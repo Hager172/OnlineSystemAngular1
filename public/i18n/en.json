@@ -1,0 +1,13 @@
+{
+    "LOGIN":{
+        "username": "User Name",
+        "password" : "Password",
+        "forget" : "Forget Password ?",
+        "remember": "Remember Me",
+        "login": "Sign in",
+        "userValid" : "User Name is required",
+        "userplaceholder" : "Enter your username",
+        "passValid" : "Password is reqired",
+        "developed" : "Developed by"
+    }
+}

@@ -1,0 +1,142 @@
+<div class="approvals-container">
+  <!-- Search Action Buttons -->
+  <div class="search-actions">
+    <!-- Search by Approval Button -->
+    <button class="action-btn action-btn-primary" (click)="toggleSearch('approval')">
+      <i class="bi bi-search"></i>
+      <span>Search by Approval</span>
+    </button>
+
+    <!-- Search by Member ID Button -->
+    <button class="action-btn action-btn-success" (click)="toggleSearch('member')">
+      <i class="bi bi-person-badge"></i>
+      <span>Search by Member ID</span>
+    </button>
+  </div>
+
+  <!-- Search Input (يظهر لما ادوس على الزرار) -->
+  <div class="search-input-wrapper" *ngIf="showSearchInput">
+    <div class="search-input-container">
+      <div class="search-input-group">
+        <i class="bi bi-search input-icon"></i>
+        <input 
+          type="number" 
+          class="search-field" 
+          [placeholder]="searchType === 'approval' ? 'Enter approval number...' : 'Enter member ID...'"
+          [(ngModel)]="searchValue"
+          (keyup.enter)="performSearch()"
+        >
+        <button 
+          class="search-btn search-btn-primary" 
+          (click)="performSearch()"
+          [disabled]="!searchValue"
+        >
+          <i class="fas fa-search"></i>
+        </button>
+        <button 
+          class="search-btn search-btn-outline" 
+          (click)="cancelSearch()"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Section -->
+  <div class="approvals-header">
+    <div class="header-left">
+      <div class="title-section">
+        <h1 class="page-title">Today Approvals</h1>
+        <p class="page-subtitle">Daily Records</p>
+      </div>
+      
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <button 
+          class="tab-btn" 
+          [class.active]="apptype === 'all'"
+          (click)="toggleapp('all')"
+        >
+          All
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="apptype === 'notcompelete'"
+          (click)="toggleapp('notcompelete')"
+        >
+          Not Complete
+        </button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="search-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search approvals..."
+        >
+      </div>
+      <div class="sort-dropdown">
+        <span>Sort by:</span>
+        <select class="sort-select">
+          <option selected>Newest</option>
+          <option>Oldest</option>
+          <option>Member ID</option>
+          <option>Provider</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="approvals-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>note</th>
+            <th>approval date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let approval of pagedApprovals">
+            <td class="member-id">
+              <span class="id-badge">#{{ approval.id }}</span>
+            </td>
+            <td class="member-name">{{ approval.note }}</td>
+            <td class="service-date">
+              <i class="bi bi-calendar3"></i>
+              {{ approval.approval_date | date:'mediumDate' }}
+            </td>
+          
+          </tr>
+          <tr *ngIf="approvallsToDay.length === 0" class="empty-state">
+            <td colspan="4">
+              <div class="empty-state-content">
+                <i class="bi bi-inbox"></i>
+                <p>No approvals found for today</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrapper" *ngIf="approvallsToDay.length > 0">
+      <div class="pagination">
+        <button 
+          *ngFor="let page of totalPages" 
+          class="page-btn" 
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

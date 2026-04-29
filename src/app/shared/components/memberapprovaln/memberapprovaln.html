@@ -1,0 +1,436 @@
+<div class="min-h-screen bg-gray-50 mt-4">
+  <!-- Header -->
+  <!-- <header class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900">Approval Management System</h1> -->
+        
+        <!-- Client Selector -->
+        <!-- <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-gray-600">Client:</span>
+          <div class="flex items-center gap-2">
+            <button 
+              *ngFor="let client of clients"
+              (click)="selectClient(client.id)"
+              [title]="client.name"
+              [class]="'flex items-center justify-center w-12 h-12 rounded-lg border-2 transition-all ' + 
+                (selectedClient === client.id 
+                  ? 'bg-' + client.color + '-600 border-' + client.color + '-500 shadow-md' 
+                  : 'bg-' + client.color + '-100 border-transparent hover:border-gray-300')"> -->
+              <!-- Icon placeholder - use appropriate icon library -->
+              <!-- <span class="text-2xl">{{ client.icon === 'building' ? '🏢' : client.icon === 'briefcase' ? '💼' : client.icon === 'cpu' ? '💻' : client.icon === 'heart' ? '❤️' : '💰' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header> -->
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-4 space-y-3">
+    
+    <!-- Lookup Form -->
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg p-3 border border-blue-100">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+        <button 
+          (click)="selectLookupType('memberId')"
+          [class]="'relative p-5 rounded-xl border-2 transition-all text-left ' +
+            (lookupType === 'memberId' 
+              ? 'border-blue-500 bg-white shadow-md' 
+              : 'border-gray-200 bg-white/50 hover:border-blue-300 hover:bg-white')">
+          <div class="flex items-start gap-3">
+            <div [class]="'w-12 h-8 rounded-lg flex items-center justify-center ' +
+              (lookupType === 'memberId' ? 'bg-blue-100' : 'bg-gray-100')">
+              <span class="text-2xl">👤</span>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 mb-1">Member ID</h3>
+              <p class="text-sm text-gray-600">Look up member details and approvals</p>
+            </div>
+            <div *ngIf="lookupType === 'memberId'" class="absolute top-4 right-4 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+              <div class="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+          </div>
+        </button>
+        <button 
+          (click)="selectLookupType('approvalId')"
+          [class]="'relative p-5 rounded-xl border-2 transition-all text-left ' +
+            (lookupType === 'approvalId' 
+              ? 'border-blue-500 bg-white shadow-md' 
+              : 'border-gray-200 bg-white/50 hover:border-blue-300 hover:bg-white')">
+          <div class="flex items-start gap-3">
+            <div [class]="'w-12 h-8 rounded-lg flex items-center justify-center ' +
+              (lookupType === 'approvalId' ? 'bg-blue-100' : 'bg-gray-100')">
+              <span class="text-2xl">✅</span>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 mb-1">Approval ID</h3>
+              <p class="text-sm text-gray-600">View specific approval request</p>
+            </div>
+            <div *ngIf="lookupType === 'approvalId'" class="absolute top-4 right-4 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+              <div class="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Input Form -->
+      <form (ngSubmit)="handleLookup()" class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <label class="block text-sm font-medium text-gray-700 mb-3">
+          Enter {{ lookupType === 'memberId' ? 'Member ID' : 'Approval ID' }}
+        </label>
+        <div class="flex gap-3">
+          <input 
+            type="text" 
+            [(ngModel)]="lookupValue"
+            (ngModelChange)="lookupValue = $event"
+            name="lookupValue"
+            [placeholder]="lookupType === 'memberId' ? 'e.g., M-12345' : 'e.g., APR-001 or PND-001'"
+            class="flex-1 pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base">
+          <button 
+            type="button" 
+            (click)="handleLookup()"
+            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium shadow-sm">
+            View Details →
+         </button>
+          
+        </div>
+      </form>
+    </div>
+
+<div *ngIf="showResults() && searchType === 'member'" class="approvals-card">
+
+      <div class="card">
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="card-header-content">
+            <div class="member-info">
+              <div class="member-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div>
+                <h2>Member Approvals</h2>
+                <p class="member-id">Member ID: <strong>{{ currentMemberId }}</strong></p>
+                <div class="stats">
+                  <div class="stat">
+                    <span class="badge badge-secondary">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                      </svg>
+                      {{ memberApprovals.length }} Total Approvals
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>           
+
+            <button 
+                routerLink="/add"
+                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add New Approval
+            </button>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <!-- Empty State -->
+          <div *ngIf="memberApprovals.length === 0" class="empty-state">
+            <div class="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+              </svg>
+            </div>
+            <h3>No approvals found</h3>
+            <p>This member doesn't have any approval records yet</p>
+            <button class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Create First Approval
+            </button>
+          </div>
+
+          <!-- Approval List -->
+          <div *ngIf="memberApprovals.length > 0" class="approval-list">
+            <!-- <div *ngFor="let approval of memberApprovals; let i = index" 
+                 class="approval-item" 
+                 (click)="openView(approval)"
+                 [@fadeIn]
+                 > -->
+                 <div *ngFor="let approval of memberApprovals; let i = index" 
+                 class="approval-item" 
+                 >
+              <div class="approval-content">
+                <div class="approval-main">
+                  <div class="approval-grid">
+                    <div class="grid-item">
+                      <div class="grid-label">Approval ID</div>
+                      <div class="grid-value">{{ approval.approvalNumber }}</div>
+                    </div>
+                    <div class="grid-item">
+                      <div class="grid-label">Items</div>
+                      <div class="grid-value">{{ approval.itemCount }} items</div>
+                    </div>
+                    <div class="grid-item">
+                      <div class="grid-label">Date</div>
+                      <div class="grid-value">{{ approval.date }}</div>
+                    </div>
+                    <div class="grid-item">
+                      <div class="grid-label">Expiry</div>
+                      <div class="grid-value">{{ approval.expiryDate }}</div>
+                    </div>
+                  </div>
+                </div>
+                 <button 
+                    class="btn btn-outline btn-small"
+                    [routerLink]="['/approval-edit', approval.approvalNumber]">
+                    View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+</div>
+
+ <!-- Approval Section -->
+ <div *ngIf="showResults() && searchType === 'approval' && currentApproval()" class="approval-detail-card">
+      <div class="card">
+        <!-- Header -->
+        <div class="card-header-approval">
+          <div class="approval-header-content">
+            <div class="approval-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+            </div>
+            <div>
+              <!-- <h2>{{ currentApproval.title }}</h2> -->
+              <p class="approval-id-label">Approval ID: <strong>{{ currentApproval()?.approvalNumber }}</strong></p>
+            </div>
+          </div>
+          <div class="approval-dates">
+            <div>
+              <span class="date-label">Date:</span>
+              <span class="date-value">{{ currentApproval()?.date }}</span>
+            </div>
+            <div>
+              <span class="date-label">Expiry Date:</span>
+              <span class="date-value">{{ currentApproval()?.expiryDate }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items List -->
+        <div class="card-body">
+          <h3>Items / Services</h3>
+          <div class="items-list">
+            <div *ngFor="let item of currentApproval()?.items; let i = index" class="item-card">
+              <div class="item-content">
+                <div class="item-number">{{ i + 1 }}</div>
+                <div class="item-details">
+                  <p class="item-name">{{ item.name }}</p>
+                  <p *ngIf="item.unitPrice" class="item-price">Price: {{ item.unitPrice }}</p>
+                </div>
+              </div>
+              <div class="item-quantity">
+                <div class="qty-label">Quantity</div>
+                <div class="qty-value">{{ item.quantity }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="btn btn-outline btn-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              Cancel
+            </button>
+            <button class="btn btn-primary btn-lg" 
+            [routerLink]="['/approval-edit', currentApproval()?.approvalNumber]"
+            >Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Worklist -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Today's Worklist</h2>
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          📅 {{ currentDate }}
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-6 border-b">
+        <button 
+          (click)="switchTab('pending')"
+          [class]="'px-4 py-2 font-medium transition-colors relative ' + 
+            (activeTab === 'pending' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900')">
+          <div class="flex items-center gap-2">
+            ⏱️ Waiting for Approval
+            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full">{{ pendingCount }}</span>
+          </div>
+          <div *ngIf="activeTab === 'pending'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+        </button>
+        <button 
+          (click)="switchTab('approved')"
+          [class]="'px-4 py-2 font-medium transition-colors relative ' + 
+            (activeTab === 'approved' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900')">
+          <div class="flex items-center gap-2">
+            ✅ Directly Approved
+            <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{{ approvedCount }}</span>
+          </div>
+          <div *ngIf="activeTab === 'approved'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="mb-4">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          placeholder="Search by ID, Member ID, Request Type, or Client..."
+          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Approval ID</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Member ID</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Request Type</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Client</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Time</th>
+              <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of currentItems" class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+              <td class="py-3 px-4">
+                <div class="flex items-center gap-2">
+                  <span *ngIf="item.status === 'approved'" class="text-sm font-medium text-green-700">✅ Approved</span>
+                  <span *ngIf="item.status === 'pending'" class="text-sm font-medium text-orange-700">⏱️ Pending</span>
+                </div>
+              </td>
+              <td class="py-3 px-4"><span class="text-sm font-medium text-gray-900">{{ item.id }}</span></td>
+              <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.memberId }}</span></td>
+              <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.requestType }}</span></td>
+              <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.client }}</span></td>
+              <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.submittedDate }}</span></td>
+              <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.submittedTime }}</span></td>
+              <td class="py-3 px-4">
+                <div class="flex justify-center gap-2">
+                  <button (click)="handleAction('print', item.id)" class="p-1.5 hover:bg-blue-50 rounded-md transition-colors" title="Print">🖨️</button>
+                  <button (click)="handleAction('edit', item.id)" class="p-1.5 hover:bg-green-50 rounded-md transition-colors" title="Edit">✏️</button>
+                  <button (click)="handleAction('delete', item.id)" class="p-1.5 hover:bg-red-50 rounded-md transition-colors" title="Delete">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <div class="text-sm text-gray-600">
+          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, currentItems.length) }} entries
+        </div>
+        <div class="flex items-center gap-2">
+          <button 
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            ←
+          </button>
+          <button 
+            *ngFor="let page of getPagesArray()"
+            (click)="changePage(page)"
+            [class]="'px-3 py-1 rounded-md transition-colors ' + 
+              (currentPage === page ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50')">
+            {{ page }}
+          </button>
+          <button 
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Manual -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">User Manual</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button 
+          *ngFor="let item of manualItems"
+          (click)="toggleManualSection(item.id)"
+          [class]="'flex items-start gap-3 p-4 border rounded-lg hover:border-blue-300 transition-all text-left ' +
+            (activeManualSection === item.id ? 'bg-blue-50 border-blue-400' : 'border-gray-200 hover:bg-gray-50')">
+          <div class="flex-1">
+            <h3 class="font-medium text-gray-900">{{ item.title }}</h3>
+            <p class="text-sm text-gray-600 mt-1">{{ item.description }}</p>
+          </div>
+        </button>
+      </div>
+
+      <!-- Quick Guide Carousel -->
+      <div *ngIf="activeManualSection === 'quick-guide'" class="mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Quick Guide</h3>
+          <button (click)="toggleManualSection('quick-guide')" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        
+        <div class="relative bg-white rounded-lg overflow-hidden shadow-lg">
+          <div class="relative aspect-video">
+            <img [src]="guideImages[currentImageIndex]" [alt]="'Guide step ' + (currentImageIndex + 1)" class="w-full h-full object-cover">
+            
+            <button (click)="prevImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all">
+              ←
+            </button>
+            <button (click)="nextImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all">
+              →
+            </button>
+
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+              {{ currentImageIndex + 1 }} / {{ guideImages.length }}
+            </div>
+          </div>
+
+          <div class="p-4 bg-white border-t">
+            <div class="flex gap-2 overflow-x-auto">
+              <button 
+                *ngFor="let image of guideImages; let i = index"
+                (click)="currentImageIndex = i"
+                [class]="'flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ' +
+                  (currentImageIndex === i ? 'border-blue-600 shadow-md' : 'border-gray-200 opacity-60 hover:opacity-100')">
+                <img [src]="image" [alt]="'Thumbnail ' + (i + 1)" class="w-full h-full object-cover">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

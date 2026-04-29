@@ -1,0 +1,134 @@
+ <div class="approval-container" *ngIf="approval">
+  
+    <div class="header-logos">
+        <div>
+        <span class="label">COMPANY</span>
+        <img [src]="approval.comLogoUrl" class="logo">
+        </div>
+
+        <div class="right">
+        <span class="label">VENDOR</span>
+        <img [src]="approval.venLogoUrl" class="logo">
+        </div>
+  </div>
+
+  <hr />
+
+  <div class="info-grid">
+
+    <div>
+      <span class="label">FROM</span>
+      <p>{{ approval.from }}</p>
+
+      <span class="label">TO</span>
+      <p>{{ approval.to }}</p>
+
+      <span class="label">DIAGNOSE</span>
+      <p>{{ approval.diagnose }}</p>
+
+      <span class="label">INVOICE NUMBER</span>
+      <p>{{ approval.invoiceNo }}</p>
+
+      <span class="label">SERVICE DATE</span>
+      <p>{{ approval.serviceDate | date:'yyyy-MM-dd' }}</p>
+    </div>
+
+    <div>
+      <span class="label">BRANCH</span>
+      <p>{{ approval.branch }}</p>
+
+      <span class="label">PRINTED</span>
+      <p>{{ approval.printDate | date:'MM/dd/yyyy, hh:mm a' }}</p>
+
+      <span class="label">CLIENT ID</span>
+      <p>{{ approval.clientId }}</p>
+    </div>
+
+  </div>
+
+  <div class="note-limit">
+
+    <div class="notes">
+      <span class="label">NOTES</span>
+      <p>{{ approval.note }}</p>
+    </div>
+
+    <div class="limit">
+      <span class="label">LIMIT</span>
+      <h2>${{approval.limit}}</h2>
+    </div>
+
+  </div>
+
+  <h3 class="section-title">INVOICE ITEMS</h3>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Quantity</th>
+        <th>Qty Unit</th>
+        <th>Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let item of approval.items; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ item.itemName }}</td>
+        <!-- <td>{{ item.quantity }}</td> -->
+        <td>
+            <input
+                type="number"
+                class="qty-input"
+                [(ngModel)]="item.quantity"
+                (ngModelChange)="onQuantityChange(item)"
+                min="0"
+                [max]="item.maxQuantity"
+            />
+        </td>
+        <td>Unit</td>
+        <td>${{ item.unitPrice }}</td>
+        <td>${{ item.quantity * item.unitPrice }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div>
+      <p>Subtotal:</p>
+      <p>Copayment ({{approval.copayment}}%):</p>
+      <p class="grand">Grand Total:</p>
+    </div>
+
+    <div class="right">
+      <p>${{ getSubtotal() }}</p>
+      <p class="negative">-${{ getDiscountAmount() }}</p>
+      <p class="grand">${{ getGrandTotal() }}</p>
+
+    </div>
+  </div>
+<div class="actions">
+
+  <!-- Submit -->
+  <button
+    class="btn submit"
+    (click)="submitApproval()"
+    [disabled]="isSubmitting || isSubmitted">
+
+    {{ isSubmitting ? 'Submitting...' : 'Submit Approval' }}
+  </button>
+
+  <!-- Print -->
+  <button
+    *ngIf="isSubmitted"
+    class="btn print"
+    (click)="printApproval()">
+
+    Print
+  </button>
+
+</div>
+</div>

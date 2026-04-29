@@ -1,0 +1,324 @@
+<div class="max-w-7xl mx-auto  p-9">
+  <div class="bg-white rounded-lg shadow-sm p-6">
+    <!-- Top Section: Form and Card -->
+    <div class="row">
+      <!-- Form Section - 8 columns -->
+      <div class="col-lg-8 col-md-12 col-sm-12">
+        <div class="row">
+          <!-- Insured ID -->
+          <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
+            <label class="block text-sm mb-2">
+              Insured ID <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="insuredId"
+              placeholder="Enter Insured ID"
+              class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>  <!-- Claim ID -->
+          <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
+            <label class="block text-sm mb-2"   [hidden]="externalPrescription">
+              Claim ID <span *ngIf="!externalPrescription" class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="claimId"
+              placeholder="Enter Claim ID"
+              [hidden]="externalPrescription"
+              class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+            <label class="flex items-center gap-2 text-sm cursor-pointer mt-2">
+              <input
+                type="checkbox"
+                [(ngModel)]="externalPrescription"
+                (change)="onExternalPrescriptionChange()"
+                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span>External Prescription</span>
+            </label>
+          </div>
+        
+        </div>
+
+        <div class="row">
+           <!-- Diagnosis -->
+          <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
+            <label class="block text-sm mb-2">
+              Diagnosis <span class="text-red-500">*</span>
+            </label>
+            <select
+              [(ngModel)]="diagnosis"
+              class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select Diagnosis</option>
+              <option *ngFor="let option of diagnosisOptions" [value]="option">
+                {{ option }}
+              </option>
+            </select>
+          </div>
+         
+          <!-- Claim Date -->
+          <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
+            <label class="block text-sm mb-2">
+              Claim Date <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="claimDate"
+              class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- National ID -->
+          <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
+            <label class="block text-sm mb-2">
+              National ID <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="nationalId"
+              placeholder="Enter National ID"
+              class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <!-- Mobile -->
+          <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
+            <label class="block text-sm mb-2">
+              Mobile <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              [(ngModel)]="mobile"
+              placeholder="+1 (555) 123-4567"
+              class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Section - 4 columns -->
+      <div class="col-lg-4 col-md-12 col-sm-12">
+        <div class="cardpro w-100">
+          <div class="firstinfo">
+            <a href="#" class="thumbnail" title="John Michael Smith">
+              <img 
+                class="img-thumbnail" 
+                [src]="memberPhoto" 
+                alt="John Michael Smith"
+              />
+            </a>
+            <div class="profileinfo">
+              <h1>John Michael Smith</h1>
+              <h3>Blue Cross Health Insurance</h3>
+              <div class="info-line">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>01223323122</span>
+              </div>
+              <div class="info-line">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>1989-05-21</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Prescription Items Section -->
+    <div class="border-t pt-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl">Prescription Items</h2>
+        <button
+          (click)="addPrescriptionItem()"
+          class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Item
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b">
+              <th class="px-3 py-3 text-left text-sm">#</th>
+              <th class="px-3 py-3 text-left text-sm">PRODUCT</th>
+              <th class="px-3 py-3 text-left text-sm">UNITS</th>
+              <th class="px-3 py-3 text-left text-sm">REPEAT</th>
+              <th class="px-3 py-3 text-left text-sm">DAYS</th>
+              <th class="px-3 py-3 text-left text-sm">PRICE</th>
+              <th class="px-3 py-3 text-left text-sm">QTY</th>
+              <th class="px-3 py-3 text-left text-sm">TOTAL</th>
+              <th class="px-3 py-3 text-left text-sm">ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of prescriptionItems; let i = index" class="border-b">
+              <td class="px-3 py-3 text-sm">{{ i + 1 }}</td>
+              <td class="px-3 py-3">
+                <select
+                  [(ngModel)]="item.product"
+                  class="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Product</option>
+                  <option *ngFor="let product of productOptions" [value]="product">
+                    {{ product }}
+                  </option>
+                </select>
+              </td>
+              <td class="px-3 py-3">
+                <input
+                  type="number"
+                  [(ngModel)]="item.units"
+                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </td>
+              <td class="px-3 py-3">
+                <input
+                  type="number"
+                  [(ngModel)]="item.repeat"
+                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </td>
+              <td class="px-3 py-3">
+                <input
+                  type="number"
+                  [(ngModel)]="item.days"
+                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </td>
+              <td class="px-3 py-3">
+                <input
+                  type="number"
+                  [(ngModel)]="item.price"
+                  class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </td>
+              <td class="px-3 py-3">
+                <input
+                  type="number"
+                  [(ngModel)]="item.qty"
+                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </td>
+              <td class="px-3 py-3 text-sm">${{ calculateTotal(item) }}</td>
+              <td class="px-3 py-3">
+                <button
+                  (click)="removePrescriptionItem(item.id)"
+                  class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-gray-50">
+            <tr class="border-t-2">
+              <td colspan="7" class="px-3 py-3 text-right text-sm font-semibold">Sub Total:</td>
+              <td class="px-3 py-3 text-sm font-semibold">${{ calculateSubTotal() }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="7" class="px-3 py-3 text-right text-sm">
+                <div class="flex items-center justify-end gap-3">
+                  <label class="font-semibold">Co. Payment:</label>
+                  <input
+                    type="number"
+                    [(ngModel)]="coPayment"
+                    class="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="%"
+                  />
+                  <span>%</span>
+                </div>
+              </td>
+              <td class="px-3 py-3 text-sm"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="7" class="px-3 py-3 text-right text-sm">
+                <div class="flex items-center justify-end gap-3">
+                  <label class="font-semibold">Co. Payment Amount:</label>
+                  <input
+                    type="number"
+                    [(ngModel)]="coPaymentAmount"
+                    class="w-32 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Amount"
+                  />
+                </div>
+              </td>
+              <td class="px-3 py-3 text-sm"></td>
+              <td></td>
+            </tr>
+            <tr class="border-t-2">
+              <td colspan="7" class="px-3 py-3 text-right text-sm font-bold">Net:</td>
+              <td class="px-3 py-3 text-sm font-bold">${{ calculateNet() }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="mt-6">
+      <label class="block text-sm mb-2">Notes</label>
+      <textarea
+        [(ngModel)]="notes"
+        placeholder="Enter any additional notes or comments..."
+        rows="4"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+      ></textarea>
+    </div>
+
+    <!-- Attach Files Section -->
+    <div class="mt-6">
+      <label class="block text-sm mb-2">Attach Files</label>
+      <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <p class="text-sm mb-1">Drag & drop files here</p>
+          <p class="text-xs text-gray-500">or click to browse from your computer</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-8 flex justify-end gap-4">
+      <button
+        (click)="handleCancel()"
+        class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="handleSubmit()"
+        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+      >
+        Submit
+      </button>
+    </div>
+  </div>
+</div>

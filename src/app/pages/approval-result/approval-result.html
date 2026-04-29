@@ -1,0 +1,141 @@
+<div class="result-page">
+  <!-- Header with back button -->
+  <div class="page-header">
+    <button class="back-btn" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+      <span>Back to Approvals</span>
+    </button>
+  </div>
+
+  <!-- Result Card -->
+  <div class="result-container" >
+    <div class="result-header">
+      <div class="header-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2>Search Result Found</h2>
+      <p class="search-type">
+        <span class="badge" [class.approval]="searchType === 'approval'" [class.member]="searchType === 'member'">
+          <i class="fas" [class.fa-search]="searchType === 'approval'" [class.fa-user]="searchType === 'member'"></i>
+          {{ searchType === 'approval' ? 'Approval Number' : 'Member ID' }}
+        </span>
+      </p>
+    </div>
+
+    <div class="result-card">
+      <!-- Member ID -->
+      <div class="result-item">
+        <div class="item-icon">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <div class="item-content">
+          <span class="item-label">Member ID</span>
+          <span class="item-value">
+            <span class="id-badge">test</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Member Name -->
+      <div class="result-item">
+        <div class="item-icon">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="item-content">
+          <span class="item-label">Member Name</span>
+          <span class="item-value name">test</span>
+        </div>
+      </div>
+
+      <!-- Service Date -->
+      <div class="result-item">
+        <div class="item-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="item-content">
+          <span class="item-label">Service Date</span>
+          <span class="item-value">test</span>
+        </div>
+      </div>
+
+      <!-- Provider -->
+      <div class="result-item">
+        <div class="item-icon">
+          <i class="fas fa-hospital"></i>
+        </div>
+        <div class="item-content">
+          <span class="item-label">Provider</span>
+          <span class="item-value provider">test</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form for New Claim -->
+    <!-- <div class="approval-form-section">
+      <h3 class="form-title">
+        <i class="fas fa-file-medical"></i>
+        New Claim 
+      </h3>
+      
+      <div class="form-card"> -->
+        <!-- Insured ID -->
+        <!-- <div class="form-row">
+          <div class="form-group full-width">
+            <label>Insured ID</label>
+            <div class="value-display">test</div>
+          </div>
+        </div> -->
+
+        <!-- Claim ID & External Prescription -->
+        <!-- <div class="form-row">
+          <div class="form-group">
+            <label>Claim ID</label>
+            <input type="text" class="form-control" placeholder="Claim ID">
+          </div>
+          <div class="form-group">
+            <label>External Prescription</label>
+            <select class="form-control">
+              <option value="">Select</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        </div> -->
+
+        <!-- Claim Date & Diagnoses
+        <div class="form-row">
+          <div class="form-group">
+            <label>Claim Date</label>
+            <input type="date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Diagnoses</label>
+            <select class="form-control">
+              <option value="">Select a diagnose</option>
+              <option value="A">Diagnosis A</option>
+              <option value="B">Diagnosis B</option>
+              <option value="C">Diagnosis C</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group ">
+            <label>Mobile</label>
+                      <input type="tel" class="form-control" placeholder="Phone Number">
+
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" (click)="submitClaim()">
+            <i class="fas fa-check me-2"></i>
+            Submit Claim
+          </button>
+         
+        </div> -->
+      <!-- </div>
+    </div> -->
+  </div>
+
+</div>

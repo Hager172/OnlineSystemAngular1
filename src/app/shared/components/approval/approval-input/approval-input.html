@@ -1,0 +1,76 @@
+<!-- <p>approval-input works!</p> -->
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+  <div class="card w-full max-w-md shadow-2xl border-t-4 border-t-blue-600">
+    <div class="card-header space-y-3 pb-6">
+      <div class="mx-auto bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center mb-2">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h2 class="text-center text-2xl font-semibold">Approval Management System</h2>
+      <p class="text-center text-muted-foreground">Enter your approval number to access details</p>
+    </div>
+    
+    <div class="card-content">
+      <form (ngSubmit)="onSubmit()" class="space-y-4">
+        <div class="space-y-2">
+          <label for="approvalNumber" class="text-base font-semibold">Approval Number</label>
+          <input
+            id="approvalNumber"
+            type="text"
+            placeholder="e.g., APR-001"
+            [(ngModel)]="approvalNumber"
+            name="approvalNumber"
+            [class.border-red-500]="error"
+            class="input h-12 text-lg w-full px-3 py-2 border rounded-md"
+          />
+          
+          <div *ngIf="error" class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+            <p class="text-sm text-red-700">{{ error }}</p>
+          </div>
+          
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mt-2">
+            <p class="text-xs font-medium text-blue-900">Demo Approvals Available:</p>
+            <p class="text-xs text-blue-700 mt-1">APR-001, APR-002, APR-003</p>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-full h-12 text-base font-semibold shadow-md">
+          Continue to Approval
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div *ngIf="isModalOpen" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header space-y-3">
+        <h2 class="text-2xl text-center font-semibold">Choose Action</h2>
+        <p class="text-center text-muted-foreground">
+          Would you like to create a new approval or view an existing one?
+        </p>
+      </div>
+      
+      <div class="flex flex-col gap-4 py-6">
+        <button 
+          (click)="onNewApproval()" 
+          class="btn-success w-full h-16 text-lg flex items-center justify-center gap-3">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create New Approval
+        </button>
+        
+        <button 
+          (click)="onDisplayApproval()" 
+          class="btn-outline w-full h-16 text-lg flex items-center justify-center gap-3">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Display Existing Approval
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

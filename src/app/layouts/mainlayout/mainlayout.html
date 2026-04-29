@@ -1,0 +1,16 @@
+<!-- <p>mainlayout works!</p> -->
+<div class="flex flex-col h-screen">
+  <!-- Header -->
+  <app-header class="h-16"></app-header>
+
+  <div class="flex flex-1">
+    <!-- Sidebar -->
+    <app-sidebar class="w-64 bg-gray-100"></app-sidebar>
+
+    <!-- Content -->
+    <div class="flex-1 p-6 overflow-auto">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
+
