@@ -2,18 +2,19 @@
   <div class="wrapper">
     <h1 class="logo">Generic<span>Logo</span></h1>
 
-    <!-- <select class="header-select" [(ngModel)]="selectedClient" (ngModelChange)="onClientChange($event)">
-        <option *ngFor="let client of clients" [ngValue]="client">{{ client.name }}</option>
-    </select> -->
+    
     <div class="right-group">
-        <select [(ngModel)]="selectedClient"
-                (ngModelChange)="onClientChange($event)"
-                class="header-select">
-            <option *ngFor="let client of clients" [value]="client.id">
-                {{ client.name }}
-            </option>
-        </select>
+      <select class="header-select"
+        [(ngModel)]="selectedClient"
+        (ngModelChange)="onClientChange($event)">
 
+  <option *ngFor="let client of clients"
+          [value]="client.clientId">
+
+    {{ client.clientName }}
+
+  </option>
+</select>
         <nav class="main-nav">
         <ul>
             <li><a href="#"><i class="fa fa-home nav-icon"></i>Home</a></li>

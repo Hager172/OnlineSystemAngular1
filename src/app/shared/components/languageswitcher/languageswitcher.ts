@@ -1,28 +1,3 @@
-// import { Component, OnInit } from '@angular/core';
-// import { Language } from '../../../core/services/language/language';
-
-// @Component({
-//   selector: 'app-languageswitcher',
-//   imports: [],
-//   templateUrl: './languageswitcher.html',
-//   styleUrl: './languageswitcher.css',
-// })
-// export class Languageswitcher implements OnInit {
-
-//   currentLang!: 'en' | 'ar';
-
-//   constructor(private langService: Language) {}
-
-//   ngOnInit(): void {
-//     this.currentLang = this.langService.getLanguage();
-//   }
-
-//   toggleLang() {
-//     this.currentLang = this.currentLang === 'en' ? 'ar' : 'en';
-//     this.langService.setLanguage(this.currentLang);
-//   }
-
-// }
 import { Component, Inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { PLATFORM_ID } from '@angular/core';
@@ -37,14 +12,27 @@ type Language = 'en' | 'ar';
   styleUrl: './languageswitcher.css',
 })
 export class Languageswitcher {
+  currentLang: Language = 'en';
+
   constructor(
     private transloco: TranslocoService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    if (isPlatformBrowser(this.platformId)) {
+      const savedLang = localStorage.getItem('language') as Language;
+      if (savedLang && (savedLang === 'en' || savedLang === 'ar')) {
+        this.currentLang = savedLang;
+        this.transloco.setActiveLang(savedLang);
+        document.documentElement.lang = savedLang;
+        document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+      }
+    }
+  }
 
   changeLanguage(lang: Language) {
     if (!isPlatformBrowser(this.platformId)) return;
 
+    this.currentLang = lang;
     this.transloco.setActiveLang(lang);
     localStorage.setItem('language', lang);
 

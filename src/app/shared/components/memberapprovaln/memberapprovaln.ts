@@ -1,25 +1,36 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Approval } from '../../interfaces/approval/approval';
-import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { Router, RouterModule } from '@angular/router';
-import { ChangeDetectorRef } from '@angular/core';
-interface Client {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
+import { ApprovalService } from '../../../core/services/Approval/approval-service';
+import { AuthService } from '../../../core/services/auth/auth-service';
+
+interface ApprovalItem {
+  id: number;
+  memberId: string;
+  memberName: string;
+  requestType: string;
+  client: string;
+  submittedDate: string;
+  submittedTime: string;
+  status: 'pending' | 'approved';
+  note: string;
 }
 
-interface WorkItem {
-  id: string;
+interface Approval {
+  approvalNumber: string;
   memberId: string;
-  requestType: string;
-  submittedTime: string;
-  submittedDate: string;
-  status: 'approved' | 'pending';
-  client: string;
+  date: string;
+  expiryDate: string;
+  notes: string;
+  itemCount: number;
+  items: any[];
+}
+
+interface ManualItem {
+  id: string;
+  title: string;
+  description: string;
 }
 
 @Component({
@@ -30,56 +41,36 @@ interface WorkItem {
   styleUrls: ['./memberapprovaln.css']
 })
 export class Memberapprovaln implements OnInit {
-Math = Math;
-memberApprovals: Approval[] = [];
-currentApproval = signal<Approval | null>(null);
-showResults = signal(false);
-searchType: 'member' | 'approval' | null = null;
-currentMemberId: string = '';
-selectedApproval: Approval | null = null;
-isViewOpen: boolean = false;
-isAddOpen: boolean = false;
+  
+pendingApprovals = signal<ApprovalItem[]>([]);
+approvedApprovals = signal<ApprovalItem[]>([]);
+  
+  lookupType: 'memberId' | 'approvalId' = 'memberId';
+  lookupValue: string = '';
+  showResults = signal(false);
+  searchType: 'member' | 'approval' | null = null;
+// بدل الـ boolean العادي
+isModalOpen = signal(false);
+  currentMemberId: string = '';
+  memberApprovals: Approval[] = [];
+  currentApproval = signal<Approval | null>(null);
+  
+  // هنا التعديل - خليها 'approved' عشان يبقى هو default
+  activeTab: 'pending' | 'approved' = 'pending';  // ✅改了这里
+  
+  searchQuery: string = '';
+  
+  currentPage: number = 1;
+  itemsPerPage: number = 5;
+  currentDate: string = '';
+  
+  clientid: string = '';
+  vendorid: string = '';
+  Math = Math;
+  error: string = '';
 
-selectedClient: string = 'client1';
-lookupType: 'memberId' | 'approvalId' = 'memberId';
-lookupValue: string = '';
-activeTab: 'approved' | 'pending' = 'pending';
-searchQuery: string = '';
-currentPage: number = 1;
-itemsPerPage: number = 5;
-currentDate: string = '';
-activeManualSection: string | null = null;
-currentImageIndex: number = 0;
-error: string = '';
-constructor(private approvalService: ApprovalService, private router: Router, private cdr: ChangeDetectorRef){}
-  // clients: Client[] = [
-  //   { id: 'client1', name: 'Acme Corporation', icon: 'building', color: 'blue' },
-  //   { id: 'client2', name: 'Global Industries', icon: 'briefcase', color: 'green' },
-  //   { id: 'client3', name: 'Tech Solutions Inc', icon: 'cpu', color: 'purple' },
-  //   { id: 'client4', name: 'Healthcare Partners', icon: 'heart', color: 'red' },
-  //   { id: 'client5', name: 'Financial Services Ltd', icon: 'dollar', color: 'orange' }
-  // ];
-
-  mockData: { [key: string]: { pending: WorkItem[], approved: WorkItem[] } } = {
-    client1: {
-      pending: [
-        { id: 'PND-003', memberId: 'M-12350', requestType: 'Appeal Request', submittedTime: '01:15 PM', submittedDate: '2/19/2026', status: 'pending', client: 'Acme Corporation' }
-      ],
-      approved: [
-        { id: 'APR-001', memberId: 'M-12345', requestType: 'Claim Approval', submittedTime: '08:30 AM', submittedDate: '2/19/2026', status: 'approved', client: 'Acme Corporation' }
-      ]
-    },
-    client2: {
-      pending: [
-        { id: 'PND-004', memberId: 'M-12351', requestType: 'Coverage Verification', submittedTime: '02:00 PM', submittedDate: '2/19/2026', status: 'pending', client: 'Global Industries' }
-      ],
-      approved: [
-        { id: 'APR-002', memberId: 'M-12346', requestType: 'Policy Update', submittedTime: '09:15 AM', submittedDate: '2/19/2026', status: 'approved', client: 'Global Industries' }
-      ]
-    }
-  };
-
-  manualItems = [
+  // User Manual Data
+  manualItems: ManualItem[] = [
     { id: 'quick-guide', title: 'Quick Guide', description: 'Learn the basics of using the approval system' },
     { id: 'video', title: 'Video Tutorials', description: 'Watch step-by-step video instructions' },
     { id: 'faqs', title: 'FAQs', description: 'Find answers to commonly asked questions' },
@@ -92,25 +83,119 @@ constructor(private approvalService: ApprovalService, private router: Router, pr
     'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80'
   ];
 
+  activeManualSection: string | null = null;
+  currentImageIndex: number = 0;
+
+  constructor(
+    private approvalService: ApprovalService,
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
   ngOnInit(): void {
     this.updateDate();
-  }
-onDisplayApproval(): void {
+    this.getVendorId();
+    // this.activeTab = 'pending';
+       
 
-  const approvalNumber = this.lookupValue?.trim();
-
-  if (!approvalNumber) {
-    alert('Please enter approval number');
-    return;
   }
 
-  if (!this.approvalService.approvalExists(approvalNumber)) {
-    this.error = `Approval ${approvalNumber} not found. Try: APR-001, APR-002, or APR-003`;
-    return;
+  getVendorId(): void {
+    const clientid = this.authService.getclientid();
+    const vendorid=this.authService.getVendorId();
+    if (clientid) {
+      this.clientid = clientid;
+      console.log("client", clientid);
+     if(vendorid){
+      this.vendorid=vendorid;
+            console.log("vendorid", vendorid);
+
+     }
+     
+    this.switchTab('approved');
+    } else {
+      this.error = 'Vendor ID not found';
+      console.log("vendor not found");
+    }
   }
 
-  this.router.navigate(['/approval-edit', approvalNumber]);
+  loadData(): void {
+    this.loadPendingApprovals();
+    this.loadApprovedApprovals();
+  }
+
+loadPendingApprovals(): void {
+  this.approvalService.getTodayNotCompletedApprovals(this.clientid, this.vendorid).subscribe({
+    next: (response) => {
+      const dataArray = Array.isArray(response.data.approvals) ? response.data.approvals : [];
+      
+      // ✅ استخدم .set() لتحديث الـ Signal
+      this.pendingApprovals.set(dataArray.map((item: any) => ({
+        id: item.id || item.approvalId,
+        memberId: item.memberid,
+        memberName: item.membername,
+        requestType: item.apptype || 'General Request',
+        client: item.membername,
+        submittedDate: this.formatDate(item.approval_date),
+        submittedTime: this.formatTime(item.approval_date),
+        status: 'pending',
+        note: item.note
+      })));
+
+      if (this.activeTab === 'pending') {
+        this.currentPage = 1;
+      }
+    }
+  });
 }
+
+loadApprovedApprovals(): void {
+  this.approvalService.getTodayCompletedApprovals(this.clientid, this.vendorid).subscribe({
+    next: (response) => {
+      const dataArray = Array.isArray(response.data?.approvals) ? response.data.approvals : [];
+      
+      // ✅ استخدم .set() لتحديث الـ Signal
+      this.approvedApprovals.set(dataArray.map((item: any) => ({
+        id: item.id || item.approvalId,
+        memberId: item.memberid,
+        memberName: item.membername,
+        requestType: item.apptype || 'General Request',
+        client: item.membername,
+        submittedDate: this.formatDate(item.approval_date),
+        submittedTime: this.formatTime(item.approval_date),
+        status: 'approved',
+        note: item.note
+      })));
+
+      if (this.activeTab === 'approved') {
+        this.currentPage = 1;
+      }
+    },
+    error: (err) => {
+      this.approvedApprovals.set([]); // ✅ تحديث صحيح في حالة الخطأ
+    }
+  });
+}
+
+  formatDate(dateString: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  formatTime(dateString: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   updateDate(): void {
     const date = new Date();
     const options: Intl.DateTimeFormatOptions = { 
@@ -122,143 +207,198 @@ onDisplayApproval(): void {
     this.currentDate = date.toLocaleDateString('en-US', options);
   }
 
-  selectClient(clientId: string): void {
-    this.selectedClient = clientId;
-    this.currentPage = 1;
+  selectLookupType(type: 'memberId' | 'approvalId'): void {
+    this.lookupType = type;
+    this.lookupValue = '';
+    this.showResults.set(false);
+    this.searchType = null;
+    this.currentApproval.set(null);
+    this.memberApprovals = [];
+    this.currentMemberId = '';
+    this.error = '';
   }
 
-selectLookupType(type: 'memberId' | 'approvalId'): void {
-  this.lookupType = type;
+  handleLookup(): void {
+    const value = (this.lookupValue || '').trim();
+    if (!value) return;
 
-  // reset input
-  this.lookupValue = '';
-
-  // reset results
-  this.showResults.set(false);
-  this.searchType = null;
-
-  // reset approval
-  this.currentApproval.set(null);
-
-  // reset member approvals
-  this.memberApprovals = [];
-  this.currentMemberId = '';
-
-  // reset errors
-  this.error = '';
-}
-handleLookup(): void {
-  const value = (this.lookupValue || '').trim();
-  if (!value) return;
-
-  if (this.lookupType === 'approvalId') {
-    this.approvalService.getApprovalDetails(value).subscribe({
-      next: (res) => {
-        this.searchType = 'approval';
-        this.currentApproval.set(this.mapApprovalDetails(res));
-        this.showResults.set(true);
-      },
-      error: () => {
-        alert('Approval not found');
-        this.showResults.set(false);
-      }
-    });
-  } else if (this.lookupType === 'memberId') {
-    this.approvalService.getMemberApprovals(value).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.searchType = 'member';
-          this.currentMemberId = res.data.memberId;
-          this.memberApprovals = res.data.approvals.map((a: any) =>
-            this.mapSingleApproval(a)
-          );
+    if (this.lookupType === 'approvalId') {
+      this.approvalService.getApprovalDetails(value).subscribe({
+        next: (res: any) => {
+          this.searchType = 'approval';
+          this.currentApproval.set(this.mapApprovalDetails(res));
           this.showResults.set(true);
-        } else {
-          alert('No approvals found');
+        },
+        error: (err) => {
+    this.isModalOpen.set(true);
+          console.log("error elsearch", err);
+          this.error = 'Approval not found';
+          
           this.showResults.set(false);
         }
-      },
-      error: () => {
-        alert('No approvals found');
-        this.showResults.set(false);
-      }
-    });
+      });
+    } else if (this.lookupType === 'memberId') {
+      // this.approvalService.getMemberApprovals(value).subscribe({
+      //   next: (res: any) => {
+      //     console.log("mem",res);
+      //     if (res.success && res.data) {
+      //       this.searchType = 'member';
+      //       this.currentMemberId = res.data.memberId;
+      //       this.memberApprovals = res.data.approvals.map((a: any) =>
+      //         this.mapSingleApproval(a)
+      //       );
+      //       this.showResults.set(true);
+      //     } else {
+      //       this.error = 'No approvals found';
+      //       this.showResults.set(false);
+      //     }
+      //   },
+      //   error: (err) => {
+      //     console.log("error",err);
+      //     this.error = 'No approvals found';
+   
+      //     this.showResults.set(false);
+      //   }
+      // });
+   
+   this.approvalService.getMemberApprovals(value).subscribe({
+  next: (res: any) => {
+    console.log("mem", res);
+
+    if (res.success && res.data) {
+
+      this.searchType = 'member';
+      this.currentMemberId = res.data.memberId;
+
+      this.memberApprovals = res.data.approvals.map((a: any) =>
+        this.mapSingleApproval(a)
+      );
+
+      this.error = '';
+      this.showResults.set(true);
+
+    } else {
+
+      this.error = res.message || 'No approvals found';
+      this.showResults.set(false);
+      this.isModalOpen.set(true);
+    }
+  },
+
+  error: (err) => {
+    console.log("error", err);
+
+    this.error =
+      err?.error?.message ||
+      'Something went wrong';
+
+
+    this.showResults.set(false);
+
+    if(err.error.message == 'No approvals found'){
+      this.isModalOpen.set(true);
+    }
+  }
+}); }
+  }
+
+  private mapApprovalDetails(a: any): Approval {
+    const approvalDate = new Date(a.approvalDate);
+    const expiryDate = new Date(approvalDate);
+    expiryDate.setDate(expiryDate.getDate() + 7);
+
+    return {
+      approvalNumber: a.approvalId?.toString(),
+      memberId: a.memberId,
+      date: approvalDate.toLocaleDateString(),
+      expiryDate: expiryDate.toLocaleDateString(),
+      notes: a.notes,
+      itemCount: a.services?.length || 0,
+      items: a.services?.map((s: any) => ({
+        id: s.serviceId,
+        name: s.itemDesc || s.careItemName,
+        quantity: s.apQty,
+        unitPrice: s.price
+      })) || []
+    };
+  }
+
+  private mapSingleApproval(a: any): Approval {
+    return {
+      approvalNumber: a.approvalNumber?.toString(),
+      memberId: a.memberId,
+      date: new Date(a.approvalDate).toLocaleDateString(),
+      expiryDate: a.expiryDate
+        ? new Date(a.expiryDate).toLocaleDateString()
+        : '',
+      notes: a.notes,
+      itemCount: a.itemCount,
+      items: a.items?.map((i: any) => ({
+        id: i.id,
+        name: i.description,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice
+      })) || []
+    };
+  }
+
+switchTab(tab: 'pending' | 'approved'): void {
+  this.activeTab = tab;
+  this.currentPage = 1;
+  this.searchQuery = '';
+
+  if (tab === 'pending') {
+    this.loadPendingApprovals();
+  } else {
+    this.loadApprovedApprovals();
   }
 }
-  private mapApprovalDetails(a: any): Approval {
 
-  const approvalDate = new Date(a.approvalDate);
+get currentItems(): ApprovalItem[] {
+  const sourceItems = this.activeTab === 'pending' ? this.pendingApprovals() : this.approvedApprovals();
+  
+  console.log("Current Source Items:", sourceItems); // كدة هيطبع الداتا صح
 
-  const expiryDate = new Date(approvalDate);
-  expiryDate.setDate(expiryDate.getDate() + 7);
-
-  return {
-    approvalNumber: a.approvalId?.toString(),
-    memberId: a.memberId,
-    date: approvalDate.toLocaleDateString(),
-    expiryDate: expiryDate.toLocaleDateString(),
-    notes: a.notes,
-    itemCount: a.services?.length || 0,
-
-    items: a.services?.map((s: any) => ({
-      id: s.serviceId,
-      name: s.itemDesc || s.careItemName,
-      quantity: s.apQty,
-      unitPrice: s.price
-    })) || []
-  };
+  let filtered = sourceItems;
+  
+  if (this.searchQuery) {
+    const query = this.searchQuery.toLowerCase();
+    filtered = sourceItems.filter(item => 
+      item.id?.toString().includes(query) ||
+      item.memberId?.toLowerCase().includes(query) ||
+      item.memberName?.toLowerCase().includes(query)
+    );
   }
-  openView(approval: Approval): void {
-    this.selectedApproval = approval;
-    this.isViewOpen = true;
+  
+  const start = (this.currentPage - 1) * this.itemsPerPage;
+  return filtered.slice(start, start + this.itemsPerPage);
+}
+
+ get totalPages(): number {
+  const sourceItems = this.activeTab === 'pending' ? this.pendingApprovals() : this.approvedApprovals();
+  
+  let filtered: ApprovalItem[] = sourceItems; 
+  
+  if (this.searchQuery) {
+    const query = this.searchQuery.toLowerCase();
+    filtered = sourceItems.filter((item: ApprovalItem) => 
+      item.id?.toString().includes(query) ||
+      item.memberId?.toLowerCase().includes(query) ||
+      item.memberName?.toLowerCase().includes(query) ||
+      item.requestType?.toLowerCase().includes(query) ||
+      item.client?.toLowerCase().includes(query)
+    );
   }
-
-  switchTab(tab: 'approved' | 'pending'): void {
-    this.activeTab = tab;
-    this.currentPage = 1;
-  }
-
-  get currentItems(): WorkItem[] {
-    const clientData = this.mockData[this.selectedClient] || { pending: [], approved: [] };
-    const items = this.activeTab === 'pending' ? clientData.pending : clientData.approved;
-    
-    const filtered = items.filter(item => {
-      if (!this.searchQuery) return true;
-      const query = this.searchQuery.toLowerCase();
-      return item.id.toLowerCase().includes(query) ||
-             item.memberId.toLowerCase().includes(query) ||
-             item.requestType.toLowerCase().includes(query) ||
-             item.client.toLowerCase().includes(query);
-    });
-
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return filtered.slice(start, start + this.itemsPerPage);
-  }
-
-  get totalPages(): number {
-    const clientData = this.mockData[this.selectedClient] || { pending: [], approved: [] };
-    const items = this.activeTab === 'pending' ? clientData.pending : clientData.approved;
-    
-    const filtered = items.filter(item => {
-      if (!this.searchQuery) return true;
-      const query = this.searchQuery.toLowerCase();
-      return item.id.toLowerCase().includes(query) ||
-             item.memberId.toLowerCase().includes(query) ||
-             item.requestType.toLowerCase().includes(query) ||
-             item.client.toLowerCase().includes(query);
-    });
-
-    return Math.ceil(filtered.length / this.itemsPerPage);
-  }
+  
+  return Math.ceil(filtered.length / this.itemsPerPage);
+}
 
   get pendingCount(): number {
-    const clientData = this.mockData[this.selectedClient] || { pending: [], approved: [] };
-    return clientData.pending.length;
+    return this.pendingApprovals.length;
   }
 
   get approvedCount(): number {
-    const clientData = this.mockData[this.selectedClient] || { pending: [], approved: [] };
-    return clientData.approved.length;
+    return this.approvedApprovals.length;
   }
 
   changePage(page: number): void {
@@ -267,10 +407,27 @@ handleLookup(): void {
     }
   }
 
-  handleAction(action: string, id: string): void {
-    alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action for ${id}`);
+  getPagesArray(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
+  handleAction(action: string, id: number): void {
+    switch(action) {
+      case 'print':
+        console.log('Printing approval:', id);
+        break;
+      case 'edit':
+        this.router.navigate(['/approval-edit', id]);
+        break;
+      case 'delete':
+        if (confirm('Are you sure you want to delete this approval?')) {
+          console.log('Deleting approval:', id);
+        }
+        break;
+    }
+  }
+
+  // User Manual Methods
   toggleManualSection(sectionId: string): void {
     this.activeManualSection = this.activeManualSection === sectionId ? null : sectionId;
     this.currentImageIndex = 0;
@@ -284,25 +441,12 @@ handleLookup(): void {
     this.currentImageIndex = (this.currentImageIndex - 1 + this.guideImages.length) % this.guideImages.length;
   }
 
-  getPagesArray(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+    onNewApproval(): void {
+    this.isModalOpen.set(false);
+    alert('Create new approval functionality - coming soon!');
   }
-  private mapSingleApproval(a: any): Approval {
-  return {
-    approvalNumber: a.approvalNumber?.toString(),
-    memberId: a.memberId,
-    date: new Date(a.approvalDate).toLocaleDateString(),
-    expiryDate: a.expiryDate
-      ? new Date(a.expiryDate).toLocaleDateString()
-      : '',
-    notes: a.notes,
-    itemCount: a.itemCount,
-    items: a.items?.map((i: any) => ({
-      id: i.id,
-      name: i.description,
-      quantity: i.quantity,
-      unitPrice: i.unitPrice
-    })) || []
-  };
+  
+    closeModal(): void {
+    this.isModalOpen.set(false);
   }
 }

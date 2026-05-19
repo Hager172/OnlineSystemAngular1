@@ -8,8 +8,10 @@ export class TokenInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler) {
     const token = this.auth.getToken();
+    console.log("token",token);
     if (token) {
       req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+
     }
     return next.handle(req);
   }

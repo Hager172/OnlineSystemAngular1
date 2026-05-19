@@ -3,6 +3,7 @@ import { ApprovalDetailsDto } from '../../../shared/interfaces/approval/approval
 import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { IApiResponse, IApproval } from '../../../shared/models/approvaltodaydto';
 
 @Injectable({
   providedIn: 'root',
@@ -68,4 +69,7 @@ export class Approval {
    getMemberApprovals(memberId: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/approvals/member/${memberId}`);
   }
+
+ 
+
 }

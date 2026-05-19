@@ -39,23 +39,23 @@ export class Clientapprovals implements OnInit {
   }
 
   loadapprovalls(): void {
-    this.service.getalltoday(this.auth.getvendor()).subscribe({
-      next: (res) => {
-        console.log(res);
+    // this.service.getalltoday(this.auth.getvendor()).subscribe({
+    //   next: (res) => {
+    //     console.log(res);
         
-        this.approvallsToDay = res.data.approvals;
-        this.calculateTotalPages();
-      },
-      error: (error) => {
-        console.log(error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to load approvals',
-          confirmButtonColor: '#d33'
-        });
-      }
-    });
+    //     this.approvallsToDay = res.data.approvals;
+    //     this.calculateTotalPages();
+    //   },
+    //   error: (error) => {
+    //     console.log(error);
+    //     Swal.fire({
+    //       icon: 'error',
+    //       title: 'Error',
+    //       text: 'Failed to load approvals',
+    //       confirmButtonColor: '#d33'
+    //     });
+    //   }
+    // });
   }
 
   toggleSearch(type: 'approval' | 'member'): void {
@@ -72,21 +72,21 @@ export class Clientapprovals implements OnInit {
     if (type === 'all') {
       this.loadapprovalls();
     } else if (type === 'notcompelete') {
-      this.service.getallnotcomplete(this.auth.getvendor()).subscribe({
-        next: (res) => {
-          this.approvallsToDay = res;
-          this.calculateTotalPages();
-          this.currentPage = 1;
-        },
-        error: (error) => {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load approvals',
-            confirmButtonColor: '#d33'
-          });
-        }
-      });
+      // this.service.getallnotcomplete(this.auth.getvendor()).subscribe({
+      //   next: (res) => {
+      //     this.approvallsToDay = res;
+      //     this.calculateTotalPages();
+      //     this.currentPage = 1;
+      //   },
+      //   error: (error) => {
+      //     Swal.fire({
+      //       icon: 'error',
+      //       title: 'Error',
+      //       text: 'Failed to load approvals',
+      //       confirmButtonColor: '#d33'
+      //     });
+      //   }
+      // });
     }
   }
 

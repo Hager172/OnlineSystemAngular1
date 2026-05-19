@@ -3,6 +3,7 @@ import { Approval } from '../../../shared/interfaces/approval/approval';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { map, Observable } from 'rxjs';
+import { IApiResponse, IApproval } from '../../../shared/models/approvaltodaydto';
 
 @Injectable({
   providedIn: 'root'
@@ -139,6 +140,7 @@ export class ApprovalService {
   //   return this.mapApprovalDetailsToApproval(this.getApprovalDetails(approvalNumber));
   // }
   getApproval(approvalNumber: string): Observable<Approval> {
+    console.log("approvalnum",approvalNumber);
   return this.getApprovalDetails(approvalNumber).pipe(
     map(res => this.mapApprovalDetailsToApproval(res))
   );
@@ -158,10 +160,19 @@ export class ApprovalService {
     return stored ? JSON.parse(stored) : null;
   }
  getMemberApprovals(memberId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}Approvals/approvals/member/${memberId}`);
+  
+
+
+
+
+
+    return this.http.get(`${this.baseUrl}Approval/approvals/member/${memberId}`);
   }
+ 
   getApprovalDetails(id: string): Observable<any> {
-  return this.http.get<any>(`${this.baseUrl}Approvals/${id}/details`);
+  return this.http.get<any>(`${this.baseUrl}Approval/${id}/details`);
+  
+
 }
 
 mapApprovalDetailsToApproval(apiRes: any): Approval {
@@ -190,4 +201,18 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     })),
   };
 }
+
+
+ getTodayCompletedApprovals(clientid: string,vendorId:string): Observable<any> {
+    return this.http.get<any>(
+      `${this.baseUrl}Approval/allapprovaltoday/${clientid}/${vendorId}`
+    );
+  }
+// api/Approval/allapprovaltoday
+  // جلب الـ approvals غير المكتملة (not complete)
+  getTodayNotCompletedApprovals(clientid: string,vendorId:string): Observable<any> {
+    return this.http.get<any>(
+      `${this.baseUrl}Approval/allapprovalnottoday/${clientid}/${vendorId}`
+    );
+  }
 }
