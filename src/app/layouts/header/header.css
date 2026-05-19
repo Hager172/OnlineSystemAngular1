@@ -18,14 +18,14 @@ header {
   z-index: 100000;
 }
 
-.wrapper {
+/* .wrapper {
   width: 95%;
   max-width: 1000px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   /* justify-content: space-between; */
-}
+/* }  */
 
 header::after {
   content: "";
@@ -33,9 +33,20 @@ header::after {
   display: block;
 }
 
+.wrapper {
+  width: 95%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 0;  /* خلي الحشو من الشمال صفر */
+}
+
 .logo {
   font-size: 1rem;
   margin: 0;
+  margin-left: -20px;  /* يتحرك للشمال */
   text-transform: uppercase;
   font-weight: 700;
 }

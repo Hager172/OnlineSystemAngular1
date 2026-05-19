@@ -3,9 +3,20 @@
   🌐 {{ currentLang.toUpperCase() }}
 </button> -->
 
- <button (click)="changeLanguage('ar')">
+ <!-- <button (click)="changeLanguage('ar')">
  العربية
 </button>
  <button (click)="changeLanguage('en')">
  English
-</button>
+</button> -->
+<div class="language-selector m-5" >
+  <select 
+    #langSelect 
+   (change)="changeLanguage($any(langSelect.value))" 
+    [value]="currentLang" 
+    class="lang-select"
+  >
+    <option value="ar">🇸🇦 العربية</option>
+    <option value="en">🇬🇧 English</option>
+  </select>
+</div>

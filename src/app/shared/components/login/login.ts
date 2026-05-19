@@ -36,7 +36,7 @@ export class Login {
     const {userName , password} = this.loginForm.value;
     this.auth.login(userName , password).subscribe({
       next: (res)=>{
-        this.router.navigate(['/home']);
+        this.router.navigate(['/mem']);
       },
       error: (err)=>{
         this.errorMessage = 'login Invalid';
