@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { AuthService } from '../../../core/services/auth/auth-service';
+import { MemberService } from '../../../core/services/member/member-service';
 
 interface ApprovalItem {
   id: number;
@@ -18,6 +19,7 @@ interface ApprovalItem {
 }
 
 interface Approval {
+  memberTele: string;
   approvalNumber: string;
   memberId: string;
   date: string;
@@ -44,7 +46,7 @@ export class Memberapprovaln implements OnInit {
   
 pendingApprovals = signal<ApprovalItem[]>([]);
 approvedApprovals = signal<ApprovalItem[]>([]);
-  
+  isLoading = signal<boolean>(false);
   lookupType: 'memberId' | 'approvalId' = 'memberId';
   lookupValue: string = '';
   showResults = signal(false);
@@ -67,7 +69,7 @@ isModalOpen = signal(false);
   clientid: string = '';
   vendorid: string = '';
   Math = Math;
-  error: string = '';
+  error= signal<string>('');
 
   // User Manual Data
   manualItems: ManualItem[] = [
@@ -89,7 +91,8 @@ isModalOpen = signal(false);
   constructor(
     private approvalService: ApprovalService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private memberService: MemberService
   ) {}
 
   ngOnInit(): void {
@@ -114,7 +117,7 @@ isModalOpen = signal(false);
      
     this.switchTab('approved');
     } else {
-      this.error = 'Vendor ID not found';
+      this.error.set('Vendor ID not found');
       console.log("vendor not found");
     }
   }
@@ -215,51 +218,33 @@ loadApprovedApprovals(): void {
     this.currentApproval.set(null);
     this.memberApprovals = [];
     this.currentMemberId = '';
-    this.error = '';
+    this.error.set('');
   }
 
   handleLookup(): void {
+          this.error.set('');
+
     const value = (this.lookupValue || '').trim();
     if (!value) return;
-
+this.isLoading.set(true);
     if (this.lookupType === 'approvalId') {
       this.approvalService.getApprovalDetails(value).subscribe({
         next: (res: any) => {
           this.searchType = 'approval';
           this.currentApproval.set(this.mapApprovalDetails(res));
           this.showResults.set(true);
+          this.isLoading.set(false);
         },
         error: (err) => {
-    this.isModalOpen.set(true);
           console.log("error elsearch", err);
-          this.error = 'Approval not found';
+          this.error.set('Approval not found');
           
           this.showResults.set(false);
+          this.isLoading.set(false);
         }
       });
     } else if (this.lookupType === 'memberId') {
-      // this.approvalService.getMemberApprovals(value).subscribe({
-      //   next: (res: any) => {
-      //     console.log("mem",res);
-      //     if (res.success && res.data) {
-      //       this.searchType = 'member';
-      //       this.currentMemberId = res.data.memberId;
-      //       this.memberApprovals = res.data.approvals.map((a: any) =>
-      //         this.mapSingleApproval(a)
-      //       );
-      //       this.showResults.set(true);
-      //     } else {
-      //       this.error = 'No approvals found';
-      //       this.showResults.set(false);
-      //     }
-      //   },
-      //   error: (err) => {
-      //     console.log("error",err);
-      //     this.error = 'No approvals found';
-   
-      //     this.showResults.set(false);
-      //   }
-      // });
+ 
    
    this.approvalService.getMemberApprovals(value).subscribe({
   next: (res: any) => {
@@ -274,24 +259,25 @@ loadApprovedApprovals(): void {
         this.mapSingleApproval(a)
       );
 
-      this.error = '';
+      this.error.set('');
       this.showResults.set(true);
+      this.isLoading.set(false);
 
     } else {
 
-      this.error = res.message || 'No approvals found';
+      this.error.set(res.message || 'No approvals found');
       this.showResults.set(false);
+      this.isLoading.set(false);
       this.isModalOpen.set(true);
     }
   },
-
   error: (err) => {
     console.log("error", err);
 
-    this.error =
-      err?.error?.message ||
-      'Something went wrong';
+    this.error.set(err?.error?.message ||
+      'Something went wrong');
 
+    this.isLoading.set(false);
 
     this.showResults.set(false);
 
@@ -314,6 +300,7 @@ loadApprovedApprovals(): void {
       expiryDate: expiryDate.toLocaleDateString(),
       notes: a.notes,
       itemCount: a.services?.length || 0,
+      memberTele: a.memberTele || 'N/A',
       items: a.services?.map((s: any) => ({
         id: s.serviceId,
         name: s.itemDesc || s.careItemName,
@@ -333,6 +320,7 @@ loadApprovedApprovals(): void {
         : '',
       notes: a.notes,
       itemCount: a.itemCount,
+      memberTele: a.memberTele || 'N/A',
       items: a.items?.map((i: any) => ({
         id: i.id,
         name: i.description,
@@ -449,4 +437,20 @@ get currentItems(): ApprovalItem[] {
     closeModal(): void {
     this.isModalOpen.set(false);
   }
+
+
+
+goToAddApproval() {
+  // 1. جهز الأوبجكت اللي عايز تنقله (ممكن تبعت الأوبجكت اللي راجعلك من الـ API كله)
+  const dataToSave = {
+    memberId: this.currentMemberId,
+    approvals: this.memberApprovals // المصفوفة اللي فيها رقم التليفون
+  };
+
+  // 2. خزن الداتا في السيرفيس
+  this.memberService.setMemberData(dataToSave);
+
+  // 3. روح لصفحة الإضافة
+  this.router.navigate(['/add']);
+}
 }

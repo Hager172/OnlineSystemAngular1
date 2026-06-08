@@ -1,0 +1,230 @@
+<div class="p-6 bg-white rounded-lg shadow-sm">
+  
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="flex justify-center items-center py-12">
+    <div class="text-gray-500">Loading approvals...</div>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading()">
+    
+    <!-- Filters Row -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5 pb-2 border-b border-gray-100">
+  
+  <!-- القسم الأيسر: الفلاتر -->
+  <div class="flex flex-wrap items-end gap-3">
+    <!-- From Date -->
+    <div class="w-[150px]">
+      <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">FROM</label>
+      <input 
+        type="date"
+        [ngModel]="fromDate()"
+        (ngModelChange)="setFromDate($event)"
+        class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors"
+      />
+    </div>
+
+    <!-- To Date -->
+    <div class="w-[150px]">
+      <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">TO</label>
+      <input 
+        type="date"
+        [ngModel]="toDate()"
+        (ngModelChange)="setToDate($event)"
+        [min]="fromDate()"
+        class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors"
+      />
+    </div>
+
+    <!-- Clear Button -->
+    <button 
+      (click)="clearDateFilter()"
+      title="Clear Date Filter"
+      class="h-[34px] w-[34px] flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all duration-200"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- القسم الأيمن: Export + Search -->
+  <div class="flex items-end gap-3">
+    <!-- Export Button -->
+    <button 
+      (click)="exportToExcel()"
+      class="h-[34px] px-4 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-sm flex items-center gap-2"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+      </svg>
+      Export
+    </button>
+
+    <!-- Search Box - شبه DataTable -->
+    <div class="relative">
+      <input 
+        type="search" 
+        [ngModel]="searchQuery()"
+        (ngModelChange)="updateSearchQuery($event)"
+        placeholder="Search..."
+        class="w-[260px] h-[34px] pl-9 pr-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-all placeholder:text-gray-400"
+      />
+    
+    </div>
+  </div>
+</div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-200 bg-gray-50">
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('statusText')">
+              Status {{ getSortIcon('statusText') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalId')">
+              Approval ID {{ getSortIcon('approvalId') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('memberId')">
+              Member ID {{ getSortIcon('memberId') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('apType')">
+              Request Type {{ getSortIcon('apType') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('requestSource')">
+              Request Source {{ getSortIcon('requestSource') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalDate')">
+              Date {{ getSortIcon('approvalDate') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('vendorId')">
+              Vendor ID {{ getSortIcon('vendorId') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('notes')">
+              Notes {{ getSortIcon('notes') }}
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+              Actions
+            </th>
+          </tr>
+        </thead>
+   <tbody>
+          <tr *ngFor="let item of currentItems()" class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-3 px-4">
+              <span [class]="'inline-flex items-center gap-1 text-sm font-medium ' + item.statusColor">
+                <span>{{ item.statusIcon }}</span> {{ item.statusText }}
+              </span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm font-medium text-gray-900">{{ item.approvalId }}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm text-gray-700">{{ item.memberId }}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm text-gray-700">{{ item.apType }}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm text-gray-700">{{ item.requestSource }}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm text-gray-700">{{ formatDate(item.approvalDate) }}</span>
+              <span class="text-xs text-gray-400 block">{{ formatTime(item.approvalDate) }}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm text-gray-700">{{ item.vendorId }}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-sm text-gray-500 max-w-xs block truncate" [title]="item.notes">
+                {{ item.notes }}
+              </span>
+            </td>
+            
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2">
+                <button 
+                  (click)="viewDetails(item)"
+                  title="View Details"
+                  class="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                </button>
+
+                <button 
+                  (click)="editApproval(item)"
+                  title="Edit Approval"
+                  class="p-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-600 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                </button>
+
+                <button 
+                  (click)="printApproval(item)"
+                  title="Print Receipt"
+                  class="p-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-600 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.617 0-1.11-.51-1.07-1.122L6.34 18m11.32 0h-11.32M9 11V9c0-1.571 1.4-2.5 3-2.5s3 .929 3 2.5v2m-6 4h6" />
+                  </svg>
+                </button>
+
+                <button 
+                  (click)="cancelApproval(item)"
+                  title="Cancel Request"
+                  class="p-1.5 bg-red-50 text-red-600 rounded-md hover:bg-red-600 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          
+          <tr *ngIf="currentItems().length === 0">
+            <td colspan="9" class="text-center py-8 text-gray-500">
+              {{ searchQuery() || fromDate() || toDate() ? 'No matching approvals found' : 'No approvals available' }}
+            </td>
+          </tr>
+        </tbody>
+       </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages() > 0" class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+      <div class="text-sm text-gray-600">
+        Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to 
+        {{ Math.min(currentPage() * itemsPerPage, filteredApprovals().length) }} of 
+        {{ filteredApprovals().length }} entries
+      </div>
+      <div class="flex items-center gap-2">
+        <button 
+          (click)="changePage(currentPage() - 1)"
+          [disabled]="currentPage() === 1"
+          class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          ←
+        </button>
+        <button 
+          *ngFor="let page of getPagesArray()"
+          (click)="changePage(page)"
+          [class]="'px-3 py-1 rounded-md transition-colors ' + 
+            (currentPage() === page ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50')">
+          {{ page }}
+        </button>
+        <button 
+          (click)="changePage(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages()"
+          class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          →
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

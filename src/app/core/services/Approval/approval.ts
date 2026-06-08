@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { IApiResponse, IApproval } from '../../../shared/models/approvaltodaydto';
+import { ClaimDto, CreateClaimResponseDto } from '../../../shared/models/create-claim/create-claim.model';
 
 @Injectable({
   providedIn: 'root',

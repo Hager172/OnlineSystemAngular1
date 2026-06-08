@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-slate-50 pt-10">
+<div id="printable-area"  class="main-content min-h-screen bg-slate-50 pt-10">
   <!-- Header (No Print) -->
   <div class="bg-white border-b shadow-sm print-hidden">
     <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
@@ -43,7 +43,7 @@
     <div class="card shadow-sm">
       <div class="card-content p-6 md:p-8 space-y-4">
         
-        <div class="flex items-center justify-between">
+        <!-- <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-slate-500 uppercase tracking-wide mb-2">Company</p>
             <img [src]="approval()?.companyLogo" alt="Company Logo" class="h-16 w-auto object-contain" />
@@ -52,7 +52,7 @@
             <p class="text-xs text-slate-500 uppercase tracking-wide mb-2">Vendor</p>
             <img [src]="approval()?.vendorLogo" alt="Vendor Logo" class="h-16 w-auto object-contain" />
           </div>
-        </div>
+        </div> -->
 
         <div class="grid grid-cols-3 gap-x-4 gap-y-3 text-sm">
           <!-- العمود الأول -->
@@ -109,8 +109,8 @@
           </div>
           <div class="col-span-4 bg-blue-50 p-4 rounded-lg">
             <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Limit</p>
-            <!-- <p class="text-2xl font-bold text-blue-600">${{ approval.limit.toFixed(2) }}</p> -->
-            <p class="text-2xl font-bold text-blue-600">${{ approval()?.limit}}</p>
+            <!-- <p class="text-2xl font-bold text-blue-600">  {{ approval.limit.toFixed(2) }}</p> -->
+            <p class="text-2xl font-bold text-blue-600">  {{ approval()?.limit}}</p>
           </div>
         </div>
 
@@ -125,6 +125,8 @@
                 <tr class="bg-slate-100">
                   <th class="px-4 py-2 text-left text-xs font-semibold uppercase w-12">#</th>
                   <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Description</th>
+
                   <th class="px-4 py-2 text-center text-xs font-semibold uppercase w-24">Qty</th>
                   <th class="px-4 py-2 text-left text-xs font-semibold uppercase w-28">Qty Unit</th>
                   <th class="px-4 py-2 text-right text-xs font-semibold uppercase w-32">Price</th>
@@ -134,12 +136,13 @@
               <tbody>
                 <tr *ngFor="let item of items(); let i = index" class="border-t">
                   <td class="px-4 py-2 text-slate-600">{{ i + 1 }}</td>
-                  <td class="px-4 py-2 font-medium">{{ item.description }}</td>
+                  <td class="px-4 py-2 font-medium">{{ item.name }}</td>
+                                    <td class="px-4 py-2 font-medium">{{ item.description }}</td>
                   <td class="px-4 py-2 text-center font-medium">{{ item.quantity }}</td>
                   <td class="px-4 py-2 font-medium">{{ item.quantityUnit }}</td>
-                  <td class="px-4 py-2 text-right font-medium">${{ item.unitPrice.toFixed(2) }}</td>
+                  <td class="px-4 py-2 text-right font-medium">  {{ item.unitPrice.toFixed(2) }}</td>
                   <td class="px-4 py-2 text-right font-semibold">
-                    ${{ (item.quantity * item.unitPrice).toFixed(2) }}
+                      {{ (item.quantity * item.unitPrice).toFixed(2) }}
                   </td>
                 </tr>
               </tbody>
@@ -152,32 +155,32 @@
           <div class="w-full max-w-md space-y-2">
             <div class="flex justify-between text-sm">
               <span class="text-slate-600">Subtotal:</span>
-              <span class="font-semibold">${{ getSubtotal().toFixed(2) }}</span>
+              <span class="font-semibold">  {{ getSubtotal().toFixed(2) }}</span>
             </div>
             
             <div *ngIf="getExceedingAmount() > 0" class="flex justify-between text-sm bg-amber-50 -mx-4 px-4 py-2">
               <span class="text-amber-800">Amount Exceeding Limit:</span>
-              <span class="font-semibold text-amber-900">${{ getExceedingAmount().toFixed(2) }}</span>
+              <span class="font-semibold text-amber-900">  {{ getExceedingAmount().toFixed(2) }}</span>
             </div>
             
             <div class="flex justify-between text-sm">
               <span class="text-slate-600">
                 Copayment ({{ approval()?.copaymentPercentage }}%):
               </span>
-              <span class="font-semibold text-red-600">-${{ getRegularCopayment().toFixed(2) }}</span>
+              <span class="font-semibold text-red-600">-  {{ getRegularCopayment().toFixed(2) }}</span>
             </div>
             
             <div *ngIf="getExtraCopayment() > 0" class="flex justify-between text-sm">
               <span class="text-slate-600">
                 Extra Copayment ({{ approval()?.extraCopaymentPercentage }}%):
               </span>
-              <span class="font-semibold text-red-600">-${{ getExtraCopayment().toFixed(2) }}</span>
+              <span class="font-semibold text-red-600">-  {{ getExtraCopayment().toFixed(2) }}</span>
             </div>
             
             <div class="bg-slate-100 -mx-4 px-4 py-3 rounded-lg">
               <div class="flex justify-between items-center">
                 <span class="font-bold text-slate-900">Grand Total:</span>
-                <span class="text-2xl font-bold text-blue-600">${{ getGrandTotal().toFixed(2) }}</span>
+                <span class="text-2xl font-bold text-blue-600">  {{ getGrandTotal().toFixed(2) }}</span>
               </div>
             </div>
           </div>

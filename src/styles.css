@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
@@ -275,16 +273,34 @@ body {
   color: #64748b;
 }
 
-/* Print Styles */
+/* Print Styles
 @media print {
   .print-hidden {
     display: none !important;
   }
-}
+} */
 
 /* Responsive */
 @media (min-width: 768px) {
   .md\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .md\\:p-8 { padding: 2rem; }
   .md\\:p-12 { padding: 3rem; }
+}
+@media print {
+
+  app-header,
+  app-sidebar {
+    display: none !important;
+  }
+
+  .flex-1.p-6.overflow-auto {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+
+
+
+  
 }
