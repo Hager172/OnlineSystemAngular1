@@ -73,8 +73,6 @@ constructor(
 
 private saveAuthData(data: any){
   if(isPlatformBrowser(this.platformId)){
-    console.log('vendor id:' ,data.vendorId );
-    console.log('token:' ,data.authToken );
     localStorage.setItem('vendorid',data.vendorId);
      localStorage.setItem('clients', JSON.stringify(data.clients || []));
   localStorage.setItem('currentClient', data.clientId ?? '');

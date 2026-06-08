@@ -10,15 +10,19 @@
       padding:10px;
       margin-bottom:10px;">
 
-    <div *ngFor="let msg of chatService.messages">
+    @for (msg of chatService.messages; track $index) {
 
-      <b>{{msg.senderId}}</b>
+      <div>
 
-      :
+        <b>{{msg.senderId}}</b>
 
-      {{msg.message}}
+        :
 
-    </div>
+        {{msg.message}}
+
+      </div>
+
+    }
 
   </div>
 
