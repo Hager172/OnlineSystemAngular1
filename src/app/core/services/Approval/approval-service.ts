@@ -4,6 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { map, Observable } from 'rxjs';
 import { IApiResponse, IApproval } from '../../../shared/models/approvaltodaydto';
+import { ClaimDto, CreateClaimResponseDto, ProductLookupDto } from '../../../shared/models/create-claim/create-claim.model';
+import { DiagnosisDto } from '../../../shared/models/create-claim/DiagnosisDto';
 
 @Injectable({
   providedIn: 'root'
@@ -162,13 +164,12 @@ export class ApprovalService {
  getMemberApprovals(memberId: string): Observable<any> {
   
 
-
-
-
-
     return this.http.get(`${this.baseUrl}Approval/approvals/member/${memberId}`);
   }
- 
+ getMemberInfo(memberId: string,type: string): Observable<any> {
+  
+    return this.http.get(`${this.baseUrl}Approval/member-info?memberId=${memberId}&type=${type}`);
+  }
   getApprovalDetails(id: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}Approval/${id}/details`);
   
@@ -198,6 +199,7 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
       quantity: s.apQty || s.qty || 0,
       quantityUnit: s.doseUnits?.toString() || 'Unit',
       unitPrice: s.price || 0,
+      name: s.servicename || '',
     })),
   };
 }
@@ -215,4 +217,41 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
       `${this.baseUrl}Approval/allapprovalnottoday/${clientid}/${vendorId}`
     );
   }
+
+
+   createClaim(
+    claim: ClaimDto
+  ): Observable<CreateClaimResponseDto> {
+
+    return this.http.post<CreateClaimResponseDto>(
+      this.baseUrl + 'Approval/create',
+      claim
+    );
+  }
+
+
+getDiagnosis(term: string) {
+  return this.http.get<DiagnosisDto[]>(
+    `${this.baseUrl}Approval/diagnosis`,
+    {
+      params: {
+        term: term
+      }
+    }
+  );
+}
+
+getProducts(term: string, vtype: string) {
+  return this.http.get<ProductLookupDto[]>(
+    `${this.baseUrl}Approval/products?term=${term}&vtype=${vtype}`
+  );
+}
+
+
+
+
+getbranchapprovals(branchid: string): Observable<any> {
+  return this.http.get<any>(
+    `${this.baseUrl}Approval/branch-approvals?office_id=${branchid}`
+  );}
 }

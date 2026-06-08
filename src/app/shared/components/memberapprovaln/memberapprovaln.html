@@ -1,8 +1,11 @@
+
+
+
 <div class="min-h-screen bg-gray-50 mt-4">
   <main class="max-w-7xl mx-auto px-4 py-4 space-y-3">
     
     <!-- Lookup Form -->
-    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg p-3 border border-blue-100">
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg p-3 border border-blue-100 z-10 relative">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
         <button 
           (click)="selectLookupType('memberId')"
@@ -56,40 +59,57 @@
             name="lookupValue"
             [placeholder]="lookupType === 'memberId' ? 'e.g., M-12345' : 'e.g., APR-001'"
             class="flex-1 pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base">
+          
           <button 
-            type="button" 
-            (click)="handleLookup()"
-            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium shadow-sm">
-            View Details →
-         </button>
+            type="submit" 
+            [disabled]="isLoading()"
+            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium shadow-sm disabled:opacity-70 disabled:cursor-not-allowed min-w-[160px]">
+            
+            <svg *ngIf="isLoading()" class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+
+            <span>{{ isLoading() ? 'Searching...' : 'View Details →' }}</span>
+          </button>
         </div>
       </form>
     </div>
 
     <!-- Error Message -->
-    <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-      {{ error }}
+    <div *ngIf="error()" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+      {{ error() }}
     </div>
 
     <!-- Member Approvals Results -->
-    <div *ngIf="showResults() && searchType === 'member'" class="bg-white rounded-lg shadow-md p-6">
+    <div *ngIf="showResults() && searchType === 'member'" class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-t-blue-600 relative -mt-5 pt-8 animate-fade-in">
+      <!-- سهم يربط النتيجة بالفورم العلوي -->
+      <div class="absolute -top-[11px] left-10 w-5 h-5 bg-white border-t border-l border-blue-600 transform rotate-45 hidden md:block"></div>
+      
       <div class="border-b border-gray-200 pb-4 mb-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+              ✓
             </div>
             <div>
-              <h2 class="text-xl font-semibold">Member Approvals</h2>
-              <p class="text-gray-600">Member ID: <strong>{{ currentMemberId }}</strong></p>
-              <p class="text-sm text-gray-500 mt-1">{{ memberApprovals.length }} Total Approvals</p>
+              <h2 class="text-xl font-semibold text-gray-900">Member Approvals</h2>
+              <p class="text-gray-600">Member ID: <strong class="text-blue-600">{{ currentMemberId }}</strong></p>
+              <p class="text-sm text-gray-500 mt-1"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ memberApprovals.length }} Total Approvals</span></p>
             </div>
           </div>
-          <button 
+          <!-- <button 
             routerLink="/add"
-            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm font-medium">
             <span>+</span>
             Add New Approval
-          </button>
+          </button> -->
+          <button 
+  (click)="goToAddApproval()"
+  class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm font-medium">
+  <span>+</span>
+  Add New Approval
+</button>
         </div>
       </div>
 
@@ -99,30 +119,31 @@
       </div>
 
       <div *ngIf="memberApprovals.length > 0" class="space-y-3">
-        <div *ngFor="let approval of memberApprovals" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-          <div class="flex justify-between items-start">
+        <div *ngFor="let approval of memberApprovals" class="border border-gray-200 rounded-lg p-4 hover:bg-blue-50/30 hover:border-blue-200 transition-all shadow-sm bg-white">
+          <div class="flex justify-between items-center">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
               <div>
-                <div class="text-xs text-gray-500 uppercase">Approval ID</div>
+                <div class="text-xs text-gray-500 uppercase font-semibold">Approval ID</div>
                 <div class="font-medium text-gray-900">{{ approval.approvalNumber }}</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500 uppercase">Items</div>
+                <div class="text-xs text-gray-500 uppercase font-semibold">Items</div>
                 <div class="font-medium text-gray-900">{{ approval.itemCount }} items</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500 uppercase">Date</div>
+                <div class="text-xs text-gray-500 uppercase font-semibold">Date</div>
                 <div class="font-medium text-gray-900">{{ approval.date }}</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500 uppercase">Expiry</div>
+                <div class="text-xs text-gray-500 uppercase font-semibold">Expiry</div>
                 <div class="font-medium text-gray-900">{{ approval.expiryDate }}</div>
               </div>
             </div>
+            <!-- زر الـ View Details الأزرق الجديد للـ Approval المعين -->
             <button 
-              class="ml-4 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+              class="ml-4 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all text-sm font-medium shadow-sm flex items-center gap-1 hover:translate-x-0.5 transform"
               [routerLink]="['/approval-edit', approval.approvalNumber]">
-              View Details →
+              View Details <span>→</span>
             </button>
           </div>
         </div>
@@ -130,15 +151,19 @@
     </div>
 
     <!-- Approval Detail Results -->
-    <div *ngIf="showResults() && searchType === 'approval' && currentApproval()" class="bg-white rounded-lg shadow-md p-6">
+    <div *ngIf="showResults() && searchType === 'approval' && currentApproval()" class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-t-green-500 relative -mt-5 pt-8 animate-fade-in">
+      <!-- سهم يربط النتيجة بالفورم العلوي -->
+      <div class="absolute -top-[11px] left-10 w-5 h-5 bg-white border-t border-l border-green-500 transform rotate-45 hidden md:block"></div>
+
       <div class="border-b border-gray-200 pb-4 mb-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
+              ℹ
             </div>
             <div>
-              <h2 class="text-xl font-semibold">Approval Details</h2>
-              <p class="text-gray-600">ID: <strong>{{ currentApproval()?.approvalNumber }}</strong></p>
+              <h2 class="text-xl font-semibold text-gray-900">Approval Details</h2>
+              <p class="text-gray-600">ID: <strong class="text-green-600">{{ currentApproval()?.approvalNumber }}</strong></p>
             </div>
           </div>
           <div class="text-right text-sm">
@@ -166,11 +191,11 @@
       </div>
 
       <div class="flex justify-end gap-3 pt-4 border-t">
-        <button class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+        <button class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 font-medium">
           Cancel
         </button>
         <button 
-          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
           [routerLink]="['/approval-edit', currentApproval()?.approvalNumber]">
           Continue →
         </button>
@@ -194,7 +219,6 @@
             (activeTab === 'pending' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900')">
           <div class="flex items-center gap-2">
              Non compelete Approval
-            <!-- <span class="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full">{{ pendingCount }}</span> -->
           </div>
           <div *ngIf="activeTab === 'pending'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
         </button>
@@ -204,7 +228,6 @@
             (activeTab === 'approved' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900')">
           <div class="flex items-center gap-2">
              Directly Approved
-            <!-- <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{{ approvedCount }}</span> -->
           </div>
           <div *ngIf="activeTab === 'approved'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
         </button>
@@ -232,7 +255,6 @@
               <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Request Type</th>
               <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
               <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Time</th>
-              <!-- <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Actions</th> -->
             </tr>
           </thead>
           <tbody>
@@ -251,13 +273,6 @@
               <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.requestType }}</span></td>
               <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.submittedDate }}</span></td>
               <td class="py-3 px-4"><span class="text-sm text-gray-700">{{ item.submittedTime }}</span></td>
-              <!-- <td class="py-3 px-4">
-                <div class="flex justify-center gap-2">
-                  <button (click)="handleAction('print', item.id)" class="p-1.5 hover:bg-blue-50 rounded-md transition-colors" title="Print">🖨️</button>
-                  <button (click)="handleAction('edit', item.id)" class="p-1.5 hover:bg-green-50 rounded-md transition-colors" title="Edit">✏️</button>
-                  <button (click)="handleAction('delete', item.id)" class="p-1.5 hover:bg-red-50 rounded-md transition-colors" title="Delete">🗑️</button>
-                </div>
-              </td> -->
             </tr>
             <tr *ngIf="currentItems.length === 0">
               <td colspan="8" class="text-center py-8 text-gray-500">No {{ activeTab === 'pending' ? 'pending' : 'approved' }} approvals found</td>
@@ -266,82 +281,55 @@
         </table>
       </div>
 
-      <!-- modal -->
-         <!-- <div *ngIf="isModalOpen()" class="modal-overlay" >
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <button (click)="closeModal()">x</button>
-      <div class="modal-header space-y-3">
-       
-        <p class="text-center text-muted-foreground">
-          approval not found 
-        </p>
-      </div>
-      
-      <div class="flex flex-col gap-4 py-6">
-        <button 
-          (click)="onNewApproval()" 
-          class="btn-success w-full h-16 text-lg flex items-center justify-center gap-3">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Create New Approval
-        </button>
-        
-       
-      </div>
-    </div>
-  </div> -->
+      <!-- Modal NotFound -->
+      <div *ngIf="isModalOpen()" 
+           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity"
+           (click)="closeModal()">
+           
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all overflow-hidden" 
+             (click)="$event.stopPropagation()">
+          
+          <button (click)="closeModal()" 
+                  class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
 
-  <div *ngIf="isModalOpen()" 
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity"
-     (click)="closeModal()">
-     
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all overflow-hidden" 
-       (click)="$event.stopPropagation()">
-    
-    <!-- زر الإغلاق العلوي -->
-    <button (click)="closeModal()" 
-            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
+          <div class="p-8">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-6">
+              <svg class="h-10 w-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
 
-    <div class="p-8">
-      <!-- أيقونة التنبيه -->
-      <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-6">
-        <svg class="h-10 w-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      </div>
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-bold text-gray-900 mb-2">Approval Not Found</h3>
+              <p class="text-gray-500">
+                We couldn't find any records matching this ID. Would you like to create a new request instead?
+              </p>
+            </div>
 
-      <div class="text-center mb-8">
-        <h3 class="text-2xl font-bold text-gray-900 mb-2">Approval Not Found</h3>
-        <p class="text-gray-500">
-          We couldn't find any records matching this ID. Would you like to create a new request instead?
-        </p>
+            <div class="flex flex-col gap-3">
+              <button 
+                routerLink="/add" 
+                class="w-full h-14 text-white bg-green-600 hover:bg-green-700 rounded-xl font-medium text-lg flex items-center justify-center gap-3 shadow-md transition-all">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Approval
+              </button>
+              
+              <button (click)="closeModal()" 
+                      class="w-full py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors">
+                Cancel and go back
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- الأزرار -->
-      <div class="flex flex-col gap-3">
-      <button 
-          routerLink="/add" 
-          class="btn-success w-full h-16 text-lg flex items-center justify-center gap-3">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Create New Approval
-        </button>
-        
-        <button (click)="closeModal()" 
-                class="w-full py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors">
-          Cancel and go back
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
       <!-- Pagination -->
       <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
         <div class="text-sm text-gray-600">
@@ -423,8 +411,6 @@
           </div>
         </div>
       </div>
-
-
     </div>
   </main>
 </div>

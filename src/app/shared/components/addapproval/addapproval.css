@@ -466,3 +466,185 @@ table {
 .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
 }
+
+
+/* الحالة الطبيعية للانبوت */
+.form-control {
+  transition: all 0.3s ease;
+  border: 1px solid #d1d5db;
+}
+
+/* لما اليوزر يكتب داتا (قيمة موجودة) */
+.has-value {
+  border-color: #10b981 !important; /* لون أخضر Emerald */
+  background-color: #f0fdf4; /* خلفية خضراء خفيفة جداً */
+}
+
+/* تحسين شكل الـ Focus */
+.form-control:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+}
+
+/* شكل الـ Label لما الانبوت يبقى فيه قيمة */
+.label-active {
+  color: #059669;
+  font-weight: 600;
+}
+
+/* تحسين شكل الجدول */
+.table-input {
+  border-radius: 4px;
+  padding: 4px 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* === التعديلات الجديدة للون الأخضر === */
+.valid-green, 
+input.has-value,
+.form-control.has-value {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+.form-control:focus.has-value,
+input:focus.valid-green {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    border-color: #059669 !important;
+}
+
+/* لـ ng-select */
+.ng-select.valid-green .ng-select-container {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+.ng-select.valid-green.ng-focused .ng-select-container {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    border-color: #059669 !important;
+}
+
+/* تحسين شكل الجدول - حقول الإدخال جوه الجدول */
+.table-input {
+    border-radius: 4px;
+    padding: 4px 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.table-input.has-value,
+input.table-input:not(:placeholder-shown) {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+/* رسوم متحركة خفيفة */
+.form-control, .table-input, .ng-select-container {
+    transition: all 0.2s ease-in-out;
+}
+
+
+
+/* اللون الأخضر للحقول اللي فيها بيانات */
+.has-value {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+.has-value:focus {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    border-color: #059669 !important;
+}
+
+/* للـ label لما الحقل يكون فيه بيانات */
+.label-active {
+    color: #059669 !important;
+    font-weight: 600 !important;
+}
+
+/* لـ ng-select لما يكون فيه قيمة */
+.ng-select.valid-green .ng-select-container {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+/* تحسين شكل الجدول */
+.table-input {
+    transition: all 0.2s ease;
+}
+
+
+/* ======================================== */
+/*  ng-select - match inputs exactly        */
+/* ======================================== */
+
+
+
+/* نفس تصميم PrimeNG */
+.custom-diagnosis-select {
+  width: 100%;
+}
+
+/* تنسيق الحاوية الخارجية زي PrimeNG */
+/* :host ::ng-deep .custom-diagnosis-select .ng-select-container {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+  min-height: 42px;
+} */
+
+/* تنسيق الـ placeholder */
+:host ::ng-deep .custom-diagnosis-select .ng-placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* تنسيق العناصر المختارة زي PrimeNG chips */
+:host ::ng-deep .custom-diagnosis-select .ng-value {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-radius: 16px !important;
+  padding: 4px 8px !important;
+  margin: 2px !important;
+  font-size: 13px !important;
+}
+
+:host ::ng-deep .custom-diagnosis-select .ng-value-icon {
+  color: #0369a1 !important;
+}
+
+:host ::ng-deep .custom-diagnosis-select .ng-value-icon:hover {
+  background-color: #bae6fd !important;
+  border-radius: 16px !important;
+}
+
+/* تنسيق القائمة المنسدلة */
+:host ::ng-deep .ng-dropdown-panel {
+  border-radius: 8px !important;
+  width: 90% !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  margin-top: 4px !important;
+}
+
+:host ::ng-deep .ng-dropdown-panel .ng-option {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  background-color: #ffffff !important;
+}
+
+:host ::ng-deep .ng-dropdown-panel .ng-option:hover {
+  background-color: #f0f9ff !important;
+}
+
+:host ::ng-deep .ng-dropdown-panel .ng-option-marked {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+
+/* تنسيق الـ clear button */
+:host ::ng-deep .ng-clear-wrapper:hover .ng-clear {
+  color: #ef4444 !important;
+}
+
+/* تنسيق الـ dropdown button */
+:host ::ng-deep .ng-arrow-wrapper:hover .ng-arrow {
+  border-color: #3b82f6 !important;
+}

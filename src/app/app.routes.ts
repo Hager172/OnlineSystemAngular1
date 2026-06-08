@@ -11,6 +11,7 @@ import { MemberApproval } from './shared/components/member-approval/member-appro
 import { Memberapprovaln } from './shared/components/memberapprovaln/memberapprovaln';
 import { Test } from './shared/components/test/test';
 import { Addapproval } from './shared/components/addapproval/addapproval';
+import { SearchResults } from './shared/components/search-results/search-results';
 
 
 export const routes: Routes = [
@@ -28,7 +29,8 @@ export const routes: Routes = [
       {path:'memberapp', component:MemberApproval},
       {path: 'mem' , component:Memberapprovaln},
       {path:'test', component:Test},
-      {path: 'add', component:Addapproval}
+      {path: 'add', component:Addapproval},
+    {path: 'search-results', component: SearchResults}
     ],
     //canActivate: [AuthGuard] 
   },
