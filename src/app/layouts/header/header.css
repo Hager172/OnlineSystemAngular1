@@ -39,7 +39,6 @@ header::after {
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding-left: 0;  /* خلي الحشو من الشمال صفر */
 }
 
@@ -177,7 +176,7 @@ header::after {
   }
 }
 .right-group {
-  margin-left: auto;      /* 🔥 تزق كل اللي يمين */
+  margin-left: 200px;      /* 🔥 تزق كل اللي يمين */
   display: flex;
   align-items: center;
   gap: 16px;              /* مسافة حلوة بينهم */

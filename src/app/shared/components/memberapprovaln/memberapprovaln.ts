@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { AuthService } from '../../../core/services/auth/auth-service';
+import { MemberService } from '../../../core/services/member/member-service';
 
 interface ApprovalItem {
   id: number;
@@ -17,6 +18,7 @@ interface ApprovalItem {
 }
 
 interface Approval {
+  memberTele: string;
   approvalNumber: string;
   memberId: string;
   date: string;
@@ -275,6 +277,7 @@ export class Memberapprovaln implements OnInit {
       expiryDate: expiryDate.toLocaleDateString(),
       notes: a.notes,
       itemCount: a.services?.length || 0,
+      memberTele: a.memberTele || 'N/A',
       items: a.services?.map((s: any) => ({
         id: s.serviceId,
         name: s.itemDesc || s.careItemName,
@@ -292,6 +295,7 @@ export class Memberapprovaln implements OnInit {
       expiryDate: a.expiryDate ? new Date(a.expiryDate).toLocaleDateString() : '',
       notes: a.notes,
       itemCount: a.itemCount,
+      memberTele: a.memberTele || 'N/A',
       items: a.items?.map((i: any) => ({
         id: i.id,
         name: i.description,

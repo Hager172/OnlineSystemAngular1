@@ -30,7 +30,11 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
       next: (data) => {
         console.log('data:', data);
         this.approval.set(data);
-        this.items = JSON.parse(JSON.stringify(data.items));
+        // this.items = JSON.parse(JSON.stringify(data.items));
+          this.items = data.items.map(item => ({
+    ...item,
+    originalQuantity: item.quantity
+  }));
       },
       error: (err) => {
         console.error(err);
@@ -72,11 +76,19 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
   }
 
   goBack(): void {
-    this.router.navigate(['/appinput']);
+    this.router.navigate(['/mem']);
   }
 //   goBack(): void {
 //   window.history.state.backData = { approvalNumber: this.approvalNumber };
 //   window.history.back();
 // }
+limitQuantity(item: any): void {
+  if (
+    item.originalQuantity != null &&
+    item.quantity > item.originalQuantity
+  ) {
+    item.quantity = item.originalQuantity;
+  }
+}
 
 }
