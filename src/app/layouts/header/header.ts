@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../../core/services/auth/auth-service';
@@ -18,9 +18,49 @@ export class Header implements OnInit {
 
   clients: any[] = [];
   selectedClient: any = null;
+  isClientDropdownOpen = false;
 
-  constructor(private auth: AuthService){
-    
+  /** Maps a clientId to its company logo. Replace these files with the
+   *  official assets at the same paths to change the displayed logos. */
+  private readonly clientLogos: Record<number, string> = {
+    2: 'assets/logos/mashreq.svg',
+    3: 'assets/logos/medigold.svg',
+  };
+
+  constructor(private auth: AuthService, private elRef: ElementRef){
+
+  }
+
+  getClientLogo(clientId: any): string | null {
+    return this.clientLogos[Number(clientId)] ?? null;
+  }
+
+  isSelected(client: any): boolean {
+    return String(client?.clientId) === String(this.selectedClient);
+  }
+
+  get selectedClientObj(): any {
+    return this.clients?.find(c => this.isSelected(c)) ?? null;
+  }
+
+  toggleClientDropdown(): void {
+    this.isClientDropdownOpen = !this.isClientDropdownOpen;
+  }
+
+  selectClient(client: any): void {
+    this.isClientDropdownOpen = false;
+    if (this.isSelected(client)) {
+      return;
+    }
+    this.selectedClient = client.clientId;
+    this.onClientChange(client.clientId);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.isClientDropdownOpen && !this.elRef.nativeElement.contains(event.target)) {
+      this.isClientDropdownOpen = false;
+    }
   }
   
 

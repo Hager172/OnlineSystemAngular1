@@ -1,20 +1,42 @@
 <header>
   <div class="wrapper">
-    <h1 class="logo">Generic<span>Logo</span></h1>
+    <a class="logo" href="#" aria-label="AC">
+      <img class="logo-img" src="assets/logos/ac-logo.svg" alt="AC">
+    </a>
 
     
     <div class="right-group">
-      <select class="header-select"
-        [(ngModel)]="selectedClient"
-        (ngModelChange)="onClientChange($event)">
+      <div class="client-selector" [class.open]="isClientDropdownOpen">
+        <button type="button" class="client-selector__trigger"
+          (click)="toggleClientDropdown(); $event.stopPropagation()">
 
-  <option *ngFor="let client of clients"
-          [value]="client.clientId">
+          @if (selectedClientObj) {
+            @if (getClientLogo(selectedClientObj.clientId); as logo) {
+              <img class="client-selector__logo" [src]="logo" [alt]="selectedClientObj.clientName">
+            }
+            <span class="client-selector__name">{{ selectedClientObj.clientName }}</span>
+          } @else {
+            <span class="client-selector__name client-selector__placeholder">Select client</span>
+          }
 
-    {{ client.clientName }}
+          <i class="fa fa-chevron-down client-selector__caret"></i>
+        </button>
 
-  </option>
-</select>
+        @if (isClientDropdownOpen) {
+          <ul class="client-selector__menu">
+            @for (client of clients; track client.clientId) {
+              <li class="client-selector__item" [class.active]="isSelected(client)"
+                (click)="selectClient(client)">
+
+                @if (getClientLogo(client.clientId); as logo) {
+                  <img class="client-selector__logo" [src]="logo" [alt]="client.clientName">
+                }
+                <span class="client-selector__name">{{ client.clientName }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
         <nav class="main-nav">
         <ul>
             <li><a href="#"><i class="fa fa-home nav-icon"></i>Home</a></li>

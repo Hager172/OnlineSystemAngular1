@@ -1,7 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { AuthService } from '../../../core/services/auth/auth-service';
 
@@ -36,270 +35,232 @@ interface ManualItem {
 @Component({
   selector: 'app-memberapprovaln',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './memberapprovaln.html',
   styleUrls: ['./memberapprovaln.css']
 })
 export class Memberapprovaln implements OnInit {
-  
-pendingApprovals = signal<ApprovalItem[]>([]);
-approvedApprovals = signal<ApprovalItem[]>([]);
-  
-  lookupType: 'memberId' | 'approvalId' = 'memberId';
-  lookupValue: string = '';
-  showResults = signal(false);
-  searchType: 'member' | 'approval' | null = null;
-// بدل الـ boolean العادي
-isModalOpen = signal(false);
-  currentMemberId: string = '';
-  memberApprovals: Approval[] = [];
-  currentApproval = signal<Approval | null>(null);
-  
-  // هنا التعديل - خليها 'approved' عشان يبقى هو default
-  activeTab: 'pending' | 'approved' = 'pending';  // ✅改了这里
-  
-  searchQuery: string = '';
-  
-  currentPage: number = 1;
-  itemsPerPage: number = 5;
-  currentDate: string = '';
-  
-  clientid: string = '';
-  vendorid: string = '';
-  Math = Math;
-  error: string = '';
 
-  // User Manual Data
-  manualItems: ManualItem[] = [
+  // --- Worklist data ---
+  readonly pendingApprovals = signal<ApprovalItem[]>([]);
+  readonly approvedApprovals = signal<ApprovalItem[]>([]);
+  readonly activeTab = signal<'pending' | 'approved'>('pending');
+  readonly currentPage = signal(1);
+  readonly itemsPerPage = 5;
+  searchQuery = '';
+
+  // --- Lookup ---
+  readonly lookupType = signal<'memberId' | 'approvalId'>('memberId');
+  lookupValue = '';
+  readonly searchType = signal<'member' | 'approval' | null>(null);
+  readonly showResults = signal(false);
+  readonly error = signal('');
+  readonly isModalOpen = signal(false);
+
+  // --- Lookup results ---
+  readonly currentMemberId = signal('');
+  readonly memberApprovals = signal<Approval[]>([]);
+  readonly currentApproval = signal<Approval | null>(null);
+
+  // --- Context ---
+  currentDate = '';
+  private clientid = '';
+  private vendorid = '';
+
+  // --- User manual ---
+  readonly manualItems: ManualItem[] = [
     { id: 'quick-guide', title: 'Quick Guide', description: 'Learn the basics of using the approval system' },
     { id: 'video', title: 'Video Tutorials', description: 'Watch step-by-step video instructions' },
     { id: 'faqs', title: 'FAQs', description: 'Find answers to commonly asked questions' },
     { id: 'docs', title: 'Complete Documentation', description: 'Access the full user manual and documentation' }
   ];
 
-  guideImages: string[] = [
+  readonly guideImages: string[] = [
     'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
     'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
     'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80'
   ];
 
-  activeManualSection: string | null = null;
-  currentImageIndex: number = 0;
+  readonly activeManualSection = signal<string | null>(null);
+  readonly currentImageIndex = signal(0);
 
   constructor(
     private approvalService: ApprovalService,
-    private router: Router,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.updateDate();
-    this.getVendorId();
-    // this.activeTab = 'pending';
-       
-
+    this.loadMemberContext();
   }
 
-  getVendorId(): void {
+  private loadMemberContext(): void {
     const clientid = this.authService.getclientid();
-    const vendorid=this.authService.getVendorId();
-    if (clientid) {
-      this.clientid = clientid;
-      console.log("client", clientid);
-     if(vendorid){
-      this.vendorid=vendorid;
-            console.log("vendorid", vendorid);
-
-     }
-     
+    if (!clientid) {
+      this.error.set('Vendor ID not found');
+      return;
+    }
+    this.clientid = clientid;
+    this.vendorid = this.authService.getVendorId() ?? '';
     this.switchTab('approved');
+  }
+
+  // ============================================================
+  // Worklist
+  // ============================================================
+  switchTab(tab: 'pending' | 'approved'): void {
+    this.activeTab.set(tab);
+    this.currentPage.set(1);
+    this.searchQuery = '';
+
+    if (tab === 'pending') {
+      this.loadPendingApprovals();
     } else {
-      this.error = 'Vendor ID not found';
-      console.log("vendor not found");
+      this.loadApprovedApprovals();
     }
   }
 
-  loadData(): void {
-    this.loadPendingApprovals();
-    this.loadApprovedApprovals();
-  }
-
-loadPendingApprovals(): void {
-  this.approvalService.getTodayNotCompletedApprovals(this.clientid, this.vendorid).subscribe({
-    next: (response) => {
-      const dataArray = Array.isArray(response.data.approvals) ? response.data.approvals : [];
-      
-      // ✅ استخدم .set() لتحديث الـ Signal
-      this.pendingApprovals.set(dataArray.map((item: any) => ({
-        id: item.id || item.approvalId,
-        memberId: item.memberid,
-        memberName: item.membername,
-        requestType: item.apptype || 'General Request',
-        client: item.membername,
-        submittedDate: this.formatDate(item.approval_date),
-        submittedTime: this.formatTime(item.approval_date),
-        status: 'pending',
-        note: item.note
-      })));
-
-      if (this.activeTab === 'pending') {
-        this.currentPage = 1;
-      }
-    }
-  });
-}
-
-loadApprovedApprovals(): void {
-  this.approvalService.getTodayCompletedApprovals(this.clientid, this.vendorid).subscribe({
-    next: (response) => {
-      const dataArray = Array.isArray(response.data?.approvals) ? response.data.approvals : [];
-      
-      // ✅ استخدم .set() لتحديث الـ Signal
-      this.approvedApprovals.set(dataArray.map((item: any) => ({
-        id: item.id || item.approvalId,
-        memberId: item.memberid,
-        memberName: item.membername,
-        requestType: item.apptype || 'General Request',
-        client: item.membername,
-        submittedDate: this.formatDate(item.approval_date),
-        submittedTime: this.formatTime(item.approval_date),
-        status: 'approved',
-        note: item.note
-      })));
-
-      if (this.activeTab === 'approved') {
-        this.currentPage = 1;
-      }
-    },
-    error: (err) => {
-      this.approvedApprovals.set([]); // ✅ تحديث صحيح في حالة الخطأ
-    }
-  });
-}
-
-  formatDate(dateString: string): string {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+  private loadPendingApprovals(): void {
+    this.approvalService.getTodayNotCompletedApprovals(this.clientid, this.vendorid).subscribe({
+      next: (response) => this.pendingApprovals.set(this.mapWorklist(response, 'pending')),
+      error: () => this.pendingApprovals.set([])
     });
   }
 
-  formatTime(dateString: string): string {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+  private loadApprovedApprovals(): void {
+    this.approvalService.getTodayCompletedApprovals(this.clientid, this.vendorid).subscribe({
+      next: (response) => this.approvedApprovals.set(this.mapWorklist(response, 'approved')),
+      error: () => this.approvedApprovals.set([])
     });
   }
 
-  updateDate(): void {
-    const date = new Date();
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    };
-    this.currentDate = date.toLocaleDateString('en-US', options);
+  private mapWorklist(response: any, status: 'pending' | 'approved'): ApprovalItem[] {
+    const rows = Array.isArray(response?.data?.approvals) ? response.data.approvals : [];
+    return rows.map((item: any) => ({
+      id: item.id || item.approvalId,
+      memberId: item.memberid,
+      memberName: item.membername,
+      requestType: item.apptype || 'General Request',
+      client: item.membername,
+      submittedDate: this.formatDate(item.approval_date),
+      submittedTime: this.formatTime(item.approval_date),
+      status,
+      note: item.note
+    }));
   }
 
+  /** Active tab's rows filtered by the search box. */
+  get filteredItems(): ApprovalItem[] {
+    const source = this.activeTab() === 'pending' ? this.pendingApprovals() : this.approvedApprovals();
+    const query = this.searchQuery.trim().toLowerCase();
+    if (!query) return source;
+
+    return source.filter(item =>
+      item.id?.toString().includes(query) ||
+      item.memberId?.toLowerCase().includes(query) ||
+      item.memberName?.toLowerCase().includes(query) ||
+      item.requestType?.toLowerCase().includes(query) ||
+      item.client?.toLowerCase().includes(query)
+    );
+  }
+
+  /** Current page slice of the filtered rows. */
+  get currentItems(): ApprovalItem[] {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.filteredItems.slice(start, start + this.itemsPerPage);
+  }
+
+  get totalCount(): number {
+    return this.filteredItems.length;
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalCount / this.itemsPerPage);
+  }
+
+  get pagesArray(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get showingFrom(): number {
+    return this.totalCount === 0 ? 0 : (this.currentPage() - 1) * this.itemsPerPage + 1;
+  }
+
+  get showingTo(): number {
+    return Math.min(this.currentPage() * this.itemsPerPage, this.totalCount);
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage.set(page);
+    }
+  }
+
+  // ============================================================
+  // Lookup
+  // ============================================================
   selectLookupType(type: 'memberId' | 'approvalId'): void {
-    this.lookupType = type;
+    this.lookupType.set(type);
     this.lookupValue = '';
     this.showResults.set(false);
-    this.searchType = null;
+    this.searchType.set(null);
     this.currentApproval.set(null);
-    this.memberApprovals = [];
-    this.currentMemberId = '';
-    this.error = '';
+    this.memberApprovals.set([]);
+    this.currentMemberId.set('');
+    this.error.set('');
   }
 
   handleLookup(): void {
-    const value = (this.lookupValue || '').trim();
+    const value = this.lookupValue.trim();
     if (!value) return;
+    this.error.set('');
 
-    if (this.lookupType === 'approvalId') {
-      this.approvalService.getApprovalDetails(value).subscribe({
-        next: (res: any) => {
-          this.searchType = 'approval';
-          this.currentApproval.set(this.mapApprovalDetails(res));
-          this.showResults.set(true);
-        },
-        error: (err) => {
-    this.isModalOpen.set(true);
-          console.log("error elsearch", err);
-          this.error = 'Approval not found';
-          
-          this.showResults.set(false);
-        }
-      });
-    } else if (this.lookupType === 'memberId') {
-      // this.approvalService.getMemberApprovals(value).subscribe({
-      //   next: (res: any) => {
-      //     console.log("mem",res);
-      //     if (res.success && res.data) {
-      //       this.searchType = 'member';
-      //       this.currentMemberId = res.data.memberId;
-      //       this.memberApprovals = res.data.approvals.map((a: any) =>
-      //         this.mapSingleApproval(a)
-      //       );
-      //       this.showResults.set(true);
-      //     } else {
-      //       this.error = 'No approvals found';
-      //       this.showResults.set(false);
-      //     }
-      //   },
-      //   error: (err) => {
-      //     console.log("error",err);
-      //     this.error = 'No approvals found';
-   
-      //     this.showResults.set(false);
-      //   }
-      // });
-   
-   this.approvalService.getMemberApprovals(value).subscribe({
-  next: (res: any) => {
-    console.log("mem", res);
-
-    if (res.success && res.data) {
-
-      this.searchType = 'member';
-      this.currentMemberId = res.data.memberId;
-
-      this.memberApprovals = res.data.approvals.map((a: any) =>
-        this.mapSingleApproval(a)
-      );
-
-      this.error = '';
-      this.showResults.set(true);
-
+    if (this.lookupType() === 'approvalId') {
+      this.lookupApproval(value);
     } else {
-
-      this.error = res.message || 'No approvals found';
-      this.showResults.set(false);
-      this.isModalOpen.set(true);
-    }
-  },
-
-  error: (err) => {
-    console.log("error", err);
-
-    this.error =
-      err?.error?.message ||
-      'Something went wrong';
-
-
-    this.showResults.set(false);
-
-    if(err.error.message == 'No approvals found'){
-      this.isModalOpen.set(true);
+      this.lookupMember(value);
     }
   }
-}); }
+
+  private lookupApproval(value: string): void {
+    this.approvalService.getApprovalDetails(value).subscribe({
+      next: (res) => {
+        this.searchType.set('approval');
+        this.currentApproval.set(this.mapApprovalDetails(res));
+        this.showResults.set(true);
+      },
+      error: (err) => {
+        console.error('approval lookup failed', err);
+        this.error.set('Approval not found');
+        this.showResults.set(false);
+        this.isModalOpen.set(true);
+      }
+    });
+  }
+
+  private lookupMember(value: string): void {
+    this.approvalService.getMemberApprovals(value).subscribe({
+      next: (res: any) => {
+        if (res?.success && res.data) {
+          this.searchType.set('member');
+          this.currentMemberId.set(res.data.memberId);
+          this.memberApprovals.set((res.data.approvals ?? []).map((a: any) => this.mapSingleApproval(a)));
+          this.showResults.set(true);
+        } else {
+          this.error.set(res?.message || 'No approvals found');
+          this.showResults.set(false);
+          this.isModalOpen.set(true);
+        }
+      },
+      error: (err) => {
+        console.error('member lookup failed', err);
+        this.error.set(err?.error?.message || 'Something went wrong');
+        this.showResults.set(false);
+        if (err?.error?.message === 'No approvals found') {
+          this.isModalOpen.set(true);
+        }
+      }
+    });
   }
 
   private mapApprovalDetails(a: any): Approval {
@@ -328,9 +289,7 @@ loadApprovedApprovals(): void {
       approvalNumber: a.approvalNumber?.toString(),
       memberId: a.memberId,
       date: new Date(a.approvalDate).toLocaleDateString(),
-      expiryDate: a.expiryDate
-        ? new Date(a.expiryDate).toLocaleDateString()
-        : '',
+      expiryDate: a.expiryDate ? new Date(a.expiryDate).toLocaleDateString() : '',
       notes: a.notes,
       itemCount: a.itemCount,
       items: a.items?.map((i: any) => ({
@@ -342,111 +301,49 @@ loadApprovedApprovals(): void {
     };
   }
 
-switchTab(tab: 'pending' | 'approved'): void {
-  this.activeTab = tab;
-  this.currentPage = 1;
-  this.searchQuery = '';
-
-  if (tab === 'pending') {
-    this.loadPendingApprovals();
-  } else {
-    this.loadApprovedApprovals();
-  }
-}
-
-get currentItems(): ApprovalItem[] {
-  const sourceItems = this.activeTab === 'pending' ? this.pendingApprovals() : this.approvedApprovals();
-  
-  console.log("Current Source Items:", sourceItems); // كدة هيطبع الداتا صح
-
-  let filtered = sourceItems;
-  
-  if (this.searchQuery) {
-    const query = this.searchQuery.toLowerCase();
-    filtered = sourceItems.filter(item => 
-      item.id?.toString().includes(query) ||
-      item.memberId?.toLowerCase().includes(query) ||
-      item.memberName?.toLowerCase().includes(query)
-    );
-  }
-  
-  const start = (this.currentPage - 1) * this.itemsPerPage;
-  return filtered.slice(start, start + this.itemsPerPage);
-}
-
- get totalPages(): number {
-  const sourceItems = this.activeTab === 'pending' ? this.pendingApprovals() : this.approvedApprovals();
-  
-  let filtered: ApprovalItem[] = sourceItems; 
-  
-  if (this.searchQuery) {
-    const query = this.searchQuery.toLowerCase();
-    filtered = sourceItems.filter((item: ApprovalItem) => 
-      item.id?.toString().includes(query) ||
-      item.memberId?.toLowerCase().includes(query) ||
-      item.memberName?.toLowerCase().includes(query) ||
-      item.requestType?.toLowerCase().includes(query) ||
-      item.client?.toLowerCase().includes(query)
-    );
-  }
-  
-  return Math.ceil(filtered.length / this.itemsPerPage);
-}
-
-  get pendingCount(): number {
-    return this.pendingApprovals.length;
+  closeModal(): void {
+    this.isModalOpen.set(false);
   }
 
-  get approvedCount(): number {
-    return this.approvedApprovals.length;
-  }
-
-  changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-    }
-  }
-
-  getPagesArray(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
-  }
-
-  handleAction(action: string, id: number): void {
-    switch(action) {
-      case 'print':
-        console.log('Printing approval:', id);
-        break;
-      case 'edit':
-        this.router.navigate(['/approval-edit', id]);
-        break;
-      case 'delete':
-        if (confirm('Are you sure you want to delete this approval?')) {
-          console.log('Deleting approval:', id);
-        }
-        break;
-    }
-  }
-
-  // User Manual Methods
+  // ============================================================
+  // User manual
+  // ============================================================
   toggleManualSection(sectionId: string): void {
-    this.activeManualSection = this.activeManualSection === sectionId ? null : sectionId;
-    this.currentImageIndex = 0;
+    this.activeManualSection.set(this.activeManualSection() === sectionId ? null : sectionId);
+    this.currentImageIndex.set(0);
+  }
+
+  selectImage(index: number): void {
+    this.currentImageIndex.set(index);
   }
 
   nextImage(): void {
-    this.currentImageIndex = (this.currentImageIndex + 1) % this.guideImages.length;
+    this.currentImageIndex.update(i => (i + 1) % this.guideImages.length);
   }
 
   prevImage(): void {
-    this.currentImageIndex = (this.currentImageIndex - 1 + this.guideImages.length) % this.guideImages.length;
+    this.currentImageIndex.update(i => (i - 1 + this.guideImages.length) % this.guideImages.length);
   }
 
-    onNewApproval(): void {
-    this.isModalOpen.set(false);
-    alert('Create new approval functionality - coming soon!');
+  // ============================================================
+  // Helpers
+  // ============================================================
+  private formatDate(dateString: string): string {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
-  
-    closeModal(): void {
-    this.isModalOpen.set(false);
+
+  private formatTime(dateString: string): string {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  private updateDate(): void {
+    this.currentDate = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 }

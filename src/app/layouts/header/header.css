@@ -44,15 +44,15 @@ header::after {
 }
 
 .logo {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
   margin: 0;
-  margin-left: -20px;  /* يتحرك للشمال */
-  text-transform: uppercase;
-  font-weight: 700;
 }
 
-.logo span {
-  font-weight: 400;
+.logo-img {
+  height: 46px;
+  width: auto;
+  display: block;
 }
 
 .main-nav {
@@ -183,34 +183,101 @@ header::after {
   gap: 16px;              /* مسافة حلوة بينهم */
 }
 
-.header-select {
-  background-color: transparent;   
-  color: #fff;                      
+/* Client selector (custom dropdown with company logos) */
+.client-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.client-selector__trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  height: 36px;
+  padding: 4px 12px;
+  background-color: transparent;
+  color: #fff;
   border: 3px solid rgba(255, 255, 255, 0.899);
-  padding: 6px 32px 6px 12px;
   border-radius: 6px;
   font-size: 14px;
-  height: 36px;
-
-  appearance: none;       
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
   cursor: pointer;
 }
 
-.header-select {
-  background-image: url("data:image/svg+xml,%3Csvg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 18px;
-}
-
-.header-select:focus {
+.client-selector__trigger:focus {
   outline: none;
   border-color: #e4b363;
 }
 
-.header-select option {
-  color: #000;  
+.client-selector__logo {
+  height: 24px;
+  width: auto;
+  max-width: 90px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 4px;
+  padding: 1px 3px;
+  flex: 0 0 auto;
+}
+
+.client-selector__name {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.client-selector__placeholder {
+  opacity: 0.7;
+}
+
+.client-selector__caret {
+  flex: 0 0 auto;
+  font-size: 12px;
+  transition: transform 200ms ease;
+}
+
+.client-selector.open .client-selector__caret {
+  transform: rotate(180deg);
+}
+
+.client-selector__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 100001;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.client-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  color: #001952;
+  cursor: pointer;
+}
+
+.client-selector__item:hover {
+  background: #f0f4ff;
+}
+
+.client-selector__item.active {
+  background: #e4b363;
+  color: #001952;
+}
+
+.client-selector__item .client-selector__logo {
+  background: transparent;
+  padding: 0;
 }

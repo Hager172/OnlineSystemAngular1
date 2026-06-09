@@ -17,8 +17,8 @@ import { Chat } from './pages/chat/chat';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
-  { 
-    path: '', 
+  {
+    path: '',
     component: Mainlayout,
     children: [
       { path: 'home', component: Home },
@@ -26,16 +26,16 @@ export const routes: Routes = [
       {path: 'appinput', component:ApprovalInput},
       {path: 'approval-edit/:approvalNumber', component: ApprovalEdit},
       {path: 'invoice-print/:approvalNumber', component: InvoicePrint},
-      {path:'memberapp', component:MemberApproval},
+      //{path:'memberapp', component:MemberApproval},
       {path: 'mem' , component:Memberapprovaln},
       {path:'test', component:Test},
       {path: 'add', component:Addapproval},
       {path: 'chat', component:Chat},
     ],
-    //canActivate: [AuthGuard] 
+    //canActivate: [AuthGuard]
   },
   { path: '**', redirectTo: 'login' },
-  
-  
-  
+
+
+
 ];

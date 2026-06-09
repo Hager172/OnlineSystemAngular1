@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 120" width="210" height="120" role="img" aria-label="AC">
+  <defs>
+    <linearGradient id="acGrad" gradientUnits="userSpaceOnUse" x1="48" y1="100" x2="196" y2="20">
+      <stop offset="0" stop-color="#34DC5B"/>
+      <stop offset="0.42" stop-color="#1FC8A6"/>
+      <stop offset="0.72" stop-color="#1E63E8"/>
+      <stop offset="1" stop-color="#3AA0F7"/>
+    </linearGradient>
+  </defs>
+  <!-- "A" : peak with triangular counter -->
+  <path fill="url(#acGrad)" fill-rule="evenodd"
+        d="M48 98 L92 22 L136 98 Z M80 98 L92 72 L104 98 Z"/>
+  <!-- "C" : angular bracket opening to the right -->
+  <path fill="url(#acGrad)"
+        d="M122 22 L194 22 L181 43 L142 43 L142 77 L181 77 L194 98 L122 98 Z"/>
+</svg>

@@ -1,5 +1,4 @@
-<!-- <p>member-approval works!</p> -->
- <div class="app-container">
+<div class="app-container">
   <!-- Header with Search -->
   <header class="header">
     <div class="container">
@@ -7,7 +6,7 @@
         <h1>Member Approval System</h1>
         <p class="subtitle">Search by Member ID or Approval ID</p>
       </div>
-      
+
       <!-- Search Bar -->
       <div class="search-container">
         <form (ngSubmit)="searchById()" class="search-form">
@@ -33,411 +32,377 @@
   <!-- Main Content -->
   <main class="main-content">
     <!-- Approval Detail Card (when searching by approval ID) -->
-    <div *ngIf="showResults && searchType === 'approval' && currentApproval" class="approval-detail-card" [@slideIn]>
-      <div class="card">
-        <!-- Header -->
-        <div class="card-header-approval">
-          <div class="approval-header-content">
-            <div class="approval-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              </svg>
-            </div>
-            <div>
-              <!-- <h2>{{ currentApproval.title }}</h2> -->
-              <p class="approval-id-label">Approval ID: <strong>{{ currentApproval.approvalNumber }}</strong></p>
-            </div>
-          </div>
-          <!-- <p class="approval-description">{{ currentApproval.description }}</p> -->
-          <div class="approval-dates">
-            <div>
-              <span class="date-label">Date:</span>
-              <span class="date-value">{{ currentApproval.date }}</span>
-            </div>
-            <div>
-              <span class="date-label">Expiry Date:</span>
-              <span class="date-value">{{ currentApproval.expiryDate }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Items List -->
-        <div class="card-body">
-          <h3>Items / Services</h3>
-          <div class="items-list">
-            <!-- <div *ngFor="let item of currentApproval.items; let i = index" class="item-card" [@fadeIn]> -->
-            <div *ngFor="let item of currentApproval.items; let i = index" class="item-card">
-              <div class="item-content">
-                <div class="item-number">{{ i + 1 }}</div>
-                <div class="item-details">
-                  <p class="item-name">{{ item.name }}</p>
-                  <p *ngIf="item.unitPrice" class="item-price">Price: {{ item.unitPrice }}</p>
+    @if (showApprovalDetail()) {
+      @if (currentApproval(); as approval) {
+        <div class="approval-detail-card">
+          <div class="card">
+            <!-- Header -->
+            <div class="card-header-approval">
+              <div class="approval-header-content">
+                <div class="approval-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="approval-id-label">Approval ID: <strong>{{ approval.approvalNumber }}</strong></p>
                 </div>
               </div>
-              <div class="item-quantity">
-                <div class="qty-label">Quantity</div>
-                <div class="qty-value">{{ item.quantity }}</div>
+              <div class="approval-dates">
+                <div>
+                  <span class="date-label">Date:</span>
+                  <span class="date-value">{{ approval.date }}</span>
+                </div>
+                <div>
+                  <span class="date-label">Expiry Date:</span>
+                  <span class="date-value">{{ approval.expiryDate }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="card-body">
+              <h3>Items / Services</h3>
+              <div class="items-list">
+                @for (item of approval.items; track $index) {
+                  <div class="item-card">
+                    <div class="item-content">
+                      <div class="item-number">{{ $index + 1 }}</div>
+                      <div class="item-details">
+                        <p class="item-name">{{ item.name }}</p>
+                        @if (item.unitPrice) {
+                          <p class="item-price">Price: {{ item.unitPrice }}</p>
+                        }
+                      </div>
+                    </div>
+                    <div class="item-quantity">
+                      <div class="qty-label">Quantity</div>
+                      <div class="qty-value">{{ item.quantity }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <button (click)="handleCancel()" class="btn btn-outline btn-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  Cancel
+                </button>
+                <button (click)="handleContinue()" class="btn btn-primary btn-lg">Continue</button>
               </div>
             </div>
           </div>
-
-          <!-- Action Buttons -->
-          <div class="action-buttons">
-            <button (click)="handleCancel()" class="btn btn-outline btn-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-              Cancel
-            </button>
-            <button (click)="handleContinue()" class="btn btn-primary btn-lg">Continue</button>
-          </div>
         </div>
-      </div>
-    </div>
+      }
+    }
 
     <!-- Member Approvals Card -->
-    <!-- <div *ngIf="showResults && searchType === 'member'" class="approvals-card" [@slideIn]> -->
-    <div *ngIf="showResults && searchType === 'member'" class="approvals-card">
-
-      <div class="card">
-        <!-- Card Header -->
-        <div class="card-header">
-          <div class="card-header-content">
-            <div class="member-info">
-              <div class="member-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-              <div>
-                <h2>Member Approvals</h2>
-                <p class="member-id">Member ID: <strong>{{ currentMemberId }}</strong></p>
-                <div class="stats">
-                  <div class="stat">
-                    <span class="badge badge-secondary">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                      </svg>
-                      {{ memberApprovals.length }} Total Approvals
-                    </span>
-                  </div>
+    @if (showMemberResults()) {
+      <div class="approvals-card">
+        <div class="card">
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="card-header-content">
+              <div class="member-info">
+                <div class="member-avatar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
                 </div>
-              </div>
-            </div>
-            <button (click)="openAddDialog()" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Add New Approval
-            </button>
-          </div>
-        </div>
-
-        <!-- Card Body -->
-        <div class="card-body">
-          <!-- Empty State -->
-          <div *ngIf="memberApprovals.length === 0" class="empty-state">
-            <div class="empty-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-              </svg>
-            </div>
-            <h3>No approvals found</h3>
-            <p>This member doesn't have any approval records yet</p>
-            <button (click)="openAddDialog()" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Create First Approval
-            </button>
-          </div>
-
-          <!-- Approval List -->
-          <div *ngIf="memberApprovals.length > 0" class="approval-list">
-            <!-- <div *ngFor="let approval of memberApprovals; let i = index" 
-                 class="approval-item" 
-                 (click)="openView(approval)"
-                 [@fadeIn]
-                 > -->
-                 <div *ngFor="let approval of memberApprovals; let i = index" 
-                 class="approval-item" 
-                 (click)="openView(approval)"
-                 >
-              <div class="approval-content">
-                <div class="approval-main">
-                  <!-- <div class="approval-title-row">
-                    <h3>{{ approval.title }}</h3>
-                    <span class="badge badge-new">New</span>
-                  </div> -->
-                  <!-- <p class="approval-description">{{ approval.description }}</p> -->
-                  <div class="approval-grid">
-                    <div class="grid-item">
-                      <div class="grid-label">Approval ID</div>
-                      <div class="grid-value">{{ approval.approvalNumber }}</div>
-                    </div>
-                    <div class="grid-item">
-                      <div class="grid-label">Items</div>
-                      <div class="grid-value">{{ approval.itemCount }} items</div>
-                    </div>
-                    <div class="grid-item">
-                      <div class="grid-label">Date</div>
-                      <div class="grid-value">{{ approval.date }}</div>
-                    </div>
-                    <div class="grid-item">
-                      <div class="grid-label">Expiry</div>
-                      <div class="grid-value">{{ approval.expiryDate }}</div>
-                    </div>
-                  </div>
-                </div>
-                <button class="btn btn-outline btn-small">View Details</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Welcome Section -->
-    <div *ngIf="!showResults" class="welcome-section">
-      <div class="info-cards">
-        <div class="info-card">
-          <div class="info-icon info-icon-blue">👤</div>
-          <h3>Search by Member ID</h3>
-          <p>View all approvals for a specific member with details like item count, dates, and expiry</p>
-        </div>
-        <div class="info-card">
-          <div class="info-icon info-icon-green">📋</div>
-          <h3>Search by Approval ID</h3>
-          <p>View specific approval with items, quantities, and action options</p>
-        </div>
-      </div>
-
-      <!-- Quick Access -->
-      <!-- <div class="quick-access">
-        <p class="quick-access-label">Try these IDs:</p>
-        <div class="id-section">
-          <p class="id-type">Member IDs:</p>
-          <div class="quick-buttons">
-            <button (click)="searchById('M001')" class="btn btn-primary">M001</button>
-            <button (click)="searchById('M002')" class="btn btn-primary">M002</button>
-            <button (click)="searchById('M003')" class="btn btn-primary">M003</button>
-          </div>
-        </div>
-        <div class="id-section">
-          <p class="id-type">Approval IDs:</p>
-          <div class="quick-buttons">
-            <button (click)="searchById('APR-2024-001')" class="btn btn-secondary">APR-2024-001</button>
-            <button (click)="searchById('APR-2024-003')" class="btn btn-secondary">APR-2024-003</button>
-          </div>
-        </div>
-      </div> -->
-    </div>
-  </main>
-
-  <!-- View Dialog Backdrop -->
-  <!-- <div *ngIf="isViewOpen" class="backdrop" (click)="closeView()" [@fadeIn]></div> -->
-  <div *ngIf="isViewOpen" class="backdrop" (click)="closeView()"></div>
-
-
-  <!-- View Dialog -->
-  <!-- <div *ngIf="isViewOpen && selectedApproval" class="dialog" [@fadeIn]> -->
-  <div *ngIf="isViewOpen && selectedApproval" class="dialog">
-
-    <div class="dialog-content dialog-large">
-      <div class="dialog-header">
-        <h2>Approval Details</h2>
-        <button (click)="closeView()" class="btn-close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <div class="dialog-body">
-        <div class="status-badge">
-          <span class="badge badge-new-large">New</span>
-        </div>
-
-        <!-- <div class="detail-section">
-          <label>Title</label>
-          <h3>{{ selectedApproval.title }}</h3>
-        </div> -->
-
-        <!-- <div class="detail-section">
-          <label>Description</label>
-          <p>{{ selectedApproval.description }}</p>
-        </div> -->
-
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Approval ID</label>
-            <p>{{ selectedApproval.approvalNumber }}</p>
-          </div>
-          <div class="detail-item">
-            <label>Number of Items</label>
-            <p>{{ selectedApproval.itemCount }} items</p>
-          </div>
-          <div class="detail-item">
-            <label>Date</label>
-            <p>{{ selectedApproval.date }}</p>
-          </div>
-          <div class="detail-item">
-            <label>Expiry Date</label>
-            <p>{{ selectedApproval.expiryDate }}</p>
-          </div>
-        </div>
-
-        <div class="items-section">
-          <h4>Items / Services</h4>
-          <div class="dialog-items-list">
-            <div *ngFor="let item of selectedApproval.items; let i = index" class="dialog-item">
-              <div class="dialog-item-left">
-                <div class="dialog-item-number">{{ i + 1 }}</div>
                 <div>
-                  <p class="dialog-item-name">{{ item.name }}</p>
-                  <p *ngIf="item.unitPrice" class="dialog-item-price">{{ item.unitPrice }}</p>
+                  <h2>Member Approvals</h2>
+                  <p class="member-id">Member ID: <strong>{{ currentMemberId() }}</strong></p>
+                  <div class="stats">
+                    <div class="stat">
+                      <span class="badge badge-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                        </svg>
+                        {{ memberApprovals().length }} Total Approvals
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="dialog-item-right">
-                <p class="dialog-qty-label">Qty</p>
-                <p class="dialog-qty-value">{{ item.quantity }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dialog-actions">
-          <button (click)="closeView()" class="btn btn-outline">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Dialog Backdrop -->
-  <div *ngIf="isAddOpen" class="backdrop" (click)="closeAddDialog()"></div>
-  <!-- <div *ngIf="isAddOpen" class="backdrop" (click)="closeAddDialog()" [@fadeIn]></div> -->
-  <!-- Add Dialog -->
-  <!-- <div *ngIf="isAddOpen" class="dialog" [@fadeIn]> -->
-  <div *ngIf="isAddOpen" class="dialog">
-
-    <div class="dialog-content dialog-large">
-      <div class="dialog-header">
-        <div>
-          <h2>Add New Approval</h2>
-          <p class="subtitle">Creating approval for Member ID: {{ currentMemberId }}</p>
-        </div>
-        <button (click)="closeAddDialog()" class="btn-close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <!-- <form (ngSubmit)="addNewApproval()" class="dialog-body"> -->
-      <form class="dialog-body">
-        <div class="form-group">
-          <label>Title</label>
-          <input
-            type="text"
-            [(ngModel)]="newApproval.title"
-            name="title"
-            placeholder="e.g., Purchase Order Request"
-            class="form-input"
-            required
-          />
-        </div>
-
-        <div class="form-group">
-          <label>Description</label>
-          <textarea
-            [(ngModel)]="newApproval.description"
-            name="description"
-            placeholder="Enter approval details..."
-            class="form-textarea"
-            rows="4"
-            required
-          ></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Expiry Date</label>
-          <input
-            type="date"
-            [(ngModel)]="newApproval.expiryDate"
-            name="expiryDate"
-            class="form-input"
-            required
-          />
-        </div>
-
-        <div class="form-group">
-          <div class="form-header">
-            <label>Items / Services</label>
-            <button type="button" (click)="addItem()" class="btn btn-outline btn-small">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Add Item
-            </button>
-          </div>
-
-          <div class="items-form-list">
-            <div *ngFor="let item of newApproval.items; let i = index" class="item-form-row">
-              <div class="item-form-inputs">
-                <input
-                  type="text"
-                  [(ngModel)]="item.name"
-                  [name]="'itemName' + i"
-                  placeholder="Item name"
-                  class="form-input"
-                  required
-                />
-                <div class="item-form-grid">
-                  <input
-                    type="number"
-                    [(ngModel)]="item.quantity"
-                    [name]="'itemQty' + i"
-                    placeholder="Quantity"
-                    class="form-input"
-                    required
-                    min="1"
-                  />
-                  <input
-                    type="text"
-                    [(ngModel)]="item.price"
-                    [name]="'itemPrice' + i"
-                    placeholder="Price (optional)"
-                    class="form-input"
-                  />
-                </div>
-              </div>
-              <button
-                *ngIf="newApproval.items.length > 1"
-                type="button"
-                (click)="removeItem(i)"
-                class="btn-remove"
-              >
+              <button (click)="openAddDialog()" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
+                Add New Approval
               </button>
             </div>
           </div>
+
+          <!-- Card Body -->
+          <div class="card-body">
+            @if (memberApprovals().length === 0) {
+              <!-- Empty State -->
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                  </svg>
+                </div>
+                <h3>No approvals found</h3>
+                <p>This member doesn't have any approval records yet</p>
+                <button (click)="openAddDialog()" class="btn btn-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Create First Approval
+                </button>
+              </div>
+            } @else {
+              <!-- Approval List -->
+              <div class="approval-list">
+                @for (approval of memberApprovals(); track approval.approvalNumber) {
+                  <div class="approval-item" (click)="openView(approval)">
+                    <div class="approval-content">
+                      <div class="approval-main">
+                        <div class="approval-grid">
+                          <div class="grid-item">
+                            <div class="grid-label">Approval ID</div>
+                            <div class="grid-value">{{ approval.approvalNumber }}</div>
+                          </div>
+                          <div class="grid-item">
+                            <div class="grid-label">Items</div>
+                            <div class="grid-value">{{ approval.itemCount }} items</div>
+                          </div>
+                          <div class="grid-item">
+                            <div class="grid-label">Date</div>
+                            <div class="grid-value">{{ approval.date }}</div>
+                          </div>
+                          <div class="grid-item">
+                            <div class="grid-label">Expiry</div>
+                            <div class="grid-value">{{ approval.expiryDate }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <button class="btn btn-outline btn-small">View Details</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Welcome Section -->
+    @if (!showResults()) {
+      <div class="welcome-section">
+        <div class="info-cards">
+          <div class="info-card">
+            <div class="info-icon info-icon-blue">👤</div>
+            <h3>Search by Member ID</h3>
+            <p>View all approvals for a specific member with details like item count, dates, and expiry</p>
+          </div>
+          <div class="info-card">
+            <div class="info-icon info-icon-green">📋</div>
+            <h3>Search by Approval ID</h3>
+            <p>View specific approval with items, quantities, and action options</p>
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+
+  <!-- View Dialog -->
+  @if (selectedApproval(); as approval) {
+    <div class="backdrop" (click)="closeView()"></div>
+
+    <div class="dialog">
+      <div class="dialog-content dialog-large">
+        <div class="dialog-header">
+          <h2>Approval Details</h2>
+          <button (click)="closeView()" class="btn-close">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
 
-        <div class="dialog-actions">
-          <button type="button" (click)="closeAddDialog()" class="btn btn-outline">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Approval</button>
+        <div class="dialog-body">
+          <div class="status-badge">
+            <span class="badge badge-new-large">New</span>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Approval ID</label>
+              <p>{{ approval.approvalNumber }}</p>
+            </div>
+            <div class="detail-item">
+              <label>Number of Items</label>
+              <p>{{ approval.itemCount }} items</p>
+            </div>
+            <div class="detail-item">
+              <label>Date</label>
+              <p>{{ approval.date }}</p>
+            </div>
+            <div class="detail-item">
+              <label>Expiry Date</label>
+              <p>{{ approval.expiryDate }}</p>
+            </div>
+          </div>
+
+          <div class="items-section">
+            <h4>Items / Services</h4>
+            <div class="dialog-items-list">
+              @for (item of approval.items; track $index) {
+                <div class="dialog-item">
+                  <div class="dialog-item-left">
+                    <div class="dialog-item-number">{{ $index + 1 }}</div>
+                    <div>
+                      <p class="dialog-item-name">{{ item.name }}</p>
+                      @if (item.unitPrice) {
+                        <p class="dialog-item-price">{{ item.unitPrice }}</p>
+                      }
+                    </div>
+                  </div>
+                  <div class="dialog-item-right">
+                    <p class="dialog-qty-label">Qty</p>
+                    <p class="dialog-qty-value">{{ item.quantity }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button (click)="closeView()" class="btn btn-outline">Close</button>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
-  </div>
+  }
+
+  <!-- Add Dialog -->
+  @if (isAddOpen()) {
+    <div class="backdrop" (click)="closeAddDialog()"></div>
+
+    <div class="dialog">
+      <div class="dialog-content dialog-large">
+        <div class="dialog-header">
+          <div>
+            <h2>Add New Approval</h2>
+            <p class="subtitle">Creating approval for Member ID: {{ currentMemberId() }}</p>
+          </div>
+          <button (click)="closeAddDialog()" class="btn-close">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <form class="dialog-body">
+          <div class="form-group">
+            <label>Title</label>
+            <input
+              type="text"
+              [(ngModel)]="newApproval.title"
+              name="title"
+              placeholder="e.g., Purchase Order Request"
+              class="form-input"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea
+              [(ngModel)]="newApproval.description"
+              name="description"
+              placeholder="Enter approval details..."
+              class="form-textarea"
+              rows="4"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input
+              type="date"
+              [(ngModel)]="newApproval.expiryDate"
+              name="expiryDate"
+              class="form-input"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <div class="form-header">
+              <label>Items / Services</label>
+              <button type="button" (click)="addItem()" class="btn btn-outline btn-small">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Item
+              </button>
+            </div>
+
+            <div class="items-form-list">
+              @for (item of newApproval.items; track $index) {
+                <div class="item-form-row">
+                  <div class="item-form-inputs">
+                    <input
+                      type="text"
+                      [(ngModel)]="item.name"
+                      [name]="'itemName' + $index"
+                      placeholder="Item name"
+                      class="form-input"
+                      required
+                    />
+                    <div class="item-form-grid">
+                      <input
+                        type="number"
+                        [(ngModel)]="item.quantity"
+                        [name]="'itemQty' + $index"
+                        placeholder="Quantity"
+                        class="form-input"
+                        required
+                        min="1"
+                      />
+                      <input
+                        type="text"
+                        [(ngModel)]="item.price"
+                        [name]="'itemPrice' + $index"
+                        placeholder="Price (optional)"
+                        class="form-input"
+                      />
+                    </div>
+                  </div>
+                  @if (newApproval.items.length > 1) {
+                    <button type="button" (click)="removeItem($index)" class="btn-remove">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button type="button" (click)="closeAddDialog()" class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Approval</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>
