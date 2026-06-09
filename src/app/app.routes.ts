@@ -21,8 +21,8 @@ import { Chat } from './pages/chat/chat';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
-  { 
-    path: '', 
+  {
+    path: '',
     component: Mainlayout,
     children: [
       { path: 'home', component: Home },
@@ -35,15 +35,15 @@ export const routes: Routes = [
       {path:'test', component:Test},
       {path: 'add', component:Addapproval},
 
-    {path: 'search-results', component: SearchResults}
+    {path: 'search-results', component: SearchResults},
 
       {path: 'chat', component:Chat},
 
     ],
-    //canActivate: [AuthGuard] 
+    //canActivate: [AuthGuard]
   },
   { path: '**', redirectTo: 'login' },
-  
-  
-  
+
+
+
 ];
