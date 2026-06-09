@@ -35,7 +35,7 @@ export const routes: Routes = [
       {path:'test', component:Test},
       {path: 'add', component:Addapproval},
 
-    {path: 'search-results', component: SearchResults}
+    {path: 'search-results', component: SearchResults},
 
       {path: 'chat', component:Chat},
 
