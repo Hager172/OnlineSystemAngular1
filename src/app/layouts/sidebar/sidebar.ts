@@ -1,122 +1,145 @@
-// import { Component, OnInit } from '@angular/core';
-// import { AuthService } from '../../core/services/auth/auth-service';
-// import { CommonModule } from '@angular/common';
-// import { ReactiveFormsModule } from '@angular/forms';
-
-// @Component({
-//   selector: 'app-sidebar',
-//   imports: [CommonModule, ReactiveFormsModule],
-//   templateUrl: './sidebar.html',
-//   styleUrl: './sidebar.css',
-// })
-// export class Sidebar implements OnInit{
-//   currentClient: string | null = null;
-//   pages: any[] = [];
-
-//   constructor(private auth: AuthService){} 
-//   // ngOnInit(): void {
-//   //   this.auth.currentClient$.subscribe(clientId =>{
-//   //     this.currentClient = clientId;
-//   //     this.loadSidebarData();
-//   //   });
-//   // }
-//    ngOnInit(): void {
-//     this.auth.pages$.subscribe(pages => {
-//       console.log('SIDEBAR PAGES:', pages); 
-//       this.pages = pages;
-//     });
-//   }
-
-//   loadSidebarData(){
-//     //المفروض هنا اكلم api اجيب منه الداتا اللي هتبقي موجودة في السايد حسب 
-//     //الكلاينت اللي داخل دا مسموحله يشوف اي
-//   }
-
-// }
-
-// import { Component, OnInit, OnDestroy } from '@angular/core';
-// import { AuthService } from '../../core/services/auth/auth-service';
-// import { CommonModule } from '@angular/common';
-// import { ReactiveFormsModule } from '@angular/forms';
-// import { TranslocoService } from '@jsverse/transloco';
-// import { Subscription } from 'rxjs';
-// import { ChangeDetectorRef } from '@angular/core';
-// @Component({
-//   selector: 'app-sidebar',
-//   standalone: true,
-//   imports: [CommonModule, ReactiveFormsModule],
-//   templateUrl: './sidebar.html',
-//   styleUrl: './sidebar.css',
-// })
-// export class Sidebar implements OnInit, OnDestroy {
-//   pages: any[] = [];
-//   currentLang: 'en' | 'ar' = 'en';
-
-//   private sub = new Subscription();
-
-//   constructor(
-//     private auth: AuthService,
-//     private transloco: TranslocoService,
-//     private cdr: ChangeDetectorRef
-//   ) {}
-
-//   ngOnInit(): void {
-//     this.sub.add(
-//       this.auth.pages$.subscribe(pages => {
-//         this.pages = pages || [];
-//          console.log('SIDEBAR PAGES:', pages); 
-//          this.cdr.detectChanges();
-//       })
-//     );
-
-//     this.currentLang = this.transloco.getActiveLang() as 'en' | 'ar';
-
-//     this.sub.add(
-//       this.transloco.langChanges$.subscribe(lang => {
-//         this.currentLang = lang as 'en' | 'ar';
-//       })
-//     );
-//   }
-
-//   getPageName(page: any): string {
-
-//     return this.currentLang === 'ar'
-//       ? page.nameAr
-//       : page.nameEn;
-//   }
-
-//   ngOnDestroy(): void {
-//     this.sub.unsubscribe();
-//   }
-// }
-import { Component, OnInit } from '@angular/core';
-import { AuthService } from '../../core/services/auth/auth-service';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  HostListener,
+  Inject,
+  OnInit,
+  PLATFORM_ID,
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
+import { AuthService } from '../../core/services/auth/auth-service';
+
+/** Shape we rely on for a navigation page. All fields are optional except a name. */
+interface NavPage {
+  nameEn?: string;
+  nameAr?: string;
+  icon?: string;
+  route?: string;
+  url?: string;
+  children?: NavPage[];
+}
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule], // أضف AsyncPipe لو مش موجود في CommonModule
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
 export class Sidebar implements OnInit {
   currentLang: 'en' | 'ar' = 'en';
 
+  /** Off-canvas drawer state on mobile/tablet. */
+  isMobileOpen = false;
+
+  /** Mini icon-rail state on desktop. Persisted across reloads. */
+  isCollapsed = false;
+
+  /** Currently highlighted page (for items that don't carry a router route). */
+  activePage: NavPage | null = null;
+
+  /** Expanded submenu groups. */
+  private readonly expanded = new Set<NavPage>();
+
+  private readonly storageKey = 'sidebar:collapsed';
+
   constructor(
-    public auth: AuthService, // لازم public عشان الـ HTML يشوفها
-    private transloco: TranslocoService
+    public auth: AuthService, // public so the template can read auth.pages$
+    private transloco: TranslocoService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    this.currentLang = this.transloco.getActiveLang() as 'en' | 'ar';
-    this.transloco.langChanges$.subscribe(lang => {
-      this.currentLang = lang as 'en' | 'ar';
+    this.currentLang = (this.transloco.getActiveLang() as 'en' | 'ar') || 'en';
+    this.transloco.langChanges$.subscribe((lang) => {
+      this.currentLang = (lang as 'en' | 'ar') || 'en';
     });
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.isCollapsed = localStorage.getItem(this.storageKey) === '1';
+    }
   }
 
-  getPageName(page: any): string {
-    return this.currentLang === 'ar' ? page.nameAr : page.nameEn;
+  get isRtl(): boolean {
+    return this.currentLang === 'ar';
   }
+
+  getPageName(page: NavPage): string {
+    const name = this.isRtl ? page?.nameAr : page?.nameEn;
+    return name || page?.nameEn || page?.nameAr || '';
+  }
+
+  getPageIcon(page: NavPage): string {
+    if (page?.icon) {
+      return page.icon.startsWith('fa') ? page.icon : `fas fa-${page.icon}`;
+    }
+    return page?.children?.length ? 'fas fa-layer-group' : 'fas fa-circle-dot';
+  }
+
+  getRoute(page: NavPage): string | null {
+    const route = page?.route || page?.url || null;
+    if (!route) return null;
+    return route.startsWith('/') ? route : `/${route}`;
+  }
+
+  hasChildren(page: NavPage): boolean {
+    return !!page?.children?.length;
+  }
+
+  isExpanded(page: NavPage): boolean {
+    return this.expanded.has(page);
+  }
+
+  isActive(page: NavPage): boolean {
+    return this.activePage === page;
+  }
+
+  toggleSubmenu(page: NavPage, event?: Event): void {
+    event?.preventDefault();
+    if (this.isCollapsed) {
+      // In mini mode, expanding a group first restores the full rail.
+      this.isCollapsed = false;
+      this.persistCollapsed();
+    }
+    if (this.expanded.has(page)) {
+      this.expanded.delete(page);
+    } else {
+      this.expanded.add(page);
+    }
+  }
+
+  selectPage(page: NavPage): void {
+    this.activePage = page;
+    this.closeMobile();
+  }
+
+  // ---- responsive controls -------------------------------------------------
+
+  toggleMobile(): void {
+    this.isMobileOpen = !this.isMobileOpen;
+  }
+
+  closeMobile(): void {
+    this.isMobileOpen = false;
+  }
+
+  toggleCollapsed(): void {
+    this.isCollapsed = !this.isCollapsed;
+    this.persistCollapsed();
+  }
+
+  private persistCollapsed(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(this.storageKey, this.isCollapsed ? '1' : '0');
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeMobile();
+  }
+
+  trackByPage = (_: number, page: NavPage): string =>
+    (page?.nameEn || '') + '|' + (page?.nameAr || '');
 }
