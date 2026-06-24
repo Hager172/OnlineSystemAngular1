@@ -46,7 +46,7 @@
       <ng-container *ngFor="let page of (auth.pages$ | async) || []; trackBy: trackByPage">
 
         <!-- Item with a submenu -->
-        <li *ngIf="hasChildren(page); else leafItem" class="app-sidebar__item">
+        <!-- <li *ngIf="hasChildren(page); else leafItem" class="app-sidebar__item">
           <button
             type="button"
             class="app-sidebar__link app-sidebar__link--group"
@@ -84,7 +84,7 @@
               </ng-template>
             </li>
           </ul>
-        </li>
+        </li> -->
 
                         <!-- 👇 السحر هنا: بنستخدم auth.pages$ مباشرة مع الـ async -->
                         <!-- <li *ngFor="let page of (auth.pages$ | async) || []" class="sidebar-item">

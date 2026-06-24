@@ -63,11 +63,12 @@ currentRole: string | null = '';
   }
 
   get isRtl(): boolean {
-    return this.currentLang === 'ar';
-    this.auth.role$.subscribe(role => {
+      this.auth.role$.subscribe(role => {
 this.currentRole = role ? role.toUpperCase() : '';    });
 
 console.log('Current Role:', this.currentRole); 
+    return this.currentLang === 'ar';
+  
   }
 
   getPageName(page: NavPage): string {
