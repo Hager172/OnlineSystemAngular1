@@ -43,7 +43,7 @@ export class Addapproval implements OnInit {
   // FORM DATA (Signals & Primitive)
   // =========================
   insuredId: string = '';
-  member = signal<any>(null); // تحويل الميمبر إلى سجنال هنا 
+  member = signal<any>(null); // تحويل الميمبر إلى سجنال هنا
   nationalId=signal<string>('');
   claimId: string = '';
   externalPrescription: boolean = false;
@@ -79,7 +79,7 @@ selectedFiles: File[] = [];
   // =========================
   ngOnInit(): void {
     let savedData = this.memberService.getMemberData();
-    
+
     if (!savedData) {
       const localMember = localStorage.getItem('saved_member_data');
       if (localMember) {
@@ -87,7 +87,7 @@ selectedFiles: File[] = [];
       }
     } else {
       localStorage.setItem('saved_member_data', JSON.stringify(savedData));
-    }  
+    }
 
     if (savedData) {
       this.insuredId = savedData.memberId;
@@ -101,13 +101,13 @@ selectedFiles: File[] = [];
             this.mobile.set(res.mobile); // تحديث سجنال الموبايل
           }
 if(res.memberNationalId){
-            this.nationalId.set(res.memberNationalId); 
+            this.nationalId.set(res.memberNationalId);
 }
           this.memberPhoto = res.cardImageUrl ? res.cardImageUrl : 'assets/images/member-photo.png';
 
           if (res.coinsurance !== undefined && res.coinsurance !== null) {
-            this.coPayment = res.coinsurance; 
-            this.onCoPaymentChange(); 
+            this.coPayment = res.coinsurance;
+            this.onCoPaymentChange();
           }
         },
         error: (err) => {
@@ -183,7 +183,7 @@ if(res.memberNationalId){
           });
 
 this.resetForm();
-          
+
         } else {
           Swal.fire({
             title: 'Warning!',
@@ -286,9 +286,9 @@ resetForm(): void {
   this.claimDate = '';
   this.notes = '';
   this.externalPrescription = false;
-  
-  this.selectedFiles = []; 
-  
+
+  this.selectedFiles = [];
+
   // تصفير الـ arrays والـ ng-select داتا
   this.diagnosisIds = [];
  this.prescriptionItems = [
@@ -299,7 +299,7 @@ resetForm(): void {
   if (this.updateSubTotals) {
     this.updateSubTotals();
   }
-  
+
   this.coPayment = 0;
   this.coPaymentAmount = 0;
 }
@@ -323,7 +323,7 @@ resetForm(): void {
 
   onProductSelect(selectedProduct: any, item: PrescriptionItem): void {
     if (selectedProduct) {
-      item.price = selectedProduct.price || 0; 
+      item.price = selectedProduct.price || 0;
     } else {
       item.price = 0;
     }

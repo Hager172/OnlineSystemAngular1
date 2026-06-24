@@ -1,0 +1,79 @@
+<div class="chat-widget" [class.open]="open">
+
+  <!-- Navbar icon -->
+  <button type="button" class="chat-widget__btn"
+    (click)="toggle(); $event.stopPropagation()"
+    aria-label="Chat" title="Chat">
+    <i class="fa fa-comments"></i>
+    @if (totalUnread > 0) {
+      <span class="chat-widget__badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
+    }
+  </button>
+
+  <!-- Popup panel -->
+  @if (open) {
+    <div class="chat-widget__panel" (click)="$event.stopPropagation()">
+
+      <div class="chat-widget__header">
+        @if (activePeer) {
+          <button type="button" class="chat-widget__back" (click)="back()" aria-label="Back">
+            <i class="fa fa-arrow-left"></i>
+          </button>
+          <span class="chat-widget__title">{{ activePeer }}</span>
+        } @else {
+          <span class="chat-widget__title">Messages</span>
+        }
+        <span class="chat-widget__status" [class.online]="connected">
+          {{ connected ? 'Online' : 'Connecting…' }}
+        </span>
+      </div>
+
+      @if (!activePeer) {
+        <!-- Inbox: contacts grouped by sender -->
+        <ul class="chat-widget__contacts">
+          @for (c of contacts; track c.peer) {
+            <li class="chat-widget__contact" (click)="selectContact(c)">
+              <span class="chat-widget__avatar">{{ c.displayName.charAt(0).toUpperCase() }}</span>
+              <span class="chat-widget__contact-info">
+                <span class="chat-widget__contact-name">{{ c.displayName }}</span>
+                @if (c.lastMessage) {
+                  <span class="chat-widget__contact-last">{{ c.lastMessage }}</span>
+                }
+              </span>
+              @if (c.unread > 0) {
+                <span class="chat-widget__badge chat-widget__badge--inline">{{ c.unread }}</span>
+              }
+            </li>
+          } @empty {
+            <li class="chat-widget__empty">No conversations yet.</li>
+          }
+        </ul>
+      } @else {
+        <!-- Open conversation -->
+        <div class="chat-widget__messages">
+          @for (msg of thread; track $index) {
+            <div class="chat-widget__msg" [class.mine]="msg.mine">
+              <div class="chat-widget__bubble">{{ msg.message }}</div>
+            </div>
+          } @empty {
+            <p class="chat-widget__empty">No messages yet.</p>
+          }
+        </div>
+
+        <form class="chat-widget__compose" (ngSubmit)="send()">
+          <input
+            type="text"
+            [(ngModel)]="message"
+            name="message"
+            autocomplete="off"
+            placeholder="Type a message…"
+            [disabled]="!connected">
+          <button type="submit" [disabled]="!connected || !message.trim()">
+            <i class="fa fa-paper-plane"></i>
+          </button>
+        </form>
+      }
+
+    </div>
+  }
+</div>

@@ -154,6 +154,20 @@ getVendorId(): string | null {
   }
   return null;
 }
+/** The logged-in agent's username. Must match ACMS's ChatStaticReceiver value. */
+getUsername(): string | null {
+  if (isPlatformBrowser(this.platformId)) {
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        return JSON.parse(user).username ?? null;
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
 getclientid():string|null{
     if (isPlatformBrowser(this.platformId)) {
     return localStorage.getItem('currentClient');

@@ -1,39 +1,40 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../core/services/Chat/chat.service';
+import { Subscription } from 'rxjs';
+import { ChatService, ChatMessage } from '../../core/services/Chat/chat.service';
+import { environment } from '../../core/environments/environment';
 
 @Component({
   selector: 'app-chat',
-  imports:  [FormsModule],
+  imports: [FormsModule],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
-export class Chat implements OnInit{
- senderId = 'AngularUser';
+export class Chat implements OnInit, OnDestroy {
 
-  receiverId = 'DotNetUser';
-
+  receiverId = environment.chatDefaultReceiverId;
   message = '';
+  messages: ChatMessage[] = [];
+
+  private sub?: Subscription;
 
   constructor(public chatService: ChatService) {}
 
   ngOnInit(): void {
-
     this.chatService.startConnection();
+    this.chatService.openConversation(this.receiverId);
+    this.sub = this.chatService.activeThread$.subscribe(t => this.messages = t);
   }
 
-  sendMessage() {
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
+  sendMessage(): void {
     if (!this.message.trim()) {
       return;
     }
-
-    this.chatService.sendMessage(
-      this.senderId,
-      this.receiverId,
-      this.message
-    );
-
+    this.chatService.sendTo(this.receiverId, this.message);
     this.message = '';
   }
 }

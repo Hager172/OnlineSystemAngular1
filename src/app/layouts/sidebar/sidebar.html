@@ -1,23 +1,90 @@
-<div class="docs">
-  <aside class="left-sidebar pt-4 d-lg-block" id="navbar-example3" data-simplebar="init">
-    <div class="simplebar-wrapper" style="margin: -24px 0px 0px;">
-      <div class="simplebar-mask">
-        <div class="simplebar-offset" style="right: 0px; bottom: 0px;">
-          <div class="simplebar-content-wrapper" style="height: 100%; overflow: hidden scroll;">
-            <div class="simplebar-content" style="padding: 24px 0px 0px;">
+<!-- Mobile toggle button (hamburger / close) -->
+<button
+  type="button"
+  class="sidebar-fab"
+  [class.is-open]="isMobileOpen"
+  (click)="toggleMobile()"
+  [attr.aria-expanded]="isMobileOpen"
+  aria-controls="app-sidebar-nav"
+  aria-label="Toggle navigation menu">
+  <i class="fas" [class.fa-bars]="!isMobileOpen" [class.fa-xmark]="isMobileOpen"></i>
+</button>
 
-              <div class="scroll-sidebar">
-                <nav class="sidebar-nav">
+<!-- Backdrop for the mobile off-canvas drawer -->
+<div
+  class="sidebar-backdrop"
+  [class.is-visible]="isMobileOpen"
+  (click)="closeMobile()"
+  aria-hidden="true"></div>
 
+<aside
+  id="app-sidebar-nav"
+  class="app-sidebar"
+  [class.is-open]="isMobileOpen"
+  [class.is-collapsed]="isCollapsed"
+  [class.is-rtl]="isRtl"
+  [attr.dir]="isRtl ? 'rtl' : 'ltr'">
 
+  <!-- Sidebar header: section label + desktop collapse toggle -->
+  <div class="app-sidebar__header">
+    <span class="app-sidebar__title">{{ isRtl ? 'القائمة' : 'Menu' }}</span>
+    <button
+      type="button"
+      class="app-sidebar__collapse"
+      (click)="toggleCollapsed()"
+      [attr.aria-pressed]="isCollapsed"
+      [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      [title]="isCollapsed ? 'Expand' : 'Collapse'">
+      <i class="fas" [class.fa-angles-left]="!isRtl" [class.fa-angles-right]="isRtl"></i>
+    </button>
+  </div>
 
-                  <ul id="sidebarnav" class="mt-4">
-                    <nav class="nav nav-pills flex-column sidebar-nav">
-                      <ul class="list-unstyled in">
+  <!-- Navigation -->
+  <nav class="app-sidebar__nav" aria-label="Primary">
 
-                        <li class="nav-small-cap">
-                          <span class="hide-menu">Getting Started</span>
-                        </li>
+    <ul class="app-sidebar__list">
+      <ng-container *ngFor="let page of (auth.pages$ | async) || []; trackBy: trackByPage">
+
+        <!-- Item with a submenu -->
+        <li *ngIf="hasChildren(page); else leafItem" class="app-sidebar__item">
+          <button
+            type="button"
+            class="app-sidebar__link app-sidebar__link--group"
+            [class.is-expanded]="isExpanded(page)"
+            (click)="toggleSubmenu(page, $event)"
+            [attr.aria-expanded]="isExpanded(page)"
+            [title]="getPageName(page)">
+            <i class="app-sidebar__icon" [ngClass]="getPageIcon(page)" aria-hidden="true"></i>
+            <span class="app-sidebar__label">{{ getPageName(page) }}</span>
+            <i class="app-sidebar__chevron fas fa-chevron-down" aria-hidden="true"></i>
+          </button>
+
+          <ul class="app-sidebar__submenu" [class.is-open]="isExpanded(page)">
+            <li *ngFor="let child of page.children; trackBy: trackByPage" class="app-sidebar__item">
+              <a
+                *ngIf="getRoute(child); else childButton"
+                class="app-sidebar__link app-sidebar__link--sub"
+                [routerLink]="getRoute(child)"
+                routerLinkActive="is-active"
+                (click)="closeMobile()"
+                [title]="getPageName(child)">
+                <i class="app-sidebar__dot fas fa-circle" aria-hidden="true"></i>
+                <span class="app-sidebar__label">{{ getPageName(child) }}</span>
+              </a>
+              <ng-template #childButton>
+                <button
+                  type="button"
+                  class="app-sidebar__link app-sidebar__link--sub"
+                  [class.is-active]="isActive(child)"
+                  (click)="selectPage(child)"
+                  [title]="getPageName(child)">
+                  <i class="app-sidebar__dot fas fa-circle" aria-hidden="true"></i>
+                  <span class="app-sidebar__label">{{ getPageName(child) }}</span>
+                </button>
+              </ng-template>
+            </li>
+          </ul>
+        </li>
 
                         <!-- 👇 السحر هنا: بنستخدم auth.pages$ مباشرة مع الـ async -->
                         <!-- <li *ngFor="let page of (auth.pages$ | async) || []" class="sidebar-item">
@@ -59,5 +126,5 @@
         </div>
       </div>
     </div>
-  </aside>
-</div>
+  </nav>
+</aside>
