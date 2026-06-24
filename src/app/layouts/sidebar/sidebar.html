@@ -86,45 +86,56 @@
           </ul>
         </li>
 
-                        <!-- 👇 السحر هنا: بنستخدم auth.pages$ مباشرة مع الـ async -->
-                        <!-- <li *ngFor="let page of (auth.pages$ | async) || []" class="sidebar-item">
-                          <a class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-                            <i class="fas fa-house fa-s me-3"></i>
-                            {{ getPageName(page) }}
-                          </a>
-                        </li> -->
-    <li  class="sidebar-item">
-      <div >
-                          <a [routerLink]="['/mem']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-                            <i class="fas fa-house fa-s me-3"></i>
-                           HOME
-                          </a>
-</div>
-             
-  <div *ngIf="currentRole === 'USER' ">
-                          <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-                            <i class="fas fa-house fa-s me-3"></i>
-                           Search Results
-                          </a>
-</div>
-  <div *ngIf="currentRole === 'ADMIN' ">
-                          <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-                            <i class="fas fa-house fa-s me-3"></i>
-                            Month's register
-                          </a>
-</div>
+        <!-- Leaf item: page with no children -->
+        <ng-template #leafItem>
+          <li class="app-sidebar__item">
+            <a
+              *ngIf="getRoute(page); else leafBtn"
+              class="app-sidebar__link"
+              [routerLink]="getRoute(page)"
+              routerLinkActive="is-active"
+              (click)="closeMobile()"
+              [title]="getPageName(page)">
+              <i class="app-sidebar__icon" [ngClass]="getPageIcon(page)" aria-hidden="true"></i>
+              <span class="app-sidebar__label">{{ getPageName(page) }}</span>
+            </a>
+            <ng-template #leafBtn>
+              <button
+                type="button"
+                class="app-sidebar__link"
+                [class.is-active]="isActive(page)"
+                (click)="selectPage(page)"
+                [title]="getPageName(page)">
+                <i class="app-sidebar__icon" [ngClass]="getPageIcon(page)" aria-hidden="true"></i>
+                <span class="app-sidebar__label">{{ getPageName(page) }}</span>
+              </button>
+            </ng-template>
+          </li>
+        </ng-template>
 
-                        </li>
-                      </ul>
-                    </nav>
-                  </ul>
-                </nav>
-              </div>
+      </ng-container>
 
-            </div>
-          </div>
+      <li class="sidebar-item">
+        <div>
+          <a [routerLink]="['/mem']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-house fa-s me-3"></i>
+            HOME
+          </a>
         </div>
-      </div>
-    </div>
+        <div *ngIf="currentRole === 'USER'">
+          <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-house fa-s me-3"></i>
+            Search Results
+          </a>
+        </div>
+        <div *ngIf="currentRole === 'ADMIN'">
+          <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-house fa-s me-3"></i>
+            Month's register
+          </a>
+        </div>
+      </li>
+
+    </ul>
   </nav>
 </aside>
