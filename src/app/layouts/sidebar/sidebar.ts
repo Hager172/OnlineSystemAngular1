@@ -93,17 +93,18 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../core/services/auth/auth-service';
 import { CommonModule } from '@angular/common';
 import { TranslocoService } from '@jsverse/transloco';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule], // أضف AsyncPipe لو مش موجود في CommonModule
+  imports: [CommonModule,RouterLink], // أضف AsyncPipe لو مش موجود في CommonModule
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
 export class Sidebar implements OnInit {
   currentLang: 'en' | 'ar' = 'en';
-
+currentRole: string | null = '';
   constructor(
     public auth: AuthService, // لازم public عشان الـ HTML يشوفها
     private transloco: TranslocoService
@@ -114,6 +115,10 @@ export class Sidebar implements OnInit {
     this.transloco.langChanges$.subscribe(lang => {
       this.currentLang = lang as 'en' | 'ar';
     });
+    this.auth.role$.subscribe(role => {
+this.currentRole = role ? role.toUpperCase() : '';    });
+
+console.log('Current Role:', this.currentRole); 
   }
 
   getPageName(page: any): string {

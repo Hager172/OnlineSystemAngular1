@@ -58,7 +58,15 @@
     padding: 2.5rem;
   }
 }
-
+.error {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  font-size: 14px;
+}
 .header {
   margin-bottom: 2rem;
   text-align: center;

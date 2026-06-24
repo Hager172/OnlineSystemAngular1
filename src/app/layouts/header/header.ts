@@ -48,15 +48,29 @@ export class Header implements OnInit {
     this.isClientDropdownOpen = !this.isClientDropdownOpen;
   }
 
-  selectClient(client: any): void {
+  // selectClient(client: any): void {
+  //   this.isClientDropdownOpen = false;
+  //   if (this.isSelected(client)) {
+  //     return;
+  //   }
+  //   this.selectedClient = client.clientId;
+  //   this.onClientChange(client.clientId);
+  // }
+selectClient(client: any): void {
+  console.log("client",client);
     this.isClientDropdownOpen = false;
+
     if (this.isSelected(client)) {
       return;
     }
-    this.selectedClient = client.clientId;
-    this.onClientChange(client.clientId);
-  }
 
+    this.selectedClient = client.clientId;
+
+    this.onClientChange(
+      client.userId,
+      client.clientId
+    );
+}
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (this.isClientDropdownOpen && !this.elRef.nativeElement.contains(event.target)) {
@@ -84,57 +98,114 @@ this.selectedClient = this.auth.currentClientSubject.value;
 
 }
 
-//   onClientChange(client: any){
-//     console.log(client);
-//     this.auth.switchClient(client).subscribe({next:(res)=>{
-//        console.log("data",res);
-//     const newToken = res.data.authToken;
-//     localStorage.setItem('token', newToken);
-// this.auth.currentClientSubject.next(res.clientId);
-// localStorage.setItem('currentClient', res.clientId); 
 
-//  this.auth.me().subscribe(user => {
+// onClientChange(userId: string, clientId: string) {
+//   this.auth.switchClient(userId, clientId).subscribe({
+//     next: (res) => {
+//       const newToken = res.data.authToken;
+//       localStorage.setItem('token', newToken);
+//       localStorage.setItem('currentClient', clientId);
+//       this.auth.currentClientSubject.next(clientId);
 
-//       this.auth.setPages(user.pages); // 👈 مهم جدًا
-//     });
-//     }});
-//   }
-onClientChange(clientId: any) {
-  this.auth.switchClient(clientId).subscribe({
+//       this.auth.me().subscribe({
+//         next: (resMe) => {
+//           const updatedPages = resMe.data?.pages || resMe.pages || [];
+          
+//           this.auth.setPages(updatedPages);
+//         }
+//       });
+//     }
+//   });
+// }
+// onClientChange(userId:any, clientId:any) {
+
+//   this.auth.switchClient(userId, clientId).subscribe({
+//     next: (res) => {
+
+//       const newToken = res.data.authToken;
+
+//       localStorage.setItem('token', newToken);
+//       localStorage.setItem('currentClient', clientId);
+
+//       this.auth.currentClientSubject.next(clientId);
+
+//       this.auth.me().subscribe({
+//         next: (resMe) => {
+
+//           const updatedPages =
+//              resMe.data?.pages || resMe.pages || [];
+
+//           this.auth.setPages(updatedPages);
+//         }
+//       });
+//     }
+//   });
+// }
+
+
+// onClientChange(userId: any, clientId: any) {
+//   this.auth.switchClient(userId, clientId).subscribe({
+//     next: (res) => {
+//       console.log('Switch Client Response:', res);
+//       const newToken = res.data.authToken;
+//       const newBranchId = res.data.branchId; 
+//       const newVendorId = res.data.vendorId; 
+
+//       // 1. تحديث الـ التوكن والعميل الحالي
+//       localStorage.setItem('token', newToken);
+//       localStorage.setItem('currentClient', clientId);
+      
+//       this.auth.currentClientSubject.next(clientId);
+
+//       this.auth.updateSessionData(newVendorId, newBranchId);
+
+//       this.auth.me().subscribe({
+//         next: (resMe) => {
+//           const branchFromMe = resMe.data?.branchId || resMe.branchId;
+//           const vendorFromMe = resMe.data?.vendorId || resMe.vendorId;
+//           if (branchFromMe || vendorFromMe) {
+//             this.auth.updateSessionData(vendorFromMe, branchFromMe);
+//           }
+
+//           const updatedPages = resMe.data?.pages || resMe.pages || [];
+//           this.auth.setPages(updatedPages);
+          
+//           window.location.reload(); 
+//         }
+//       });
+//     }
+//   });
+// }
+onClientChange(userId: any, clientId: any) {
+  this.auth.switchClient(userId, clientId).subscribe({
     next: (res) => {
+      console.log('Switch Client Response:', res);
       const newToken = res.data.authToken;
+      const newBranchId = res.data.branchId; 
+      const newVendorId = res.data.vendorId; 
+      const newRole = res.data.roles[0]; 
+
       localStorage.setItem('token', newToken);
       localStorage.setItem('currentClient', clientId);
       this.auth.currentClientSubject.next(clientId);
 
+      this.auth.updateSessionData(newVendorId, newBranchId, newRole);
+
       this.auth.me().subscribe({
         next: (resMe) => {
+          const branchFromMe = resMe.branchId;
+          const vendorFromMe = resMe.vendorId;
+          const roleFromMe = resMe.roles[0];
+
+          this.auth.updateSessionData(vendorFromMe, branchFromMe, roleFromMe);
+
           const updatedPages = resMe.data?.pages || resMe.pages || [];
-          
           this.auth.setPages(updatedPages);
+          
+          window.location.reload(); 
         }
       });
     }
   });
 }
-// onClientChange(clientId: any) {
-//   this.auth.switchClient(clientId).subscribe({
-//     next: (res) => {
-//       const newToken = res.data.authToken;
-//       localStorage.setItem('token', newToken);
-//       localStorage.setItem('currentClient', clientId); 
-
-//       this.auth.me().subscribe(user => {
-//         const pages = user.data?.pages || user.pages;
-        
-//         const userData = JSON.parse(localStorage.getItem('user') || '{}');
-//         userData.pages = pages;
-//         localStorage.setItem('user', JSON.stringify(userData));
-
-//         this.auth.currentClientSubject.next(clientId);
-//         this.auth.setPages(pages);
-//       });
-//     }
-//   });
-// }
 }

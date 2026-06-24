@@ -254,4 +254,10 @@ getbranchapprovals(branchid: string): Observable<any> {
   return this.http.get<any>(
     `${this.baseUrl}Approval/branch-approvals?office_id=${branchid}`
   );}
+
+
+getbrancha3mpprovals(branchid: string): Observable<any> {
+  return this.http.get<any>(
+    `${this.baseUrl}Approval/branch-3mapprovals?office_id=${branchid}`
+  );}
 }

@@ -15,6 +15,7 @@ import { Addapproval } from './shared/components/addapproval/addapproval';
 import { SearchResults } from './shared/components/search-results/search-results';
 
 import { Chat } from './pages/chat/chat';
+import { Approvals3m } from './shared/components/approvals3m/approvals3m';
 
 
 
@@ -36,6 +37,7 @@ export const routes: Routes = [
       {path: 'add', component:Addapproval},
 
     {path: 'search-results', component: SearchResults},
+    {path:'monthlyapprovals',component:Approvals3m},
 
       {path: 'chat', component:Chat},
 

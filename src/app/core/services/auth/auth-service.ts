@@ -22,7 +22,8 @@ export class AuthService {
 
   private apiUrl = environment.apiUrl;
 
-
+private roleSubject = new BehaviorSubject<string | null>(null);
+  role$ = this.roleSubject.asObservable();
  
 constructor(
   private http: HttpClient,
@@ -34,7 +35,7 @@ constructor(
     const clients = localStorage.getItem('clients');
     const currentClient = localStorage.getItem('currentClient');
     const user = localStorage.getItem('user');
-
+const role = localStorage.getItem('role');
     if (clients) {
       this.clientsSubject.next(JSON.parse(clients));
     }
@@ -48,6 +49,7 @@ constructor(
       console.log("pages",parsed.pages);
       this.pagesSubject.next(parsed.pages || []);
     }
+    if (role) this.roleSubject.next(role);
   }
 }
   login(userName: string , password: string){
@@ -62,9 +64,7 @@ constructor(
 
         this.pagesSubject.next(res.data.pages || []);
 
-        // this.currentClientSubject.next(
-        //   res.data.clientId ?? '1'
-        // );
+    
 
         this.currentClientSubject.next(res.data.clientId || null);
       })
@@ -74,20 +74,29 @@ constructor(
 private saveAuthData(data: any){
   if(isPlatformBrowser(this.platformId)){
     localStorage.setItem('vendorid',data.vendorId);
+    localStorage.setItem('branchid', data.branchId);
      localStorage.setItem('clients', JSON.stringify(data.clients || []));
   localStorage.setItem('currentClient', data.clientId ?? '');
     localStorage.setItem('token' , data.authToken);
+  const userRole = data.roles[0];
+      localStorage.setItem('role', userRole);
+      this.roleSubject.next(userRole);
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify({
       username: data.username,
-      vendorId: data.vendorId,     
-      pages: data.pages
+      vendorId: data.vendorId, 
+      branchId: data.branchId,    
+      pages: data.pages,
+      role: userRole
     }));
   }
 }
-// setPages(pages: any[]) {
-//   this.pagesSubject.next([...pages]);
-// }
+getBranchId(): string | null {
+  if (isPlatformBrowser(this.platformId)) {
+    return localStorage.getItem('branchid');
+  }
+  return null;
+}
 setPages(pages: any[]) {
   this.pagesSubject.next([...pages]);
 
@@ -100,71 +109,39 @@ setPages(pages: any[]) {
     }
   }
 }
-// switchClient(clientId: string) {
 
-//   this.currentClientSubject.next(clientId);
+updateSessionData(vendorId: string, branchId: string, role?: string) {
+    if (isPlatformBrowser(this.platformId)) {
+      if (vendorId) localStorage.setItem('vendorid', vendorId);
+      if (branchId) localStorage.setItem('branchid', branchId);
+      if (role) {
+        localStorage.setItem('role', role);
+        this.roleSubject.next(role);
+      }
 
-//   if (isPlatformBrowser(this.platformId)) {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        user.vendorId = vendorId || user.vendorId;
+        user.branchId = branchId || user.branchId;
+        user.role = role || user.role;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+    }
+  }
 
-//     localStorage.setItem('currentClient', clientId.toString());
+  getRole(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('role');
+    }
+    return this.roleSubject.value;
+  }
 
-//     const user = JSON.parse(localStorage.getItem('user') || '{}');
-//     this.http.
-   
-//   }
-
-  
-// }
-
-// /Account/SwitchClients?ClientId=3
-// switchClient(clientId: string) {
-//   console.log("fun");
-//   return this.http.post<any>(
-//     `${this.apiUrl}Account/SwitchClients?ClientId=${clientId}`, {}
-//   ).pipe(
-//     tap(res => {
-//       console.log("test", res);
-//       const newToken = res.data.authToken;
-//       localStorage.setItem('token', newToken);
-//       this.currentClientSubject.next(clientId);
-//     }),
-//     switchMap(() =>
-//       this.http.get<any>(`${this.apiUrl}Account/Me`)
-//     ),
-//     tap(res => {
-//       const data = res.data;
-//       this.pagesSubject.next(data.pages || []);
-
-//       if (isPlatformBrowser(this.platformId)) {
-//         const user = JSON.parse(localStorage.getItem('user') || '{}');
-//         user.pages = data.pages;
-//         localStorage.setItem('user', JSON.stringify(user));
-//       }
-//     })
-//   );
-// }
-// switchClient(clientId: string) {
-//   this.http.post<any>(
-//     `${this.apiUrl}Account/SwitchClients?ClientId=${clientId}`, {}
-//   ).subscribe(res => {
-// console.log("data",res);
-//     const newToken = res.data.authToken;
-//     localStorage.setItem('token', newToken);
-//     this.currentClientSubject.next(clientId);
-
-//     this.http.get<any>(`${this.apiUrl}Account/Me`)
-//       .subscribe(res2 => {
-//         console.log("data2",res2);
-//         const data = res2;
-//         this.pagesSubject.next(data.pages || []);
-//       });
-//   });
-// }
-
-switchClient(clientId: string):Observable<any>{
- return this.http.post<any>(
-    `${this.apiUrl}Account/SwitchClients?ClientId=${clientId}`, {}
-  )
+switchClient(userId:any, clientId:any){
+  return this.http.post<any>(
+    `${this.apiUrl}Account/SwitchClients?UserId=${userId}&ClientId=${clientId}`,
+    {}
+  );
 }
 
 me():Observable<any>{
