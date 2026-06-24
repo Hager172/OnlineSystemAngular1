@@ -6,6 +6,8 @@
 
     
     <div class="right-group">
+      <app-chat-widget></app-chat-widget>
+
       <div class="client-selector" [class.open]="isClientDropdownOpen">
         <button type="button" class="client-selector__trigger"
           (click)="toggleClientDropdown(); $event.stopPropagation()">
