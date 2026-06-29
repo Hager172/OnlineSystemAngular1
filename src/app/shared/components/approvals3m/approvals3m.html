@@ -97,6 +97,21 @@
    <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('branchName')">
          Branch {{ getSortIcon('branchName') }}
       </th>
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('value')">
+        Value {{ getSortIcon('value') }}
+      </th>
+         <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('copaymentvalue')">
+        copaymentvalue {{ getSortIcon('copaymentvalue') }}
+      </th>
+         <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('importeddiscountvalue')">
+        importeddiscountvalue {{ getSortIcon('importeddiscountvalue') }}
+      </th>
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('localdiscountvalue')">
+        localdiscountvalue {{ getSortIcon('localdiscountvalue') }}
+      </th>
+         <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('netvalue')">
+        netvalue {{ getSortIcon('netvalue') }}
+      </th>
       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('notes')">
         Notes {{ getSortIcon('notes') }}
       </th>
@@ -140,6 +155,23 @@
       <td class="py-3 px-4">
         <span class="text-sm font-medium text-gray-800 block">{{ item.branchName || '-' }}</span>
       </td>
+      <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.value || '-' }}</span>
+      </td>
+       <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.copaymentvalue || '-' }}</span>
+      </td>
+      
+       <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.importeddiscountvalue || '-' }}</span>
+      </td>
+      <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.localdiscountvalue || '-' }}</span>
+      </td>
+       <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.netvalue || '-' }}</span>
+      </td>
+      
       <td class="py-3 px-4">
         <span class="text-sm text-gray-500 max-w-xs block truncate" [title]="item.notes">
           {{ item.notes }}

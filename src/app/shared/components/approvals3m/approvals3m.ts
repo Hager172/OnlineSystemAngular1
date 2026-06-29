@@ -16,7 +16,11 @@ interface BranchApprovalItem {
   memberName: string | null;
     companyName: string | null;
     branchName: string | null;
-
+value:number;
+netvalue:number;
+localdiscountvalue:number;
+importeddiscountvalue:number;
+copaymentvalue:number;
   vendorId: string;
   statusText: string;
   statusIcon: string;
@@ -177,7 +181,7 @@ loadBranchApprovals() {
     return {
       approvalId: i.approvalId, approvalDate: i.approvalDate, apStatus: i.apStatus,
       apType: i.apType || 'General', requestSource: i.requestSource || 'Manual',
-      notes: i.notes || '-', memberId: i.memberId, memberName: i.memberName,
+      notes: i.notes || '-', memberId: i.memberId, memberName: i.memberName,value:i.value,netvalue:i.netvalue,localdiscountvalue:i.localdiscountvalue,importeddiscountvalue:i.importeddiscountvalue,copaymentvalue:i.copaymentvalue,
       vendorId: i.vendorId, companyName: i.companyName || '-', branchName: i.branchName || '-', statusText, statusIcon, statusColor
     };
   }
