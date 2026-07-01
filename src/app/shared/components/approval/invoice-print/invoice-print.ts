@@ -28,10 +28,11 @@ export class InvoicePrint implements OnInit {
     this.approvalNumber = this.route.snapshot.paramMap.get('approvalNumber') || '';
     this.approvalService.getApproval(this.approvalNumber).subscribe({
     next: (data) => {
+      console.log('data:', data);
     this.approval.set(data);
     const editedItems = this.approvalService.getEditedItems(this.approvalNumber);
     this.items.set(editedItems || data.items);
-    console.log('data:', data);
+    
   },
   error: (err) => {
     console.error(err);

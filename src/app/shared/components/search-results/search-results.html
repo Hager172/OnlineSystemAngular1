@@ -144,7 +144,8 @@
             <td class="py-3 px-4">
               <div class="flex items-center gap-2">
                 <button 
-                  (click)="viewDetails(item)"
+                
+                  [routerLink]="['/invoice-print', item.approvalId]"
                   title="View Details"
                   class="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
                 >
@@ -165,7 +166,7 @@
                 </button>
 
                 <button 
-                  (click)="printApproval(item)"
+                 [routerLink]="['/invoice-print', item.approvalId]"
                   title="Print Receipt"
                   class="p-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-600 hover:text-white transition-colors"
                 >

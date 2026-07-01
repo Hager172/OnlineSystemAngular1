@@ -3,6 +3,8 @@ import { ApprovalService } from '../../../core/services/Approval/approval-servic
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
+import { AuthService } from '../../../core/services/auth/auth-service';
+import { RouterLink } from '@angular/router';
 
 interface BranchApprovalItem {
   approvalId: number;
@@ -21,7 +23,7 @@ interface BranchApprovalItem {
 
 @Component({
   selector: 'app-search-results',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule,RouterLink],
   templateUrl: './search-results.html',
   styleUrl: './search-results.css',
 })
@@ -39,7 +41,7 @@ export class SearchResults implements OnInit {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
-  constructor(private service: ApprovalService) {}
+  constructor(private service: ApprovalService,private authService: AuthService) {}
 
   filteredApprovals = computed(() => {
     let all = this.approvals();
@@ -124,7 +126,13 @@ export class SearchResults implements OnInit {
 
   loadBranchApprovals() {
     this.isLoading.set(true);
-    this.service.getbranchapprovals('270001.84').subscribe({
+       const branchId = this.authService.getBranchId(); 
+    if (!branchId) {
+      console.error('No Branch ID found for this user!');
+      return; 
+    }
+
+    this.service.getbranchapprovals(branchId).subscribe({
       next: (data: any) => {
         const arr = Array.isArray(data) ? data : (data.data || data.approvals || []);
         this.approvals.set(arr.map((i: any) => this.mapApprovalStatus(i)));
