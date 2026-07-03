@@ -147,6 +147,11 @@ export class ApprovalService {
     map(res => this.mapApprovalDetailsToApproval(res))
   );
 }
+getApprovalsearchDetails(approvalNumber: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}Approval/${approvalNumber}/searchdetails`);
+}
+
+
   approvalExists(approvalNumber: string): boolean {
     // return !!this.mockApprovals[approvalNumber];
     return !!this.getApprovalDetails(approvalNumber);
@@ -191,9 +196,9 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     clientId: apiRes.memberId || '',
     diagnose: apiRes.diagnoses?.map((d: any) => d.name).join(', ') || '',
     notes: apiRes.notes || '',
-    limit: apiRes.maxValue || 0,
-    copaymentPercentage: 10,
-    extraCopaymentPercentage: 5,
+    limit: apiRes.maxValue || null,
+    copaymentPercentage: 0,
+    extraCopaymentPercentage: 0,
     items: (apiRes.services || []).map((s: any) => ({
       description: s.itemDesc || '',
       quantity: s.apQty || s.qty || 0,
@@ -260,4 +265,11 @@ getbrancha3mpprovals(branchid: string): Observable<any> {
   return this.http.get<any>(
     `${this.baseUrl}Approval/branch-3mapprovals?office_id=${branchid}`
   );}
+
+  cancelApproval(approvalId: number): Observable<any> {
+  return this.http.put(
+    `${this.baseUrl}Approval/cancelapproval/${approvalId}`,
+    {}
+  );
+}
 }

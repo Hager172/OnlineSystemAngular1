@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { AuthService } from '../../../core/services/auth/auth-service';
-
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 interface BranchApprovalItem {
   approvalId: number;
   approvalDate: string;
@@ -59,7 +60,7 @@ export class Approvals3m implements OnInit {
 
   ngOnInit() {
     this.initMonthNames();
-    this.loadBranchApprovals();
+    this.loadVendorApprovals();
   }
 
   initMonthNames() {
@@ -145,17 +146,18 @@ export class Approvals3m implements OnInit {
 
   totalPages = computed(() => Math.ceil(this.filteredApprovals().length / this.itemsPerPage) || 1);
 
-  loadBranchApprovals() {
-    const branchId = this.authService.getBranchId(); 
-    if (!branchId) {
-      console.error('No Branch ID found for this user!');
+  loadVendorApprovals() {
+    const vendorId = this.authService.getVendorId(); 
+    console.log('Vendor ID:', vendorId); // Debugging line
+    if (!vendorId) {
+      console.error('No Vendor ID found for this user!');
       return; 
     }
 
     this.isLoading.set(true);
-    this.service.getbrancha3mpprovals(branchId).subscribe({
+    this.service.getbrancha3mpprovals(vendorId).subscribe({
       next: (data: any) => {
-        console.log('Branch Approvals Data:', data);
+        console.log('Vendor Approvals Data:', data);
         const arr = Array.isArray(data) ? data : (data.data || data.approvals || []);
         this.approvals.set(arr.map((i: any) => this.mapApprovalStatus(i)));
         this.isLoading.set(false);
@@ -268,4 +270,92 @@ export class Approvals3m implements OnInit {
   editApproval(item: BranchApprovalItem) { console.log('Editing:', item.approvalId); }
   printApproval(item: BranchApprovalItem) { console.log('Printing:', item.approvalId); }
   cancelApproval(item: BranchApprovalItem) { console.log('Canceling:', item.approvalId); }
+
+
+  //pdf
+exportToPDF(): void {
+  const dataToExport = this.filteredApprovals();
+  if (dataToExport.length === 0) {
+    alert('No data available to export!');
+    return;
+  }
+
+  // 1. إنشاء كائن الـ PDF بالوضع الأفقي
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // 2. إضافة خط يدعم اللغة العربية (خط Amiri متوفر كـ ديفولت يدعم العربية في الـ Unicode)
+  // سنقوم بجلب الخط بصيغة خفيفة، أو يمكنك تحميل ملف Amiri-Regular.ttf وتحويله لـ Base64
+  // للسهولة والسرعة، نستخدم إضافة الخط القياسي الذي يتعامل مع الحروف العربية عبر ضبط الفونت أو الـ styles.
+  
+  // ملحوظة: jsPDF يحتاج تحويل الخط إلى Base64 ليعمل 100% بدون إنترنت، ولكن لتشغيل الدعم الفوري للـ Unicode العربي:
+  // نقوم بضبط الخصائص للـ autoTable لتدعم النص العربي.
+
+  // عنوان التقرير داخل الملف
+  doc.setFontSize(16);
+  doc.text('Approvals Report / تقرير الموافقات', 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+
+  // الأعمدة التي ستظهر في الـ PDF
+  const columns = [
+    'ID', 'Date', 'Status', 'Type', 'Source', 
+    'Member Info', 'Company', 'Gross', 'Copay', 'Net'
+  ];
+
+  // تجهيز الصفوف من البيانات المفلترة
+  const rows = dataToExport.map(item => [
+    item.approvalId,
+    this.formatDate(item.approvalDate),
+    item.statusText,
+    item.apType,
+    item.requestSource,
+    `${item.memberName || '-'}\n(${item.memberId})`,
+    item.companyName || '-',
+    item.value.toFixed(2),
+    item.copaymentvalue.toFixed(2),
+    item.netvalue.toFixed(2)
+  ]);
+
+  // إضافة صف الإجمالي في نهاية الجدول
+  rows.push([
+    'TOTALS', '', '', '', '', '', '',
+    this.totalGrossValue().toFixed(2),
+    this.totalCopayment().toFixed(2),
+    this.totalNetValue().toFixed(2)
+  ]);
+
+  // 3. رسم الجدول وتفعيل خصائص الخطوط العربية و الـ RTL
+  autoTable(doc, {
+    head: [columns],
+    body: rows,
+    startY: 28,
+    theme: 'striped',
+    headStyles: { fillColor: [30, 41, 59] }, 
+    
+    // الخصائص الحركية لحل مشكلة الحروف العربية وعلامات الاستفهام:
+    styles: { 
+      fontSize: 8, 
+      overflow: 'linebreak',
+      // إذا كنتِ قد أضفت خط مخصص، اكتبيه هنا، وإلا فإن النظام سيتعرف على الحروف عند إعطاء أمر الـ font الأصلي للمتصفح
+      font: 'Courier', // أو أي خط متاح يدعم الـ glyphs 
+    },
+    
+    // تفعيل اتجاه النص من اليمين إلى اليسار للأعمدة التي قد تحتوي على عربي (مثل اسم العضو أو الشركة)
+    columnStyles: {
+      5: { cellWidth: 40, halign: 'right' }, // عمود اسم العضو
+      6: { cellWidth: 35, halign: 'right' }  // عمود الشركة
+    },
+    
+    didParseCell: (data) => {
+      if (data.row.index === rows.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [241, 245, 249];
+      }
+    }
+  });
+
+  // تحميل الملف تلقائياً
+  const fileName = `Approvals_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+}
 }

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { AuthService } from '../../../core/services/auth/auth-service';
 import { RouterLink } from '@angular/router';
+import Swal from 'sweetalert2';
 
 interface BranchApprovalItem {
   approvalId: number;
@@ -104,6 +105,9 @@ export class SearchResults implements OnInit {
 
   ngOnInit() {
     this.loadBranchApprovals();
+    const today = new Date().toISOString().split('T')[0];
+    this.fromDate.set(today);
+    this.toDate.set(today);
   }
 
   setFromDate(date: string) {
@@ -126,7 +130,8 @@ export class SearchResults implements OnInit {
 
   loadBranchApprovals() {
     this.isLoading.set(true);
-       const branchId = this.authService.getBranchId(); 
+       const branchId = this.authService.getVendorId(); 
+       console.log('vbendorid:', branchId); // Debugging line
     if (!branchId) {
       console.error('No Branch ID found for this user!');
       return; 
@@ -240,9 +245,52 @@ viewDetails(item: BranchApprovalItem) {
     // لوجيك الطباعة هنا
   }
 
-  cancelApproval(item: BranchApprovalItem) {
-    console.log('Canceling item:', item.approvalId);
-    // لوجيك الإلغاء أو الـ Confirm هنا
-  }
+  
+cancelApproval(item: any) {
+  Swal.fire({
+    title: 'Cancel Approval?',
+    text: 'Are you sure you want to cancel this approval?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Yes, Cancel',
+    cancelButtonText: 'No'
+  }).then((result) => {
+    if (result.isConfirmed) {
 
+      this.service.cancelApproval(item.approvalId).subscribe({
+        next: (res) => {
+
+          if (res.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cancelled',
+              text: 'Approval cancelled successfully.',
+              timer: 1500,
+              showConfirmButton: false
+            });
+
+            this.loadBranchApprovals();
+          }
+          else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed',
+              text: res.messageEn || 'Unable to cancel approval.'
+            });
+          }
+        },
+        error: () => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong.'
+          });
+        }
+      });
+
+    }
+  });
+}
 }

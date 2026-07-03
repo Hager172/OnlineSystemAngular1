@@ -1,0 +1,234 @@
+import { CommonModule } from '@angular/common';
+import { Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Approval } from '../../interfaces/approval/approval';
+import { ApprovalItem } from '../../interfaces/approval/approvalitem';
+import { ActivatedRoute,Router } from '@angular/router';
+import { ApprovalService } from '../../../core/services/Approval/approval-service';
+
+import { Subject } from 'rxjs';
+import Swal from 'sweetalert2';
+import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
+
+@Component({
+  selector: 'app-approval-edit-search',
+  imports: [CommonModule, FormsModule,NgSelectModule,NgSelectComponent],
+  templateUrl: './approval-edit-search.html',
+  styleUrl: './approval-edit-search.css',
+})
+export class ApprovalEditSearch {
+productSearch$ = new Subject<string>();
+  productOptions: any[] = [];
+approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
+  approvalNumber: string = '';
+  currentDate: string = '';
+coPayment: number = 0;
+  coPaymentAmount: number = 0;
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private approvalService: ApprovalService
+  ) {}
+
+ngOnInit(): void {
+  this.approvalNumber = this.route.snapshot.paramMap.get('approvalNumber') || '';
+
+  if (!this.approvalNumber) return;
+
+  this.approvalService
+    .getApprovalsearchDetails(this.approvalNumber)
+    .subscribe({
+      next: (res) => {
+        console.log(res);
+
+        // تأكد أن الكائن data موجود في الرد قبل استخدامه
+        if (res && res.data) {
+          const approvalData = res.data;
+
+          this.approval.set({
+            approvalNumber: approvalData.approvalId?.toString(),
+            date: approvalData.approvalDate,
+            notes: approvalData.notes,
+            diagnose: '',
+            companyName: approvalData.companyName,
+            companyLogo: '',
+            vendorLogo: '',
+            branch: approvalData.branchName,
+            invoiceNumber: approvalData.approvalId?.toString(),
+            issueDate: approvalData.approvalDate,
+            serviceDate: approvalData.approvalDate,
+            clientName: approvalData.memberName,
+            clientId: approvalData.memberId,
+            clientPhone: '',
+limit: approvalData.maxValue ? approvalData.maxValue : null,
+vendorName: approvalData.vendorName,
+            copaymentPercentage: approvalData.copaymentvalue,
+            extraCopaymentPercentage: 0,
+            items: []
+          });
+
+          // تم تعديل الوصول للمصفوفة لتصبح approvalData.services بدلاً من res.services
+          this.items = (approvalData.services?.map((x: any) => ({
+            id: x.itemSerial,
+            name: x.servicename,
+            description: x.itemDesc,
+            quantity: x.apQty,
+            originalQuantity: x.qty,
+            quantityUnit: '',
+            unitPrice: x.price,
+            editqty: x.apQty, // إضافة حقل editqty
+          })) || []);
+        }
+      },
+      error: err => {
+        console.log(err);
+      }
+    });
+
+
+
+
+
+    this.productSearch$.subscribe(term => {
+      if (!term || term.length < 3) return;
+      this.approvalService.getProducts(term, "Ph").subscribe(res => {
+        this.productOptions = res;
+      });
+    });
+  }
+
+
+getSubtotal(): number {
+  return this.items.reduce((sum, item) => sum + ((item.editqty || 0) * item.unitPrice), 0);
+}
+
+// 3. تعديل دالة الليميت لو حابه تطبقيها على الـ editqty:
+limitQuantity(item: any): void {
+  if (
+    item.originalQuantity != null &&
+    item.editqty > item.originalQuantity
+  ) {
+    item.editqty = item.originalQuantity;
+  }}
+
+  getWithinLimit(): number {
+    return Math.min(this.getSubtotal(), this.approval()?.limit || 0);
+  }
+
+  getExceedingAmount(): number {
+    return Math.max(0, this.getSubtotal() - (this.approval()?.limit || 0));
+  }
+
+  getRegularCopayment(): number {
+    return (this.getWithinLimit() * (this.approval()?.copaymentPercentage || 0)) / 100;
+  }
+
+  getExtraCopayment(): number {
+    return (this.getExceedingAmount() * (this.approval()?.extraCopaymentPercentage || 0)) / 100;
+  }
+
+  getTotalCopayment(): number {
+    return this.getRegularCopayment() + this.getExtraCopayment();
+  }
+
+  getTotal(): number {
+    return this.getSubtotal() - this.getTotalCopayment();
+  }
+
+addPrescriptionItem(): void {
+  this.items.push({
+    id: 0,              // ضفنا الـ id عشان الـ interface طالباها أساسية ومش اختيارية
+    name: '',
+    description: '',
+    quantity: -1,        
+    editqty: 1,         
+    unitPrice: 0,
+    isNew: true        
+  });
+}
+
+  removePrescriptionItem(index: number): void {
+    this.items.splice(index, 1);
+    this.updateSubTotals();
+  }
+
+  // عند اختيار منتج من الـ سيلكت المضاف حديثاً
+  onProductSelect(selectedProduct: any, item: any): void {
+    if (selectedProduct) {
+      item.productId = selectedProduct.id;
+      item.name = selectedProduct.name;
+      item.unitPrice = selectedProduct.price || 0;
+    } else {
+      item.productId = null;
+      item.name = '';
+      item.unitPrice = 0;
+    }
+    this.updateSubTotals();
+  }
+
+  onProductSearch($event: any): void {
+    const term = $event?.term;
+    if (term && term.length >= 2) {
+      this.productSearch$.next(term);
+    } else if (!term || term.length === 0) {
+      this.productOptions = [];
+    }
+  }
+
+  onProductClear(): void {
+    this.productOptions = [];
+    this.productSearch$.next('');
+  }
+
+  // ==========================================
+  // دوال الحسابات التلقائية (تعتمد على editqty)
+  // ==========================================
+  
+  calculateTotal(item: any): string {
+    return ((item.unitPrice || 0) * (item.editqty || 0)).toFixed(2);
+  }
+
+  calculateSubTotal(): string {
+    const total = this.items.reduce((sum, item) => sum + ((item.unitPrice || 0) * (item.editqty || 0)), 0);
+    return total.toFixed(2);
+  }
+
+  calculateNet(): string {
+    const subTotal = parseFloat(this.calculateSubTotal());
+    return (subTotal - (this.coPaymentAmount || 0)).toFixed(2);
+  }
+
+  onCoPaymentChange(): void {
+    const subTotal = parseFloat(this.calculateSubTotal());
+    this.coPaymentAmount = parseFloat(((subTotal * this.coPayment) / 100).toFixed(2));
+  }
+
+  onCoAmountChange(): void {
+    const subTotal = parseFloat(this.calculateSubTotal());
+    if (subTotal > 0) {
+      this.coPayment = parseFloat(((this.coPaymentAmount || 0) / subTotal * 100).toFixed(2));
+    } else {
+      this.coPayment = 0;
+    }
+  }
+
+  updateSubTotals(): void {
+    const subTotal = parseFloat(this.calculateSubTotal());
+    if (this.coPayment > 0) {
+      this.coPaymentAmount = parseFloat(((subTotal * this.coPayment) / 100).toFixed(2));
+    } else if (this.coPaymentAmount > 0 && subTotal > 0) {
+      this.coPayment = parseFloat(((this.coPaymentAmount / subTotal) * 100).toFixed(2));
+    }
+  }
+
+  goBack(): void {
+    this.router.navigate(['/mem']);
+  }
+
+  onSubmit(): void {
+    // اللوجيك الخاص بحفظ التعديلات وإرسال الداتا النهائية للسيرفر
+    console.log('Final Items to Save:', this.items);
+    Swal.fire('Saved!', 'Approval updated successfully.', 'success');
+  }
+
+}
