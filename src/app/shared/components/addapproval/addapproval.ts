@@ -126,6 +126,7 @@ if(res.memberNationalId){
     this.productSearch$.subscribe(term => {
       if (!term || term.length < 3) return;
       this.approvalService.getProducts(term, "Ph").subscribe(res => {
+        console.log('Product Options:', res); // Debugging line
         this.productOptions = res;
       });
     });

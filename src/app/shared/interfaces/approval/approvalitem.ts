@@ -1,12 +1,19 @@
 export interface ApprovalItem {
-  id: string | number; // عشان يقبل string من الـ API ويقبل 0 أو number للجديد
+  id: string | number;
+
   name?: string;
   description?: string;
   servicename?: string;
+
   quantity: number;
-  quantityUnit?: string;
-  unitPrice: number;
   originalQuantity?: number;
   editqty?: number;
-  isNew?: boolean;   // ضفنا الحقل ده هنا عشان الـ TypeScript ميعترضش
+  days?: number;
+
+  quantityUnit?: string;
+  unitPrice: number;
+
+  serviceId?: number;
+
+  isNew?: boolean;
 }

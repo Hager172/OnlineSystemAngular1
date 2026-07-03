@@ -68,16 +68,19 @@ vendorName: approvalData.vendorName,
           });
 
           // تم تعديل الوصول للمصفوفة لتصبح approvalData.services بدلاً من res.services
-          this.items = (approvalData.services?.map((x: any) => ({
-            id: x.itemSerial,
-            name: x.servicename,
-            description: x.itemDesc,
-            quantity: x.apQty,
-            originalQuantity: x.qty,
-            quantityUnit: '',
-            unitPrice: x.price,
-            editqty: x.apQty, // إضافة حقل editqty
-          })) || []);
+       this.items = approvalData.services?.map((x: any) => ({
+  id: x.itemSerial,
+  name: x.servicename,
+  description: x.itemDesc,
+  quantity: x.apQty,
+  originalQuantity: x.qty,
+  quantityUnit: '',
+  unitPrice: x.price,
+  editqty: x.editqty ?? x.apQty,
+  days: x.days,
+  serviceId: -1,
+  isNew: false
+})) || [];
         }
       },
       error: err => {
@@ -136,15 +139,17 @@ limitQuantity(item: any): void {
   }
 
 addPrescriptionItem(): void {
-  this.items.push({
-    id: 0,              // ضفنا الـ id عشان الـ interface طالباها أساسية ومش اختيارية
-    name: '',
-    description: '',
-    quantity: -1,        
-    editqty: 1,         
-    unitPrice: 0,
-    isNew: true        
-  });
+this.items.push({
+  id: 0,
+  name: '',
+  description: '',
+  quantity: -1,
+  editqty: 1,
+  unitPrice: 0,
+  days: 7,
+  serviceId: 0,
+  isNew: true
+});
 }
 
   removePrescriptionItem(index: number): void {
@@ -155,11 +160,11 @@ addPrescriptionItem(): void {
   // عند اختيار منتج من الـ سيلكت المضاف حديثاً
   onProductSelect(selectedProduct: any, item: any): void {
     if (selectedProduct) {
-      item.productId = selectedProduct.id;
+      item.serviceId = selectedProduct.id;
       item.name = selectedProduct.name;
       item.unitPrice = selectedProduct.price || 0;
     } else {
-      item.productId = null;
+      item.serviceId = 0;
       item.name = '';
       item.unitPrice = 0;
     }
@@ -224,11 +229,64 @@ addPrescriptionItem(): void {
   goBack(): void {
     this.router.navigate(['/mem']);
   }
+onSubmit(): void {
 
-  onSubmit(): void {
-    // اللوجيك الخاص بحفظ التعديلات وإرسال الداتا النهائية للسيرفر
-    console.log('Final Items to Save:', this.items);
-    Swal.fire('Saved!', 'Approval updated successfully.', 'success');
+  const request = {
+  approval: {
+    approvalId: Number(this.approval()?.approvalNumber),
+    notes: this.approval()?.notes,
+    services: this.items.map(item => ({
+      itemSerial: item.id,
+      serviceId: item.isNew ? item.serviceId : -1,
+      editqty: item.editqty,
+      days: item.days,
+      itemDesc: item.description,
+      price: item.unitPrice
+    }))
   }
+};
+
+
+  console.log(request);
+
+this.approvalService.editApproval(request).subscribe({
+  next: () => {
+    Swal.fire(
+      'Saved!',
+      'Approval updated successfully.',
+      'success'
+    );
+
+    
+  },
+  error: err => {
+    console.error(err);
+
+    Swal.fire(
+      'Error',
+      'Failed to update approval.',
+      'error'
+    );
+  }
+});  //   next: () => {
+  //     Swal.fire(
+  //       'Saved!',
+  //       'Approval updated successfully.',
+  //       'success'
+  //     );
+
+  //     this.goBack();
+  //   },
+  //   error: err => {
+  //     console.error(err);
+
+  //     Swal.fire(
+  //       'Error',
+  //       'Failed to update approval.',
+  //       'error'
+  //     );
+  //   }
+  // });
+}
 
 }

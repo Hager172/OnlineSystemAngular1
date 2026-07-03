@@ -130,8 +130,8 @@ export class SearchResults implements OnInit {
 
   loadBranchApprovals() {
     this.isLoading.set(true);
-       const branchId = this.authService.getVendorId(); 
-       console.log('vbendorid:', branchId); // Debugging line
+       const branchId = this.authService.getBranchId(); 
+       console.log('branchId:', branchId); // Debugging line
     if (!branchId) {
       console.error('No Branch ID found for this user!');
       return; 

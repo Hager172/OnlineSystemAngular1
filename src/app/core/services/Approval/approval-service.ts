@@ -272,4 +272,10 @@ getbrancha3mpprovals(branchid: string): Observable<any> {
     {}
   );
 }
+editApproval(request: any): Observable<any> {
+  return this.http.post<any>(
+    `${this.baseUrl}Approval/edit`,
+    request
+  );
+}
 }

@@ -84,10 +84,11 @@ export interface PrescriptionItem {
   qty: number;
 }
 
-
 export interface ProductLookupDto {
-
   id: number;
-    name: string;
+  name: string;
   price: number;
-  }
+
+  doseUnitNo: number;
+  subUnitNo: number;
+}
