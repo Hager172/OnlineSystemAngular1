@@ -48,7 +48,10 @@ export class Header implements OnInit {
   toggleClientDropdown(): void {
     this.isClientDropdownOpen = !this.isClientDropdownOpen;
   }
-
+logout(): void {
+  this.auth.logout();
+  
+}
   // selectClient(client: any): void {
   //   this.isClientDropdownOpen = false;
   //   if (this.isSelected(client)) {

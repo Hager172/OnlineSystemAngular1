@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, PLATFORM_ID } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
+import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root',
 })
@@ -27,6 +28,7 @@ private roleSubject = new BehaviorSubject<string | null>(null);
  
 constructor(
   private http: HttpClient,
+  private router: Router,
   @Inject(PLATFORM_ID) private platformId: Object
 ) {
 
@@ -204,14 +206,14 @@ getclientid():string|null{
 }
 
 
-logout(){
+logout() {
   if (isPlatformBrowser(this.platformId)) {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('vendorid');
     localStorage.removeItem('branchid');
-    localStorage.removeItem('vtype'); // 🔥 يمسح الـ vtype عند الخروج
+    localStorage.removeItem('vtype');
     localStorage.removeItem('role');
     localStorage.removeItem('clients');
     localStorage.removeItem('currentClient');
@@ -219,6 +221,8 @@ logout(){
 
   this.currentClientSubject.next(null);
   this.pagesSubject.next([]);
+
+  this.router.navigate(['/login']);
 }
   
 }
