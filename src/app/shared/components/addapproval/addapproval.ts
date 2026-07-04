@@ -58,7 +58,7 @@ diagnosisIds: string[] = [];
   coPayment: number = 0;
   coPaymentAmount: number = 0;
   memberPhoto: string = 'assets/images/member-photo.png';
-
+vendorType: string | null = null;
   // =========================
   // DROPDOWNS & ITEMS
   // =========================
@@ -80,6 +80,8 @@ diagnosisIds: string[] = [];
   // INIT
   // =========================
  ngOnInit(): void {
+  this.vendorType = this.authService.getVendorType();
+  console.log('Vendor Type on Init:', this.vendorType);
   // حساب نطاق الـ 7 أيام (كودك زي ما هو)
   const today = new Date();
   const sevenDaysAgo = new Date();
@@ -98,8 +100,9 @@ diagnosisIds: string[] = [];
 
   if (savedData) {
     this.insuredId = savedData.memberId; // تأكد إن الـ Object جواه فعلاً الاسم ده
-
-    this.approvalService.getMemberInfo(this.insuredId, 'Ph').subscribe({
+const vendorType = this.authService.getVendorType();
+console.log('Vendor Type:', vendorType);
+    this.approvalService.getMemberInfo(this.insuredId, vendorType??'').subscribe({
       next: (res) => {
         console.log('Member Info:', res);
         this.member.set(res); 
@@ -128,8 +131,22 @@ diagnosisIds: string[] = [];
   }
 
   // بقية الـ streams بتاعتك تحت زي ما هي...
-  this.diagnosisSearch$.subscribe(term => { /* ... */ });
-  this.productSearch$.subscribe(term => { /* ... */ });
+  // this.diagnosisSearch$.subscribe(term => { /* ... */ });
+  // this.productSearch$.subscribe(term => { /* ... */ });
+   this.diagnosisSearch$.subscribe(term => {
+      if (!term || term.length < 3) return;
+      this.approvalService.getDiagnosis(term).subscribe(res => {
+        this.diagnosisOptions = res;
+      });
+    });
+
+    this.productSearch$.subscribe(term => {
+      if (!term || term.length < 3) return;
+      const vendorType = this.authService.getVendorType();
+      this.approvalService.getProducts(term, vendorType ?? '').subscribe(res => {
+        this.productOptions = res;
+      });
+    });
 }
 
   onExternalPrescriptionChange(): void {
@@ -140,7 +157,7 @@ diagnosisIds: string[] = [];
 
   addPrescriptionItem(): void {
     this.prescriptionItems.push({
-      productId: null, units: null, repeat: null, days: null, price: 0, qty: 0
+      productId: null, units: null, repeat: null, days: null, price: 0, qty: 0, tooth: null, position: null
     });
   }
 
@@ -177,6 +194,8 @@ diagnosisIds: string[] = [];
       diagnosisInsString: this.diagnosisIds.join(','),
       notes: this.notes,
       // لو مش مكتوب بنبعته نص فارغ مش "0"
+//       tooth: x.tooth ?? null,
+// position: x.position ?? null,
       nationalId: currentNationalId ? currentNationalId.trim() : '', 
       services: this.prescriptionItems.map(x => ({
         productId: x.productId ?? 0,

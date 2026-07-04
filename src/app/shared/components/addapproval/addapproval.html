@@ -190,11 +190,13 @@
             <tr class="bg-gray-50 border-b">
               <th class="px-3 py-3 text-left text-sm">#</th>
               <th class="px-3 py-3 text-left text-sm" style="width: 396px;">PRODUCT</th>
-              <th class="px-3 py-3 text-left text-sm">UNITS</th>
-              <th class="px-3 py-3 text-left text-sm">REPEAT</th>
-              <th class="px-3 py-3 text-left text-sm">DAYS</th>
+              <th *ngIf="vendorType?.toLowerCase() === 'ph'" class="px-3 py-3 text-left text-sm">UNITS</th>
+              <th *ngIf="vendorType?.toLowerCase() === 'ph'" class="px-3 py-3 text-left text-sm">REPEAT</th>
+              <th *ngIf="vendorType?.toLowerCase() === 'ph'" class="px-3 py-3 text-left text-sm">DAYS</th>
+              <th *ngIf="vendorType?.toLowerCase() === 'dt'">Tooth</th>
+    <th *ngIf="vendorType?.toLowerCase() === 'dt'">Position</th>
               <th class="px-3 py-3 text-left text-sm">PRICE</th>
-              <th class="px-3 py-3 text-left text-sm">QTY</th>
+              <th *ngIf="vendorType?.toLowerCase() != 'dt'" class="px-3 py-3 text-left text-sm">QTY</th>
               <th class="px-3 py-3 text-left text-sm">TOTAL</th>
               <th class="px-3 py-3 text-left text-sm">ACTION</th>
             </tr>
@@ -226,7 +228,7 @@
                   </ng-template>
                 </ng-select>
               </td>
-              <td class="px-3 py-3">
+              <td *ngIf="vendorType?.toLowerCase() === 'ph'" class="px-3 py-3">
                 <input
                   type="number"
                   [(ngModel)]="item.units"
@@ -235,7 +237,7 @@
                   class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </td>
-              <td class="px-3 py-3">
+              <td *ngIf="vendorType?.toLowerCase() === 'ph'" class="px-3 py-3">
                 <input
                   type="number"
                   [(ngModel)]="item.repeat"
@@ -244,7 +246,7 @@
                   class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </td>
-              <td class="px-3 py-3">
+              <td *ngIf="vendorType?.toLowerCase() === 'ph'" class="px-3 py-3">
                 <input
                   type="number"
                   [(ngModel)]="item.days"
@@ -253,6 +255,22 @@
                   class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </td>
+              <td *ngIf="vendorType?.toLowerCase() === 'dt'">
+      <select [(ngModel)]="item.tooth" class="form-control w-full px-2 py-1 border border-gray-300 rounded-md">
+        <option [value]="null" disabled selected>Select Tooth</option>
+        <option *ngFor="let num of [1,2,3,4,5,6,7,8]" [value]="num">{{ num }}</option>
+      </select>
+    </td>
+    
+    <td *ngIf="vendorType?.toLowerCase() === 'dt'">
+      <select [(ngModel)]="item.position" class="form-control w-full px-2 py-1 border border-gray-300 rounded-md">
+        <option [value]="null" disabled selected>Select Position</option>
+        <option value="top-right">Top Right</option>
+        <option value="top-left">Top Left</option>
+        <option value="bottom-right">Bottom Right</option>
+        <option value="bottom-left">Bottom Left</option>
+      </select>
+    </td>
               <td class="px-3 py-3">
                 <input
                   type="number"
@@ -262,7 +280,7 @@
                   class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </td>
-              <td class="px-3 py-3">
+              <td *ngIf="vendorType?.toLowerCase() != 'dt'" class="px-3 py-3">
                 <input
                   type="number"
                   [(ngModel)]="item.qty"

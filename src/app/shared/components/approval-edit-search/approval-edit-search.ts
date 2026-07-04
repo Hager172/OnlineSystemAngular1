@@ -9,6 +9,7 @@ import { ApprovalService } from '../../../core/services/Approval/approval-servic
 import { Subject } from 'rxjs';
 import Swal from 'sweetalert2';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
+import { AuthService } from '../../../core/services/auth/auth-service';
 
 @Component({
   selector: 'app-approval-edit-search',
@@ -27,7 +28,8 @@ coPayment: number = 0;
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private approvalService: ApprovalService
+    private approvalService: ApprovalService,
+  private authService: AuthService
   ) {}
 
 ngOnInit(): void {
@@ -94,7 +96,8 @@ vendorName: approvalData.vendorName,
 
     this.productSearch$.subscribe(term => {
       if (!term || term.length < 3) return;
-      this.approvalService.getProducts(term, "Ph").subscribe(res => {
+      const vendorType = this.authService.getVendorType() ;
+      this.approvalService.getProducts(term, vendorType??'').subscribe(res => {
         this.productOptions = res;
       });
     });

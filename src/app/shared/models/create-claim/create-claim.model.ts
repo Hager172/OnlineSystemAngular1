@@ -7,7 +7,7 @@ export interface ClaimDto {
   presId: string;
 
   phone?: string;
-
+ 
   diagnosisString?: string;
 
   diagnosisInsString?: string;
@@ -77,7 +77,8 @@ export interface PrescriptionItem {
   units: number | null;
   repeat: number | null;
   days: number | null;
-
+ tooth?: string | null;
+ position?: string | null;
   price: number;
   qty: number;
 

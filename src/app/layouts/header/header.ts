@@ -185,20 +185,20 @@ onClientChange(userId: any, clientId: any) {
       const newBranchId = res.data.branchId; 
       const newVendorId = res.data.vendorId; 
       const newRole = res.data.roles[0]; 
-
+const newVType = res.data.VType;
       localStorage.setItem('token', newToken);
       localStorage.setItem('currentClient', clientId);
       this.auth.currentClientSubject.next(clientId);
 
-      this.auth.updateSessionData(newVendorId, newBranchId, newRole);
+      this.auth.updateSessionData(newVendorId, newBranchId, newRole, newVType);
 
       this.auth.me().subscribe({
         next: (resMe) => {
           const branchFromMe = resMe.branchId;
           const vendorFromMe = resMe.vendorId;
           const roleFromMe = resMe.roles[0];
-
-          this.auth.updateSessionData(vendorFromMe, branchFromMe, roleFromMe);
+const vTypeFromMe = resMe.data.VType || '';
+          this.auth.updateSessionData(vendorFromMe, branchFromMe, roleFromMe, vTypeFromMe);
 
           const updatedPages = resMe.data?.pages || resMe.pages || [];
           this.auth.setPages(updatedPages);
