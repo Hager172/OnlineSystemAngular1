@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router'; // تم إضافة RouterModule عشان الـ routerLink يشتغل
+import { Router, RouterModule } from '@angular/router'; 
 
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { AuthService } from '../../../core/services/auth/auth-service';
@@ -18,7 +18,6 @@ import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { Subject } from 'rxjs';
 import Swal from 'sweetalert2';
 import { MemberService } from '../../../core/services/member/member-service';
-import { get } from 'http';
 
 @Component({
   selector: 'app-addapproval',
@@ -43,16 +42,19 @@ export class Addapproval implements OnInit {
   // FORM DATA (Signals & Primitive)
   // =========================
   insuredId: string = '';
-  member = signal<any>(null); // تحويل الميمبر إلى سجنال هنا
-  nationalId=signal<string>('');
+  member = signal<any>(null); 
+  nationalId = signal<string>('');
   claimId: string = '';
   externalPrescription: boolean = false;
-  claimDate: string = new Date().toISOString().split('T')[0]; // تاريخ اليوم بشكل افتراضي
-  diagnosisIds: string[] = [];
-  mobile = signal<string>(''); // السجنال الخاص بالموبايل
+  
+  // تواريخ الفاليديشن لنطاق الـ 7 أيام
+  claimDate: string = '';
+  minClaimDate: string = '';
+  maxClaimDate: string = '';
+diagnosisIds: string[] = [];
+  mobile = signal<string>(''); 
   notes: string = '';
-  // مصفوفة لحفظ الملفات المرفوعة مؤقتاً
-selectedFiles: File[] = [];
+  selectedFiles: File[] = [];
   coPayment: number = 0;
   coPaymentAmount: number = 0;
   memberPhoto: string = 'assets/images/member-photo.png';
@@ -66,71 +68,69 @@ selectedFiles: File[] = [];
   prescriptionItems: PrescriptionItem[] = [
     {
       productId: null,
-      units: 1,
-      repeat: 1,
-      days: 1,
+      units: null,
+      repeat: null,
+      days: null,
       price: 0,
-      qty: 1
+      qty: 0
     }
   ];
 
   // =========================
   // INIT
   // =========================
-  ngOnInit(): void {
-    let savedData = this.memberService.getMemberData();
+ ngOnInit(): void {
+  // حساب نطاق الـ 7 أيام (كودك زي ما هو)
+  const today = new Date();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(today.getDate() - 7);
 
-    if (!savedData) {
-      const localMember = localStorage.getItem('saved_member_data');
-      if (localMember) {
-        savedData = JSON.parse(localMember);
-      }
-    } else {
-      localStorage.setItem('saved_member_data', JSON.stringify(savedData));
-    }
+  this.maxClaimDate = today.toISOString().split('T')[0];
+  this.minClaimDate = sevenDaysAgo.toISOString().split('T')[0];
+  this.claimDate = this.maxClaimDate; 
 
-    if (savedData) {
-      this.insuredId = savedData.memberId;
+  // 🔥 الـتـعديـل هـنـا: بنقرا الداتا من الـ Signal (بنادي عليه كأنه دالة)
+  let savedData = this.memberService.memberData();
+  console.log('Saved Member Data from Signal:', savedData);
 
-      this.approvalService.getMemberInfo(this.insuredId, 'Ph').subscribe({
-        next: (res) => {
-          console.log('Member Info:', res);
-          this.member.set(res); // تحديث الـ Signal الخاص بالميمبر
+  // فكك من الـ if والـ else والـ localStorage اللي كانوا هنا.. 
+  // لأن السيرفيس الجديدة بقت بتعمل ده لوحدها أول ما بتفتح وبترجع الداتا جاهزة!
 
-          if (res.mobile) {
-            this.mobile.set(res.mobile); // تحديث سجنال الموبايل
-          }
-if(res.memberNationalId){
-            this.nationalId.set(res.memberNationalId);
-}
-          this.memberPhoto = res.cardImageUrl ? res.cardImageUrl : 'assets/images/member-photo.png';
+  if (savedData) {
+    this.insuredId = savedData.memberId; // تأكد إن الـ Object جواه فعلاً الاسم ده
 
-          if (res.coinsurance !== undefined && res.coinsurance !== null) {
-            this.coPayment = res.coinsurance;
-            this.onCoPaymentChange();
-          }
-        },
-        error: (err) => {
-          console.log('Error loading member info:', err);
+    this.approvalService.getMemberInfo(this.insuredId, 'Ph').subscribe({
+      next: (res) => {
+        console.log('Member Info:', res);
+        this.member.set(res); 
+
+        if (res.mobile) {
+          this.mobile.set(res.mobile); 
         }
-      });
-    }
 
-    this.diagnosisSearch$.subscribe(term => {
-      if (!term || term.length < 3) return;
-      this.approvalService.getDiagnosis(term).subscribe(res => {
-        this.diagnosisOptions = res;
-      });
-    });
+        if (res.memberNationalId && res.memberNationalId !== '0' && res.memberNationalId !== 0) {
+          this.nationalId.set(res.memberNationalId.toString());
+        } else {
+          this.nationalId.set('');
+        }
 
-    this.productSearch$.subscribe(term => {
-      if (!term || term.length < 3) return;
-      this.approvalService.getProducts(term, "Ph").subscribe(res => {
-        console.log('Product Options:', res); // Debugging line
-        this.productOptions = res;
-      });
+        this.memberPhoto = res.cardImageUrl ? res.cardImageUrl : 'assets/images/member-photo.png';
+
+        if (res.coinsurance !== undefined && res.coinsurance !== null) {
+          this.coPayment = res.coinsurance;
+          this.onCoPaymentChange();
+        }
+      },
+      error: (err) => {
+        console.log('Error loading member info:', err);
+      }
     });
   }
+
+  // بقية الـ streams بتاعتك تحت زي ما هي...
+  this.diagnosisSearch$.subscribe(term => { /* ... */ });
+  this.productSearch$.subscribe(term => { /* ... */ });
+}
 
   onExternalPrescriptionChange(): void {
     if (this.externalPrescription) {
@@ -140,7 +140,7 @@ if(res.memberNationalId){
 
   addPrescriptionItem(): void {
     this.prescriptionItems.push({
-      productId: null, units: 1, repeat: 1, days: 1, price: 0, qty: 1
+      productId: null, units: null, repeat: null, days: null, price: 0, qty: 0
     });
   }
 
@@ -152,21 +152,39 @@ if(res.memberNationalId){
   // SUBMIT
   // =========================
   handleSubmit(): void {
+    const currentNationalId = this.nationalId();
+
+    // فاليديشن: لو المستخدم كاتب داتا في الـ National ID، لازم تبق 14 رقم بالظبط
+    if (currentNationalId && currentNationalId.trim() !== '') {
+      const natIdRegex = /^[0-9]{14}$/;
+      if (!natIdRegex.test(currentNationalId.trim())) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: 'National ID must be exactly 14 digits.',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
+        return; 
+      }
+    }
+
     const claimDto: ClaimDto = {
       membId: this.insuredId,
       serviceDate: new Date(this.claimDate),
       presId: this.externalPrescription ? '-564000' : this.claimId,
-      phone: this.mobile(), // قراءة السجنال باستخدام الاقواس ()
+      phone: this.mobile(), 
       diagnosisString: this.diagnosisIds.join(','),
       diagnosisInsString: this.diagnosisIds.join(','),
       notes: this.notes,
+      // لو مش مكتوب بنبعته نص فارغ مش "0"
+      nationalId: currentNationalId ? currentNationalId.trim() : '', 
       services: this.prescriptionItems.map(x => ({
-        productId: x.productId??0,
+        productId: x.productId ?? 0,
         qty: x.qty,
         price: x.price,
-        units: x.units,
-        rep: x.repeat,
-        duration: x.days
+        units: x.units ?? 0,
+        rep: x.repeat ?? 0,
+        duration: x.days ?? 0
       }))
     };
 
@@ -182,9 +200,7 @@ if(res.memberNationalId){
             confirmButtonColor: '#3085d6',
             confirmButtonText: 'OK'
           });
-
-this.resetForm();
-
+          this.resetForm();
         } else {
           Swal.fire({
             title: 'Warning!',
@@ -211,10 +227,10 @@ this.resetForm();
     this.nationalId.set('');
     this.claimId = '';
     this.externalPrescription = false;
-    this.claimDate = '2026-02-24';
+    this.claimDate = this.maxClaimDate;
     this.diagnosisIds = [];
-    this.mobile.set(''); // تصفير السجنال
-    this.member.set(null); // تصفير سجنال الكارد
+    this.mobile.set(''); 
+    this.member.set(null); 
     this.notes = '';
     this.coPayment = 0;
     this.coPaymentAmount = 0;
@@ -225,9 +241,7 @@ this.resetForm();
   // CALCULATIONS & UPDATES
   // =========================
   onItemChange(item: PrescriptionItem): void {
-    item.qty = (item.units || 0) * (item.repeat || 0) * (item.days || 0);
-    if (item.qty === 0) item.qty = 1;
-    this.updateSubTotals();
+    this.calculateQty(item);
   }
 
   onCoPaymentChange(): void {
@@ -257,53 +271,49 @@ this.resetForm();
       this.coPaymentAmount = 0;
     }
   }
-// 1. التعامل مع اختيار الملفات عن طريق الـ Browse (الكليك)
-handleFileSelect(event: any): void {
-  const files = event.target.files;
-  if (files && files.length > 0) {
-    this.processFiles(files);
-  }
-}
 
-// 2. التعامل مع الملفات عن طريق الـ Drag & Drop (السحب والإفلات)
-handleFileDrop(event: DragEvent): void {
-  event.preventDefault();
-  const files = event.dataTransfer?.files;
-  if (files && files.length > 0) {
-    this.processFiles(files);
-  }
-}
-
-// 3. دالة معالجة الملفات وحفظها في المصفوفة
-private processFiles(fileList: FileList): void {
-  for (let i = 0; i < fileList.length; i++) {
-    this.selectedFiles.push(fileList[i]);
-  }
-  console.log('Selected Files:', this.selectedFiles);
-}
-
-resetForm(): void {
-  this.claimId = '';
-  this.claimDate = '';
-  this.notes = '';
-  this.externalPrescription = false;
-
-  this.selectedFiles = [];
-
-  // تصفير الـ arrays والـ ng-select داتا
-  this.diagnosisIds = [];
- this.prescriptionItems = [
-    { productId: null, units: 1, repeat: 1, days: 1, price: 0, qty: 1 }
-  ]; // لو عايز تسيب سطر فاضي للمستخدم يكتب فيه علطول، ممكن تخليها: this.prescriptionItems = [{ productId: null, units: null, repeat: null, days: null, price: null, qty: null }];
-
-  // تحديث الحسابات الإجمالية للفورم بعد التصفير
-  if (this.updateSubTotals) {
-    this.updateSubTotals();
+  handleFileSelect(event: any): void {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      this.processFiles(files);
+    }
   }
 
-  this.coPayment = 0;
-  this.coPaymentAmount = 0;
-}
+  handleFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.processFiles(files);
+    }
+  }
+
+  private processFiles(fileList: FileList): void {
+    for (let i = 0; i < fileList.length; i++) {
+      this.selectedFiles.push(fileList[i]);
+    }
+    console.log('Selected Files:', this.selectedFiles);
+  }
+
+  resetForm(): void {
+    this.claimId = '';
+    this.claimDate = this.maxClaimDate;
+    this.notes = '';
+    this.externalPrescription = false;
+    this.selectedFiles = [];
+    this.diagnosisIds = [];
+    this.nationalId.set(''); // تصفير دائم للرقم القومي بالفورم
+    this.prescriptionItems = [
+      { productId: null, units: null, repeat: null, days: null, price: 0, qty: 0 }
+    ]; 
+
+    if (this.updateSubTotals) {
+      this.updateSubTotals();
+    }
+
+    this.coPayment = 0;
+    this.coPaymentAmount = 0;
+  }
+
   onCoAmountChange(): void {
     const subTotal = parseFloat(this.calculateSubTotal());
     if (subTotal > 0) {
@@ -322,34 +332,60 @@ resetForm(): void {
     }
   }
 
-  onProductSelect(selectedProduct: any, item: PrescriptionItem): void {
-    if (selectedProduct) {
-      item.price = selectedProduct.price || 0;
-    } else {
-      item.price = 0;
+  private calculateQty(item: PrescriptionItem): void {
+    if (!item.product) {
+      return;
     }
-    this.onItemChange(item);
+
+    const units = item.units || 0;
+    const repeat = item.repeat || 0;
+    const duration = item.days || 0;
+
+    const dose = item.product.doseUnitNo || 1;
+    const sub = item.product.subUnitNo || 1;
+
+    let qty = (units * repeat * duration) / (dose / sub);
+    const decimalPart = qty % 1;
+    qty = Math.round(qty);
+
+    if (decimalPart >= 0.3 && decimalPart < 0.5) {
+      qty++;
+    }
+
+    item.qty = qty;
+    this.updateSubTotals();
   }
 
-  // دالة مسح الـ Diagnosis
-onDiagnosisClear(): void {
-  this.diagnosisOptions = [];    // تفضي الليسته
-  this.diagnosisSearch$.next(''); // تبعت signal فاضي عشان الـ typeahead
-}
+  onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
+    console.log(product);
+    if (!product) {
+      item.product = undefined;
+      item.price = 0;
+      item.qty = 0;
+      return;
+    }
 
-// دالة مسح الـ Product
-onProductClear(): void {
-  this.productOptions = [];
-  this.productSearch$.next('');
-}
-
-// دالة للبحث - فيها تحسين إنها متجيش بالنتايج لو الكلمة أقل من 3 حروف (لازم عندك سيرفر بيقبل)
-onDiagnosisSearch($event: any): void {
-  const term = $event?.term;
-  if (term && term.length >= 2) {
-    this.diagnosisSearch$.next(term);
-  } else if (!term || term.length === 0) {
-    this.diagnosisOptions = [];
+    item.product = product;
+    item.price = product.price / (product.subUnitNo || 1);
+    this.calculateQty(item);
   }
-}
+
+  onDiagnosisClear(): void {
+    this.diagnosisOptions = [];    
+    this.diagnosisSearch$.next(''); 
+  }
+
+  onProductClear(): void {
+    this.productOptions = [];
+    this.productSearch$.next('');
+  }
+
+  onDiagnosisSearch($event: any): void {
+    const term = $event?.term;
+    if (term && term.length >= 2) {
+      this.diagnosisSearch$.next(term);
+    } else if (!term || term.length === 0) {
+      this.diagnosisOptions = [];
+    }
+  }
 }

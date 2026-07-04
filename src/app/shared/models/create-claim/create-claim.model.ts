@@ -14,6 +14,8 @@ export interface ClaimDto {
 
   notes?: string;
 
+  nationalId?: string;
+
   services: ClaimServiceItemDto[];
 }
 
@@ -70,25 +72,22 @@ export interface CreateClaimResponseDto {
 }
 
 export interface PrescriptionItem {
+  productId: number | null;
 
-  productId: number|null;
-
-  units: number;
-
-  repeat: number;
-
-  days: number;
+  units: number | null;
+  repeat: number | null;
+  days: number | null;
 
   price: number;
-
   qty: number;
+
+  product?: ProductLookupDto;
 }
 
 export interface ProductLookupDto {
   id: number;
   name: string;
   price: number;
-
   doseUnitNo: number;
   subUnitNo: number;
 }
