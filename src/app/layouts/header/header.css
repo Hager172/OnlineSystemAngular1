@@ -280,3 +280,36 @@ header::after {
   background: transparent;
   padding: 0;
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 16px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all .25s ease;
+}
+
+.logout-btn i {
+  font-size: 16px;
+}
+
+.logout-btn:hover {
+  background: #f3f4f6;
+  color: #dc2626;
+}
+
+.logout-btn:active {
+  transform: scale(.96);
+}

@@ -21,5 +21,6 @@ export interface Approval {
   items: ApprovalItem[];
   expiryDate?: string;
   itemCount?: number;
+  vendorName?: string;
 
 }

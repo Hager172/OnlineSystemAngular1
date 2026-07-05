@@ -1,0 +1,69 @@
+
+/* نفس تصميم PrimeNG */
+.custom-diagnosis-select {
+  width: 100%;
+}
+
+/* تنسيق الحاوية الخارجية زي PrimeNG */
+/* :host ::ng-deep .custom-diagnosis-select .ng-select-container {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+  min-height: 42px;
+} */
+
+/* تنسيق الـ placeholder */
+:host ::ng-deep .custom-diagnosis-select .ng-placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* تنسيق العناصر المختارة زي PrimeNG chips */
+:host ::ng-deep .custom-diagnosis-select .ng-value {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-radius: 16px !important;
+  padding: 4px 8px !important;
+  margin: 2px !important;
+  font-size: 13px !important;
+}
+
+:host ::ng-deep .custom-diagnosis-select .ng-value-icon {
+  color: #0369a1 !important;
+}
+
+:host ::ng-deep .custom-diagnosis-select .ng-value-icon:hover {
+  background-color: #bae6fd !important;
+  border-radius: 16px !important;
+}
+
+/* تنسيق القائمة المنسدلة */
+:host ::ng-deep .ng-dropdown-panel {
+  border-radius: 8px !important;
+  width: 90% !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  margin-top: 4px !important;
+}
+
+:host ::ng-deep .ng-dropdown-panel .ng-option {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  background-color: #ffffff !important;
+}
+
+:host ::ng-deep .ng-dropdown-panel .ng-option:hover {
+  background-color: #f0f9ff !important;
+}
+
+:host ::ng-deep .ng-dropdown-panel .ng-option-marked {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+
+/* تنسيق الـ clear button */
+:host ::ng-deep .ng-clear-wrapper:hover .ng-clear {
+  color: #ef4444 !important;
+}
+
+/* تنسيق الـ dropdown button */
+:host ::ng-deep .ng-arrow-wrapper:hover .ng-arrow {
+  border-color: #3b82f6 !important;
+}
