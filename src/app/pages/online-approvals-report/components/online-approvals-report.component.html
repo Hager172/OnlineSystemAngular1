@@ -32,20 +32,6 @@
   <mat-card-content>
     <form [formGroup]="form" (ngSubmit)="search()" class="oar-form">
 
-      <!-- Client ID -->
-      <mat-form-field appearance="outline" class="oar-form__field">
-        <mat-label>Client ID</mat-label>
-        <mat-icon matPrefix>business</mat-icon>
-        <input matInput
-               formControlName="clientId"
-               placeholder="e.g. 153"
-               autocomplete="off"
-               autofocus>
-        @if (form.get('clientId')?.hasError('required') && form.get('clientId')?.touched) {
-          <mat-error>Client ID is required</mat-error>
-        }
-      </mat-form-field>
-
       <!-- Start Date -->
       <mat-form-field appearance="outline" class="oar-form__field">
         <mat-label>Start Date</mat-label>
