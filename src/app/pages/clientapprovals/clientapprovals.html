@@ -19,22 +19,22 @@
     <div class="search-input-container">
       <div class="search-input-group">
         <i class="bi bi-search input-icon"></i>
-        <input 
-          type="number" 
-          class="search-field" 
+        <input
+          type="number"
+          class="search-field"
           [placeholder]="searchType === 'approval' ? 'Enter approval number...' : 'Enter member ID...'"
           [(ngModel)]="searchValue"
           (keyup.enter)="performSearch()"
         >
-        <button 
-          class="search-btn search-btn-primary" 
+        <button
+          class="search-btn search-btn-primary"
           (click)="performSearch()"
           [disabled]="!searchValue"
         >
           <i class="fas fa-search"></i>
         </button>
-        <button 
-          class="search-btn search-btn-outline" 
+        <button
+          class="search-btn search-btn-outline"
           (click)="cancelSearch()"
         >
           <i class="fas fa-times"></i>
@@ -50,18 +50,18 @@
         <h1 class="page-title">Today Approvals</h1>
         <p class="page-subtitle">Daily Records</p>
       </div>
-      
+
       <!-- Tabs -->
       <div class="tabs-container">
-        <button 
-          class="tab-btn" 
+        <button
+          class="tab-btn"
           [class.active]="apptype === 'all'"
           (click)="toggleapp('all')"
         >
           All
         </button>
-        <button 
-          class="tab-btn" 
+        <button
+          class="tab-btn"
           [class.active]="apptype === 'notcompelete'"
           (click)="toggleapp('notcompelete')"
         >
@@ -73,9 +73,9 @@
     <div class="header-right">
       <div class="search-wrapper">
         <i class="bi bi-search search-icon"></i>
-        <input 
-          type="text" 
-          class="search-input" 
+        <input
+          type="text"
+          class="search-input"
           placeholder="Search approvals..."
         >
       </div>
@@ -112,7 +112,7 @@
               <i class="bi bi-calendar3"></i>
               {{ approval.approval_date | date:'mediumDate' }}
             </td>
-          
+
           </tr>
           <tr *ngIf="approvallsToDay.length === 0" class="empty-state">
             <td colspan="4">
@@ -129,9 +129,9 @@
     <!-- Pagination -->
     <div class="pagination-wrapper" *ngIf="approvallsToDay.length > 0">
       <div class="pagination">
-        <button 
-          *ngFor="let page of totalPages" 
-          class="page-btn" 
+        <button
+          *ngFor="let page of totalPages"
+          class="page-btn"
           [class.active]="page === currentPage"
           (click)="goToPage(page)">
           {{ page }}

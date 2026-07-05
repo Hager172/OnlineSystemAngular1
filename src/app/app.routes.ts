@@ -16,6 +16,7 @@ import { SearchResults } from './shared/components/search-results/search-results
 
 import { Chat } from './pages/chat/chat';
 import { Approvals3m } from './shared/components/approvals3m/approvals3m';
+import { OnlineApprovalsReportComponent } from './pages/online-approvals-report/components/online-approvals-report.component';
 
 
 
@@ -40,6 +41,7 @@ export const routes: Routes = [
     {path:'monthlyapprovals',component:Approvals3m},
 
       {path: 'chat', component:Chat},
+      {path: 'online-approvals-report', component: OnlineApprovalsReportComponent},
 
     ],
     //canActivate: [AuthGuard]
