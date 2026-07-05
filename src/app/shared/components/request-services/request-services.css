@@ -1,0 +1,183 @@
+.services-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eef0f4;
+}
+
+.services-card--placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #9aa1b1;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.services-card--placeholder i {
+  font-size: 28px;
+}
+
+.services-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1a1d29;
+}
+
+.section-subtitle {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.btn-add-service {
+  border: none;
+  background: #2f6fed;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-add-service:hover {
+  background: #2559c9;
+}
+
+.services-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #eef0f4;
+  border-radius: 10px;
+}
+
+.services-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1200px;
+}
+
+.services-table th {
+  background: #1a1d29;
+  color: #fff;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 12px 10px;
+  white-space: nowrap;
+}
+
+.services-table td {
+  padding: 10px;
+  border-bottom: 1px solid #f2f3f6;
+  vertical-align: middle;
+}
+
+.services-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.table-input {
+  width: 75px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #e4e6ec;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+
+
+.table-select .ng-select-container {
+  min-height: 36px !important;
+  font-size: 13px;
+   min-width: 180px;
+  width: 200px;
+}
+
+.selected-service-name {
+  font-size: 12.5px;
+  color: #1a1d29;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.services-table tfoot td {
+  border-top: 2px solid #eef0f4;
+  border-bottom: none;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: #9aa1b1;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 28px;
+}
+
+::ng-deep .ng-dropdown-panel {
+  z-index: 9999 !important;
+}
+.services-table {
+  min-width: 1400px; /* بدل 1200px، عشان الأعمدة متتزنقش */
+}
+::ng-deep .table-select .ng-select-container {
+  height: 36px !important;
+  min-height: 36px !important;
+  border: 1px solid #e4e6ec !important;
+  border-radius: 6px !important;
+  font-size: 13px;
+  box-shadow: none !important;
+  background: #fff;
+}
+
+::ng-deep .table-select.ng-select-focused .ng-select-container {
+  border-color: #2f6fed !important;
+  box-shadow: 0 0 0 2px rgba(47,111,237,.15) !important;
+}
+
+::ng-deep .table-select .ng-value-container {
+  padding-left: 8px !important;
+}
+
+::ng-deep .table-select .ng-input input {
+  padding-left: 4px !important;
+}
+
+::ng-deep .table-select .ng-placeholder {
+  color: #9aa1b1 !important;
+  font-size: 13px;
+}
+
+::ng-deep .table-select .ng-value {
+  font-size: 13px;
+  color: #1a1d29;
+}
+
+::ng-deep .table-select .ng-arrow-wrapper {
+  padding-right: 8px;
+}

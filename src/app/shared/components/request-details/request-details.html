@@ -1,0 +1,299 @@
+<div class="request-details-card">
+  <h6 class="section-title">Request Details</h6>
+
+  <!-- 1. Select Member -->
+  <div class="step-block">
+    <label class="step-label">1. Select Member</label>
+
+    <div class="search-input-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        class="form-control search-input"
+        placeholder="Search by member name, ID or mobile number..."
+        [(ngModel)]="searchTerm"
+        (input)="onMemberInputChange()"
+      />
+      <button type="button" class="btn-inline-search" (click)="onMemberSearchClick()">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+
+    <div class="text-muted mt-2" *ngIf="loading">Searching...</div>
+
+    <div class="member-card" *ngIf="state.member() as m">
+      <div class="member-card__main">
+        <img
+          [src]="m.cardImageUrl || 'assets/images/member-photo.png'"
+          class="member-avatar"
+          alt="{{ m.memberName }}"
+        />
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">{{ m.memberName }}</span>
+            <span class="badge-active" *ngIf="m.status">{{ m.status }}</span>
+          </div>
+          <div class="member-sub-row">
+            <span *ngIf="m.memberId">Member ID: {{ m.memberId }}</span>
+            <span class="dot-separator" *ngIf="m.mobile">•</span>
+            <span *ngIf="m.mobile">Mobile: {{ m.mobile }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="member-card__meta">
+        <div class="meta-item" *ngIf="m.customerName">
+          <i class="fas fa-file-alt meta-icon"></i>
+          <div>
+            <div class="meta-label">Customer</div>
+            <div class="meta-value">{{ m.customerName }}</div>
+          </div>
+        </div>
+        <div class="meta-item" *ngIf="m.nationalId">
+          <i class="fas fa-id-card meta-icon"></i>
+          <div>
+            <div class="meta-label">National ID</div>
+            <div class="meta-value">{{ m.nationalId }}</div>
+          </div>
+        </div>
+        <div class="meta-item" *ngIf="m.birthDate">
+          <i class="fas fa-user meta-icon"></i>
+          <div>
+            <div class="meta-label">Age</div>
+            <div class="meta-value">{{ calculateAge(m.birthDate) }} Y</div>
+          </div>
+        </div>
+        <button type="button" class="btn-view-history">
+          <i class="fas fa-history"></i>
+          View History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="state.member()">
+
+    <!-- 2. Select Type -->
+    <div class="step-block">
+      <label class="step-label">2. Select Type</label>
+      <div class="type-selector">
+        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Surgical'" (click)="selectType('Surgical')">
+          <i class="fas fa-user-injured"></i> Surgery
+        </button>
+        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Pharmacy'" (click)="selectType('Pharmacy')">
+          <i class="fas fa-pills"></i> Medicine
+        </button>
+        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Public'" (click)="selectType('Public')">
+          <i class="fas fa-file-medical"></i> Other
+        </button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="state.selectedType()">
+
+      <!-- 3. Select Vendor + Branch -->
+      <div class="step-block">
+        <label class="step-label">3. Select Vendor</label>
+        <div class="row g-3">
+          <div class="col-md-7">
+            <label class="sub-label">Vendor</label>
+            <ng-select
+              class="custom-diagnosis-select"
+              [items]="vendorOptions"
+              bindLabel="text"
+              bindValue="id"
+              [typeahead]="vendorSearch$"
+              (search)="onVendorSearch($event.term)"
+              (change)="onVendorSelect($event)"
+              (clear)="onVendorClear()"
+              placeholder="Type to search vendor..."
+              [clearable]="true"
+              [searchable]="true"
+            ></ng-select>
+          </div>
+
+          <div class="col-md-5">
+            <label class="sub-label">Branch <span class="text-muted">(Optional)</span></label>
+            <ng-select
+              class="custom-diagnosis-select"
+              [items]="branchOptions"
+              bindLabel="branchName"
+              bindValue="branchId"
+              [ngModel]="state.selectedBranch()"
+              (ngModelChange)="state.selectedBranch.set($event)"
+              [disabled]="!state.selectedVendor()"
+              placeholder="Select Vendor first"
+              [clearable]="true"
+              [searchable]="true"
+            ></ng-select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Approval Date + Max Limit -->
+      <div class="step-block">
+        <label class="step-label">4. Approval Date</label>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="sub-label">Date</label>
+            <input
+              type="date"
+              class="custom-input"
+              [ngModel]="state.approvalDate()"
+              (ngModelChange)="state.approvalDate.set($event)"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="sub-label">Max Limit <span class="text-muted">(Optional)</span></label>
+            <input
+              type="number"
+              class="custom-input"
+              placeholder="Max"
+              [ngModel]="state.maxLimit()"
+              (ngModelChange)="state.maxLimit.set($event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Diagnosis -->
+      <div class="step-block">
+        <label class="step-label">5. Diagnosis</label>
+        <ng-select
+          class="custom-diagnosis-select"
+          [items]="diagnosisOptions"
+          bindLabel="name"
+          bindValue="id"
+          [multiple]="true"
+          [typeahead]="diagnosisSearch$"
+          [ngModel]="state.diagnosisIds()"
+          (ngModelChange)="state.diagnosisIds.set($event)"
+          placeholder="Select Diagnosis"
+          [clearable]="true"
+          [searchable]="true"
+          (search)="onDiagnosisSearch($event)"
+          (clear)="onDiagnosisClear()"
+        ></ng-select>
+      </div>
+
+      <!-- 6. Approval Code / Source / Contact -->
+     <!-- 6. Approval Code / Source / Contact -->
+<div class="step-block">
+  <label class="step-label">6. Approval Code, Source & Contact</label>
+
+  <!-- First Row -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <label class="sub-label">
+        Approval Code <span class="text-muted">(Optional)</span>
+      </label>
+
+      <input
+        type="text"
+        class="custom-input"
+        placeholder="Approval Code"
+        [ngModel]="state.approvalCode()"
+        (ngModelChange)="state.approvalCode.set($event)"
+      />
+    </div>
+
+    <div class="col-md-6">
+      <label class="sub-label">Select Source</label>
+
+      <select
+        class="custom-input"
+        [ngModel]="state.selectedSource()"
+        (ngModelChange)="state.selectedSource.set($event)"
+      >
+        <option [ngValue]="null" disabled>Select Source</option>
+        <option *ngFor="let s of sourceOptions" [ngValue]="s">
+          {{ s }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Second Row -->
+  <div class="row">
+    <div class="col-12">
+      <label class="sub-label">Contact Method</label>
+
+      <div class="contact-methods">
+
+        <button
+          type="button"
+          class="contact-btn"
+          [class.active]="isContactMethodActive('Email')"
+          (click)="toggleContactMethod('Email')">
+          <i class="fas fa-envelope"></i>
+          Email
+        </button>
+
+        <button
+          type="button"
+          class="contact-btn"
+          [class.active]="isContactMethodActive('WhatsApp')"
+          (click)="toggleContactMethod('WhatsApp')">
+          <i class="fab fa-whatsapp"></i>
+          WhatsApp
+        </button>
+
+        <button
+          type="button"
+          class="contact-btn"
+          [class.active]="isContactMethodActive('Call')"
+          (click)="toggleContactMethod('Call')">
+          <i class="fas fa-phone"></i>
+          Call
+        </button>
+
+        <button
+          type="button"
+          class="contact-btn"
+          [class.active]="isContactMethodActive('Other')"
+          (click)="toggleContactMethod('Other')">
+          Other
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+      <!-- 7. Notes -->
+      <div class="step-block">
+        <label class="step-label">7. Notes <span class="text-muted">(Optional)</span></label>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="sub-label">Notes</label>
+            <textarea class="custom-textarea" rows="3" placeholder="Notes"
+              [ngModel]="state.notes()" (ngModelChange)="state.notes.set($event)"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="sub-label">Private Notes</label>
+            <textarea class="custom-textarea" rows="3" placeholder="Private Notes"
+              [ngModel]="state.privateNotes()" (ngModelChange)="state.privateNotes.set($event)"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Claim & Exception -->
+      <div class="step-block">
+        <label class="step-label">8. Claim & Exception <span class="text-muted">(Optional)</span></label>
+        <div class="claim-exception-wrapper">
+          <div class="claim-field">
+            <label class="sub-label">Claim</label>
+            <input type="text" class="custom-input" placeholder="Claim"
+              [ngModel]="state.claimAmount()" (ngModelChange)="state.claimAmount.set($event)" />
+          </div>
+          <div class="exception-field d-flex align-items-center gap-2">
+            <input type="checkbox" id="exceptionCheck"
+              [ngModel]="state.isException()" (ngModelChange)="state.isException.set($event)" />
+            <label for="exceptionCheck" class="sub-label mb-0">Exception</label>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+  </ng-container>
+</div>
