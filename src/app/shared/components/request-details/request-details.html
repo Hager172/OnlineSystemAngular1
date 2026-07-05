@@ -1,0 +1,299 @@
+<!-- <div class="request-details-card">
+  <h6 class="section-title">Request Details</h6>
+
+  <div class="form-group-block">
+    <label class="step-label">1. Select Member</label>
+
+    <div class="search-input-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        class="form-control search-input"
+        placeholder="Search by member name, ID or mobile number..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchInput()"
+      />
+    </div>
+
+    <div class="text-muted mt-2" *ngIf="loading()">Searching...</div>
+
+    <div class="member-card" *ngIf="member() as m">
+      <div class="member-card__main">
+        <img
+          [src]="m.cardImageUrl || 'assets/images/member-photo.png'"
+          class="member-avatar"
+          alt="{{ m.memberName }}"
+        />
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">{{ m.memberName }}</span>
+            <span class="badge-active" *ngIf="m.status">{{ m.status }}</span>
+          </div>
+          <div class="member-sub-row">
+            <span>Member ID: {{ m.memberId }}</span>
+            <span class="dot-separator" *ngIf="m.mobile">•</span>
+            <span *ngIf="m.mobile">Mobile: {{ m.mobile }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="member-card__meta">
+        <div class="meta-item" *ngIf="m.customerName">
+          <i class="fas fa-file-alt meta-icon"></i>
+          <div>
+            <div class="meta-label">Customer</div>
+            <div class="meta-value">{{ m.customerName }}</div>
+          </div>
+        </div>
+
+        <div class="meta-item" *ngIf="m.nationalId">
+          <i class="fas fa-id-card meta-icon"></i>
+          <div>
+            <div class="meta-label">National ID</div>
+            <div class="meta-value">{{ m.nationalId }}</div>
+          </div>
+        </div>
+
+        <div class="meta-item" *ngIf="m.birthDate">
+          <i class="fas fa-user meta-icon"></i>
+          <div>
+            <div class="meta-label">Birth Date</div>
+            <div class="meta-value">{{ m.birthDate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> -->
+<!-- 
+<div class="request-details-card">
+  <h6 class="section-title">Request Details</h6>
+
+  <div class="form-group-block">
+    <label class="step-label">1. Select Member</label>
+
+    <form (ngSubmit)="onSearch()" class="search-input-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        class="form-control search-input"
+        placeholder="Search by member name, ID or mobile number..."
+        [(ngModel)]="searchTerm"
+        name="searchTerm"
+      />
+    </form>
+
+    <div class="text-muted mt-2" *ngIf="loading()">Searching...</div>
+
+    <div class="member-card" *ngIf="member() as m">
+      <div class="member-card__main">
+        <img
+          [src]="m.cardImageUrl || 'assets/images/member-photo.png'"
+          class="member-avatar"
+          alt="{{ m.memberName }}"
+        />
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">{{ m.memberName }}</span>
+          </div>
+          <div class="member-sub-row">
+            <span>Member ID: {{ m.memberId }}</span>
+            <span class="dot-separator" *ngIf="m.mobile">•</span>
+            <span *ngIf="m.mobile">Mobile: {{ m.mobile }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="member-card__meta" *ngIf="m.customerName">
+        <div class="meta-item">
+          <i class="fas fa-file-alt meta-icon"></i>
+          <div>
+            <div class="meta-label">Customer</div>
+            <div class="meta-value">{{ m.customerName }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+ -->
+<div class="request-details-card">
+  <h6 class="section-title">Request Details</h6>
+
+  <div class="form-group-block">
+    <label class="step-label">1. Select Member</label>
+
+    <div class="search-input-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        class="form-control search-input"
+        placeholder="Search by member name, ID or mobile number..."
+        [(ngModel)]="searchTerm"
+        (input)="onInputChange()"
+      />
+      <button type="button" class="btn-inline-search" (click)="onSearchClick()">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+
+    <div class="text-muted mt-2" *ngIf="loading()">Searching...</div>
+
+    <div class="member-card" *ngIf="member() as m">
+      <div class="member-card__main">
+        <img
+          [src]="m.cardImageUrl || 'assets/images/member-photo.png'"
+          class="member-avatar"
+          alt="{{ m.memberName }}"
+        />
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">{{ m.memberName }}</span>
+            <span class="badge-active" *ngIf="m.status">{{ m.status }}</span>
+          </div>
+          <div class="member-sub-row">
+            <span *ngIf="m.memberId">Member ID: {{ m.memberId }}</span>
+            <span class="dot-separator" *ngIf="m.mobile">•</span>
+            <span *ngIf="m.mobile">Mobile: {{ m.mobile }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="member-card__meta">
+        <div class="meta-item" *ngIf="m.customerName">
+          <i class="fas fa-file-alt meta-icon"></i>
+          <div>
+            <div class="meta-label">Customer</div>
+            <div class="meta-value">{{ m.customerName }}</div>
+          </div>
+        </div>
+
+        <div class="meta-item" *ngIf="m.nationalId">
+          <i class="fas fa-id-card meta-icon"></i>
+          <div>
+            <div class="meta-label">National ID</div>
+            <div class="meta-value">{{ m.nationalId }}</div>
+          </div>
+        </div>
+
+        <div class="meta-item" *ngIf="m.birthDate">
+          <i class="fas fa-user meta-icon"></i>
+          <div>
+            <div class="meta-label">Age</div>
+            <div class="meta-value">{{ calculateAge(m.birthDate) }} Y</div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-view-history">
+          <i class="fas fa-history"></i>
+          View History
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- 2. Select Type -->
+<div class="form-group-block mt-4" *ngIf="member()">
+  <label class="step-label">2. Select Type</label>
+
+  <div class="type-selector">
+    <button
+      type="button"
+      class="type-btn"
+      [class.active]="selectedType() === 'Surgery'"
+      (click)="selectType('Surgery')"
+    >
+      <i class="fas fa-user-injured"></i>
+      Surgery
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      [class.active]="selectedType() === 'Medicine'"
+      (click)="selectType('Medicine')"
+    >
+      <i class="fas fa-pills"></i>
+      Medicine
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      [class.active]="selectedType() === 'Other'"
+      (click)="selectType('Other')"
+    >
+      <i class="fas fa-file-medical"></i>
+      Other
+    </button>
+  </div>
+</div>
+
+<div class="mt-4" *ngIf="selectedType()">
+
+  <!-- 3. Select Vendor -->
+  <div class="form-group-block">
+    <label class="step-label">3. Select Vendor</label>
+    <ng-select
+      class="form-control custom-diagnosis-select"
+      [items]="vendorOptions"
+      bindLabel="vendorName"
+      bindValue="vendorId"
+      [typeahead]="vendorSearch$"
+      (change)="onVendorSelect($event)"
+      (clear)="onVendorClear()"
+      placeholder="Select Vendor"
+      [clearable]="true"
+      [searchable]="true"
+    ></ng-select>
+  </div>
+
+  <!-- 4. Branch (اختياري) -->
+  <div class="mt-4" *ngIf="selectedType()">
+
+  <!-- 3. Select Vendor -->
+  <div class="form-group-block">
+    <label class="step-label">3. Select Vendor</label>
+
+    <ng-select
+      class="custom-diagnosis-select"
+      [items]="vendorOptions"
+      bindLabel="vendorName"
+      [typeahead]="vendorSearch$"
+      (search)="onVendorSearch($event.term)"
+      (change)="onVendorSelect($event)"
+      (clear)="onVendorClear()"
+      placeholder="Type to search vendor..."
+      [clearable]="true"
+      [searchable]="true">
+    </ng-select>
+
+  </div>
+
+  <!-- 4. Select Branch -->
+  <div class="form-group-block mt-3" *ngIf="selectedVendor()">
+
+    <label class="step-label">
+      4. Select Branch
+      <span class="text-muted">(Optional)</span>
+    </label>
+
+    <ng-select
+      class="custom-diagnosis-select"
+      [items]="branchOptions"
+      bindLabel="branchName"
+      bindValue="branchId"
+      [ngModel]="selectedBranch()"
+      (ngModelChange)="selectedBranch.set($event)"
+      placeholder="Select Branch"
+      [clearable]="true"
+      [searchable]="true">
+    </ng-select>
+
+  </div>
+
+
+</div>
+</div>
+
+
+</div>

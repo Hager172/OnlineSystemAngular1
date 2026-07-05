@@ -1,0 +1,21 @@
+.request-page {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.request-page__left {
+  flex: 2;
+  min-width: 0;
+}
+
+.request-page__right {
+  flex: 1;
+  min-width: 280px;
+}
+
+@media (max-width: 900px) {
+  .request-page {
+    flex-direction: column;
+  }
+}
