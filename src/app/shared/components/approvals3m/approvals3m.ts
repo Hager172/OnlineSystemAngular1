@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { AuthService } from '../../../core/services/auth/auth-service';
-
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 interface BranchApprovalItem {
   approvalId: number;
   approvalDate: string;
@@ -14,13 +15,13 @@ interface BranchApprovalItem {
   notes: string;
   memberId: string;
   memberName: string | null;
-    companyName: string | null;
-    branchName: string | null;
-value:number;
-netvalue:number;
-localdiscountvalue:number;
-importeddiscountvalue:number;
-copaymentvalue:number;
+  companyName: string | null;
+  branchName: string | null;
+  value: number;
+  netvalue: number;
+  localdiscountvalue: number;
+  importeddiscountvalue: number;
+  copaymentvalue: number;
   vendorId: string;
   statusText: string;
   statusIcon: string;
@@ -41,81 +42,75 @@ export class Approvals3m implements OnInit {
   itemsPerPage = 5;
   Math = Math;
 
-  // لتحديد الشهر المختار حالياً (all تعني كل الـ 3 أشهر)
-  selectedMonthFilter = signal<'all' | 'current' | 'last' | 'twoMonthsAgo'>('all');
-
+  // 1. الديفولت بقى 'last' (الشهر اللي فات) وتم استبعاد الشهر الحالي تماماً
+  selectedMonthFilter = signal<'last' | 'twoMonthsAgo' | 'threeMonthsAgo'>('last');
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
-  // أسماء الأشهر للـ Buttons
   monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
   
-  currentMonthName = '';
   lastMonthName = '';
   twoMonthsAgoName = '';
+  threeMonthsAgoName = '';
 
-  constructor(private service: ApprovalService,private authService: AuthService) {}
+  constructor(private service: ApprovalService, private authService: AuthService) {}
 
   ngOnInit() {
     this.initMonthNames();
-    this.loadBranchApprovals();
+    this.loadVendorApprovals();
   }
 
- initMonthNames() {
-  const now = new Date();
-  
-  // الشهر الأول السابق (بدل الحالي)
-  this.currentMonthName = this.monthNames[new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth()];
-  
-  // الشهر الثاني السابق
-  this.lastMonthName = this.monthNames[new Date(now.getFullYear(), now.getMonth() - 2, 1).getMonth()];
-  
-  // الشهر الثالث السابق
-  this.twoMonthsAgoName = this.monthNames[new Date(now.getFullYear(), now.getMonth() - 3, 1).getMonth()];
-}
-  // فلترة متطورة تجمع بين (البحث الذكي + زرار الشهر المختار + السورتينج)
+  initMonthNames() {
+    const now = new Date();
+    // ترحيل الحسبة لتبدأ من الشهر الماضي وتنزيل 3 شهور لورا (6 و 5 و 4)
+    this.lastMonthName = this.monthNames[new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth()];
+    this.twoMonthsAgoName = this.monthNames[new Date(now.getFullYear(), now.getMonth() - 2, 1).getMonth()];
+    this.threeMonthsAgoName = this.monthNames[new Date(now.getFullYear(), now.getMonth() - 3, 1).getMonth()];
+  }
+
   filteredApprovals = computed(() => {
     let all = this.approvals();
     const query = this.searchQuery().toLowerCase();
     const monthFilter = this.selectedMonthFilter();
     
-    // 1. الفلترة بحسب الشهر المختار بالـ Buttons
     const now = new Date();
-    const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    // تجهيز التواريخ للثلاثة شهور السابقة (6 و 5 & 4)
     const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
     const twoMonthsAgoDate = new Date(currentYear, currentMonth - 2, 1);
+    const threeMonthsAgoDate = new Date(currentYear, currentMonth - 3, 1);
 
-    if (monthFilter !== 'all') {
-      all = all.filter(item => {
-        const d = new Date(item.approvalDate);
-        if (monthFilter === 'current') {
-          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-        } else if (monthFilter === 'last') {
-          return d.getMonth() === lastMonthDate.getMonth() && d.getFullYear() === lastMonthDate.getFullYear();
-        } else if (monthFilter === 'twoMonthsAgo') {
-          return d.getMonth() === twoMonthsAgoDate.getMonth() && d.getFullYear() === twoMonthsAgoDate.getFullYear();
-        }
-        return true;
-      });
-    }
+    // الفلترة بناءً على الاختيار المستهدف
+    all = all.filter(item => {
+      if (!item.approvalDate) return false;
+      const d = new Date(item.approvalDate);
+      
+      if (monthFilter === 'last') {
+        return d.getMonth() === lastMonthDate.getMonth() && d.getFullYear() === lastMonthDate.getFullYear();
+      } else if (monthFilter === 'twoMonthsAgo') {
+        return d.getMonth() === twoMonthsAgoDate.getMonth() && d.getFullYear() === twoMonthsAgoDate.getFullYear();
+      } else if (monthFilter === 'threeMonthsAgo') {
+        return d.getMonth() === threeMonthsAgoDate.getMonth() && d.getFullYear() === threeMonthsAgoDate.getFullYear();
+      }
+      return true;
+    });
 
-    // 2. الفلترة بكلمة البحث (Search Query)
     if (query) {
       all = all.filter(i => 
-        i.approvalId.toString().includes(query) ||
-        i.memberId.toLowerCase().includes(query) ||
-        i.apType.toLowerCase().includes(query) ||
-        i.requestSource.toLowerCase().includes(query) ||
-        i.vendorId.toLowerCase().includes(query) ||
-        i.notes.toLowerCase().includes(query)
+        (i.approvalId?.toString() || '').includes(query) ||
+        (i.memberId?.toLowerCase() || '').includes(query) ||
+        (i.apType?.toLowerCase() || '').includes(query) ||
+        (i.requestSource?.toLowerCase() || '').includes(query) ||
+        (i.vendorId?.toLowerCase() || '').includes(query) ||
+        (i.notes?.toLowerCase() || '').includes(query)
       );
     }
 
-    // 3. الترتيب (Sorting)
     const col = this.sortColumn();
     if (col) {
       const dir = this.sortDirection();
@@ -123,8 +118,8 @@ export class Approvals3m implements OnInit {
         let x: any = a[col as keyof BranchApprovalItem];
         let y: any = b[col as keyof BranchApprovalItem];
         if (col === 'approvalDate') {
-          x = new Date(x).getTime();
-          y = new Date(y).getTime();
+          x = x ? new Date(x).getTime() : 0;
+          y = y ? new Date(y).getTime() : 0;
         } else if (typeof x === 'string') {
           x = x.toLowerCase();
           y = y.toLowerCase();
@@ -137,37 +132,42 @@ export class Approvals3m implements OnInit {
     return all;
   });
 
+  totalGrossValue = computed(() => this.filteredApprovals().reduce((sum, item) => sum + (item.value || 0), 0));
+  totalCopayment = computed(() => this.filteredApprovals().reduce((sum, item) => sum + (item.copaymentvalue || 0), 0));
+  totalImportedDiscount = computed(() => this.filteredApprovals().reduce((sum, item) => sum + (item.importeddiscountvalue || 0), 0));
+  totalLocalDiscount = computed(() => this.filteredApprovals().reduce((sum, item) => sum + (item.localdiscountvalue || 0), 0));
+  totalNetValue = computed(() => this.filteredApprovals().reduce((sum, item) => sum + (item.netvalue || 0), 0));
+
   currentItems = computed(() => {
     const filtered = this.filteredApprovals();
     const start = (this.currentPage() - 1) * this.itemsPerPage;
     return filtered.slice(start, start + this.itemsPerPage);
   });
 
-  totalPages = computed(() => Math.ceil(this.filteredApprovals().length / this.itemsPerPage));
+  totalPages = computed(() => Math.ceil(this.filteredApprovals().length / this.itemsPerPage) || 1);
 
-loadBranchApprovals() {
-  const branchId = this.authService.getBranchId(); 
-  
-  if (!branchId) {
-    console.error('No Branch ID found for this user!');
-    return; 
-  }
-
-  this.isLoading.set(true);
-  
-  this.service.getbrancha3mpprovals(branchId).subscribe({
-    next: (data: any) => {
-      console.log('Branch Approvals Data:', data);
-      const arr = Array.isArray(data) ? data : (data.data || data.approvals || []);
-      this.approvals.set(arr.map((i: any) => this.mapApprovalStatus(i)));
-      this.isLoading.set(false);
-    },
-    error: (err) => {
-      console.error(err);
-      this.isLoading.set(false);
+  loadVendorApprovals() {
+    const vendorId = this.authService.getVendorId(); 
+    console.log('Vendor ID:', vendorId); // Debugging line
+    if (!vendorId) {
+      console.error('No Vendor ID found for this user!');
+      return; 
     }
-  });
-}
+
+    this.isLoading.set(true);
+    this.service.getbrancha3mpprovals(vendorId).subscribe({
+      next: (data: any) => {
+        console.log('Vendor Approvals Data:', data);
+        const arr = Array.isArray(data) ? data : (data.data || data.approvals || []);
+        this.approvals.set(arr.map((i: any) => this.mapApprovalStatus(i)));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   private mapApprovalStatus(i: any): BranchApprovalItem {
     let statusText = '', statusIcon = '', statusColor = '';
@@ -181,13 +181,14 @@ loadBranchApprovals() {
     return {
       approvalId: i.approvalId, approvalDate: i.approvalDate, apStatus: i.apStatus,
       apType: i.apType || 'General', requestSource: i.requestSource || 'Manual',
-      notes: i.notes || '-', memberId: i.memberId, memberName: i.memberName,value:i.value,netvalue:i.netvalue,localdiscountvalue:i.localdiscountvalue,importeddiscountvalue:i.importeddiscountvalue,copaymentvalue:i.copaymentvalue,
+      notes: i.notes || '-', memberId: i.memberId, memberName: i.memberName, value: i.value || 0, netvalue: i.netvalue || 0,
+      localdiscountvalue: i.localdiscountvalue || 0, importeddiscountvalue: i.importeddiscountvalue || 0, copaymentvalue: i.copaymentvalue || 0,
       vendorId: i.vendorId, companyName: i.companyName || '-', branchName: i.branchName || '-', statusText, statusIcon, statusColor
     };
   }
 
-  // تغيير فلتر الشهور من خلال الأزرار
-  setMonthFilter(filter: 'all' | 'current' | 'last' | 'twoMonthsAgo') {
+  // تحديث القيم المقبولة للفلتر الجديد
+  setMonthFilter(filter: 'last' | 'twoMonthsAgo' | 'threeMonthsAgo') {
     this.selectedMonthFilter.set(filter);
     this.currentPage.set(1);
   }
@@ -219,32 +220,142 @@ loadBranchApprovals() {
   formatTime(d: string) { return d ? new Date(d).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) : '-'; }
 
   exportToExcel(): void {
-    const dataToExport = this.filteredApprovals();
+    const dataToExport = this.filteredApprovals(); 
     if (dataToExport.length === 0) {
       alert('No data available to export!');
       return;
     }
-    const excelRows = dataToExport.map(item => ({
-      'Status': item.statusText,
+
+    const excelRows: any[] = dataToExport.map(item => ({
       'Approval ID': item.approvalId,
-      'Member ID': item.memberId,
+      'Date': this.formatDate(item.approvalDate),
+      'Time': this.formatTime(item.approvalDate),
+      'Status': item.statusText,
       'Request Type': item.apType,
       'Request Source': item.requestSource,
-      'Date': this.formatDate(item.approvalDate),
+      'Member ID': item.memberId,
+      'Member Name': item.memberName || '-',
+      'Company Name': item.companyName || '-',
+      'Branch Name': item.branchName || '-',
       'Vendor ID': item.vendorId,
+      'Gross Value': item.value,
+      'Copayment (Coinsurance)': item.copaymentvalue,
+      'Imported Discount': item.importeddiscountvalue,
+      'Local Discount': item.localdiscountvalue,
+      'Net Value': item.netvalue,
       'Notes': item.notes
     }));
 
+    excelRows.push({
+      'Approval ID': 'TOTALS',
+      'Date': '', 'Time': '', 'Status': '', 'Request Type': '', 'Request Source': '',
+      'Member ID': '', 'Member Name': '', 'Company Name': '', 'Branch Name': '', 'Vendor ID': '',
+      'Gross Value': this.totalGrossValue(),
+      'Copayment (Coinsurance)': this.totalCopayment(),
+      'Imported Discount': this.totalImportedDiscount(),
+      'Local Discount': this.totalLocalDiscount(),
+      'Net Value': this.totalNetValue(),
+      'Notes': ''
+    });
+
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelRows);
     const workbook: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Approvals List');
-    const fileName = `Approvals_3Months_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'All Approvals Data');
+
+    const fileName = `All_Approvals_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   }
 
-  // دوال الـ Actions
   viewDetails(item: BranchApprovalItem) { console.log('Viewing:', item.approvalId); }
   editApproval(item: BranchApprovalItem) { console.log('Editing:', item.approvalId); }
   printApproval(item: BranchApprovalItem) { console.log('Printing:', item.approvalId); }
   cancelApproval(item: BranchApprovalItem) { console.log('Canceling:', item.approvalId); }
+
+
+  //pdf
+exportToPDF(): void {
+  const dataToExport = this.filteredApprovals();
+  if (dataToExport.length === 0) {
+    alert('No data available to export!');
+    return;
+  }
+
+  // 1. إنشاء كائن الـ PDF بالوضع الأفقي
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // 2. إضافة خط يدعم اللغة العربية (خط Amiri متوفر كـ ديفولت يدعم العربية في الـ Unicode)
+  // سنقوم بجلب الخط بصيغة خفيفة، أو يمكنك تحميل ملف Amiri-Regular.ttf وتحويله لـ Base64
+  // للسهولة والسرعة، نستخدم إضافة الخط القياسي الذي يتعامل مع الحروف العربية عبر ضبط الفونت أو الـ styles.
+  
+  // ملحوظة: jsPDF يحتاج تحويل الخط إلى Base64 ليعمل 100% بدون إنترنت، ولكن لتشغيل الدعم الفوري للـ Unicode العربي:
+  // نقوم بضبط الخصائص للـ autoTable لتدعم النص العربي.
+
+  // عنوان التقرير داخل الملف
+  doc.setFontSize(16);
+  doc.text('Approvals Report / تقرير الموافقات', 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+
+  // الأعمدة التي ستظهر في الـ PDF
+  const columns = [
+    'ID', 'Date', 'Status', 'Type', 'Source', 
+    'Member Info', 'Company', 'Gross', 'Copay', 'Net'
+  ];
+
+  // تجهيز الصفوف من البيانات المفلترة
+  const rows = dataToExport.map(item => [
+    item.approvalId,
+    this.formatDate(item.approvalDate),
+    item.statusText,
+    item.apType,
+    item.requestSource,
+    `${item.memberName || '-'}\n(${item.memberId})`,
+    item.companyName || '-',
+    item.value.toFixed(2),
+    item.copaymentvalue.toFixed(2),
+    item.netvalue.toFixed(2)
+  ]);
+
+  // إضافة صف الإجمالي في نهاية الجدول
+  rows.push([
+    'TOTALS', '', '', '', '', '', '',
+    this.totalGrossValue().toFixed(2),
+    this.totalCopayment().toFixed(2),
+    this.totalNetValue().toFixed(2)
+  ]);
+
+  // 3. رسم الجدول وتفعيل خصائص الخطوط العربية و الـ RTL
+  autoTable(doc, {
+    head: [columns],
+    body: rows,
+    startY: 28,
+    theme: 'striped',
+    headStyles: { fillColor: [30, 41, 59] }, 
+    
+    // الخصائص الحركية لحل مشكلة الحروف العربية وعلامات الاستفهام:
+    styles: { 
+      fontSize: 8, 
+      overflow: 'linebreak',
+      // إذا كنتِ قد أضفت خط مخصص، اكتبيه هنا، وإلا فإن النظام سيتعرف على الحروف عند إعطاء أمر الـ font الأصلي للمتصفح
+      font: 'Courier', // أو أي خط متاح يدعم الـ glyphs 
+    },
+    
+    // تفعيل اتجاه النص من اليمين إلى اليسار للأعمدة التي قد تحتوي على عربي (مثل اسم العضو أو الشركة)
+    columnStyles: {
+      5: { cellWidth: 40, halign: 'right' }, // عمود اسم العضو
+      6: { cellWidth: 35, halign: 'right' }  // عمود الشركة
+    },
+    
+    didParseCell: (data) => {
+      if (data.row.index === rows.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [241, 245, 249];
+      }
+    }
+  });
+
+  // تحميل الملف تلقائياً
+  const fileName = `Approvals_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+}
 }

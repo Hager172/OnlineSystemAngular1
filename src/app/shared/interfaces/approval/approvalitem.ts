@@ -1,11 +1,19 @@
 export interface ApprovalItem {
-  id: string;
+  id: string | number;
+
   name?: string;
   description?: string;
   servicename?: string;
+
   quantity: number;
+  originalQuantity?: number;
+  editqty?: number;
+  days?: number;
+
   quantityUnit?: string;
   unitPrice: number;
-    originalQuantity?: number;
 
+  serviceId?: number;
+
+  isNew?: boolean;
 }

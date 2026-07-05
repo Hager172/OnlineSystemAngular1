@@ -245,41 +245,41 @@ this.isLoading.set(true);
         }
       });
     } else if (this.lookupType === 'memberId') {
- 
-   
-   this.approvalService.getMemberApprovals(value).subscribe({
-  next: (res: any) => {
-    console.log("mem", res);
+  this.approvalService.getMemberApprovals(value).subscribe({
+    next: (res: any) => {
+      console.log("mem", res);
 
-    if (res.success && res.data) {
+     if (res.success && res.data) {
+  this.searchType = 'member';
+  this.currentMemberId = res.data.memberId;
 
-      this.searchType = 'member';
-      this.currentMemberId = res.data.memberId;
+  // 🔥 سطر واحد هيدلع الدنيا:
+  this.memberService.setMemberData(res.data);
 
-      this.memberApprovals = res.data.approvals.map((a: any) =>
-        this.mapSingleApproval(a)
-      );
+  this.memberApprovals = res.data.approvals.map((a: any) =>
+    this.mapSingleApproval(a)
+  );
 
-      this.error.set('');
-      this.showResults.set(true);
-      this.isLoading.set(false);
-
-    } else {
-
-      this.error.set(res.message || 'No approvals found');
-      this.showResults.set(false);
-      this.isLoading.set(false);
-      this.isModalOpen.set(true);
-    }
-  },
- error: (err) => {
+  this.error.set('');
+  this.showResults.set(true);
+  this.isLoading.set(false);
+} else {
+        this.error.set(res.message || 'No approvals found');
+        this.showResults.set(false);
+        this.isLoading.set(false);
+        this.isModalOpen.set(true);
+      }
+    },
+  error: (err) => {
   this.isLoading.set(false);
   this.showResults.set(false);
 console.log("error elsearch", err);
-  if (err.error.message === 'No approvals found') {
+ if (err.error?.message === 'No approvals found') {
+    this.error.set('No approvals found');
 
-        this.error.set('No approvals found');
-
+    // 🔥 الـحـل هـنـا: بنعمل ست للأوبجكت فيه الـ memberId الجديد بس
+    // عشان السيرفيس والـ localStorage يتحدثوا قبل ما ننقل للمشهد التاني
+    this.memberService.setMemberData({ memberId: value });
 
     setTimeout(() => {
       this.router.navigate(['/add'], {
@@ -294,7 +294,8 @@ console.log("error elsearch", err);
 
   this.error.set(err?.error?.message || 'Something went wrong');
 }
-}); }
+  });
+}
   }
 
   private mapApprovalDetails(a: any): Approval {

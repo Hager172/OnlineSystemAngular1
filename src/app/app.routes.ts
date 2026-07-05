@@ -17,7 +17,9 @@ import { SearchResults } from './shared/components/search-results/search-results
 import { RequestAttachments } from './shared/components/request-attachments/request-attachments'; 
 import { Chat } from './pages/chat/chat';
 import { Approvals3m } from './shared/components/approvals3m/approvals3m';
-import { RequestServices } from './shared/components/request-services/request-services';  
+import { ApprovalEditSearch } from './shared/components/approval-edit-search/approval-edit-search';
+import { OnlineApprovalsReportComponent } from './pages/online-approvals-report/components/online-approvals-report.component';
+
 
 
 export const routes: Routes = [
@@ -31,18 +33,18 @@ export const routes: Routes = [
       {path: 'exchange' , component: Approvalexchange},
       {path: 'appinput', component:ApprovalInput},
       {path: 'approval-edit/:approvalNumber', component: ApprovalEdit},
+      {path: 'approval-edit-search/:approvalNumber', component: ApprovalEditSearch},
       {path: 'invoice-print/:approvalNumber', component: InvoicePrint},
       //{path:'memberapp', component:MemberApproval},
       {path: 'mem' , component:Memberapprovaln},
       {path:'test', component:Test},
       {path: 'add', component:Addapproval},
-      {path: 'issue-approval', component:IssueApproval},
-      {path: 'request-details', component:RequestDetails},
-      {path: 'request-attachments', component: RequestAttachments },
+
     {path: 'search-results', component: SearchResults},
     {path:'monthlyapprovals',component:Approvals3m},
-{path: 'request-services', component: RequestServices}, 
+
       {path: 'chat', component:Chat},
+      {path: 'online-approvals-report', component: OnlineApprovalsReportComponent},
 
     ],
     //canActivate: [AuthGuard]
