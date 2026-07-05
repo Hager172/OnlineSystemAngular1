@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class VendorService {
-  private baseUrl = `${environment.apiUrl}/api/Vendor`;
+  private baseUrl = `${environment.apiUrl}Vendor`;
 
   constructor(private http: HttpClient) {}
 
@@ -26,4 +26,6 @@ export class VendorService {
   getVendorServices(vendorId: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/${vendorId}/services`);
   }
+
+  
 }

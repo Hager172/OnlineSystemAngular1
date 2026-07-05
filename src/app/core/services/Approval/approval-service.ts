@@ -278,4 +278,9 @@ editApproval(request: any): Observable<any> {
     request
   );
 }
+getAgentProducts(term: string, vendorId: string) {
+  return this.http.get<ProductLookupDto[]>(
+    `${this.baseUrl}Approval/Agentproducts?term=${term}&vendor_id=${vendorId}`
+  );
+}
 }

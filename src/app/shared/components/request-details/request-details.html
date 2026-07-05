@@ -77,13 +77,13 @@
     <div class="step-block">
       <label class="step-label">2. Select Type</label>
       <div class="type-selector">
-        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Surgery'" (click)="selectType('Surgery')">
+        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Surgical'" (click)="selectType('Surgical')">
           <i class="fas fa-user-injured"></i> Surgery
         </button>
-        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Medicine'" (click)="selectType('Medicine')">
+        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Pharmacy'" (click)="selectType('Pharmacy')">
           <i class="fas fa-pills"></i> Medicine
         </button>
-        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Other'" (click)="selectType('Other')">
+        <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Public'" (click)="selectType('Public')">
           <i class="fas fa-file-medical"></i> Other
         </button>
       </div>
@@ -100,7 +100,8 @@
             <ng-select
               class="custom-diagnosis-select"
               [items]="vendorOptions"
-              bindLabel="vendorName"
+              bindLabel="text"
+              bindValue="id"
               [typeahead]="vendorSearch$"
               (search)="onVendorSearch($event.term)"
               (change)="onVendorSelect($event)"

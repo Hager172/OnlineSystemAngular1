@@ -1,65 +1,3 @@
-// import { Component, signal } from '@angular/core';
-// import { CommonModule } from '@angular/common';
-// import { FormsModule } from '@angular/forms';
-// import { Subject } from 'rxjs';
-// import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-// import { MemberService } from '../../../core/services/member/member-service';
-// //import { MemberSearchResult } from '../../models/member-search.model';
-
-// @Component({
-//   selector: 'app-request-details',
-//   standalone: true,
-//   imports: [CommonModule, FormsModule],
-//   templateUrl: './request-details.html',
-//   styleUrl: './request-details.css',
-// })
-// export class RequestDetails {
-//   constructor(private memberService: MemberService) {}
-
-//   searchTerm: string = '';
-//   search$ = new Subject<string>();
-
-//   //member = signal<MemberSearchResult | null>(null);
-//   loading = signal<boolean>(false);
-
-//   ngOnInit(): void {
-//     this.search$
-//       .pipe(debounceTime(400), distinctUntilChanged())
-//       .subscribe((term) => {
-//         if (!term || term.length < 2) {
-//       //    this.member.set(null);
-//           return;
-//         }
-//         this.fetchMember(term);
-//       });
-//   }
-
-//   onSearchInput(): void {
-//     this.search$.next(this.searchTerm);
-//   }
-
-//   private fetchMember(term: string): void {
-//     this.loading.set(true);
-
-//     // ⚠️ اسم الدالة placeholder - غيريه لو الباك اند سماها حاجة تانية
-//   //   this.memberService.searchMember(term).subscribe({
-//   //     next: (res: MemberSearchResult) => {
-//   //       this.member.set(res);
-//   //       this.loading.set(false);
-//   //     },
-//   //     error: () => {
-//   //       this.member.set(null);
-//   //       this.loading.set(false);
-//   //     },
-//   //   });
-//   // }
-
-//   // clearSelection(): void {
-//   //   this.member.set(null);
-//   //   this.searchTerm = '';
-//   // }
-// }
-// }
 
 
 import { Component, OnInit } from '@angular/core';
@@ -95,6 +33,7 @@ export class RequestDetails implements OnInit {
   // --- Vendor search ---
   vendorSearch$ = new Subject<string>();
   vendorOptions: VendorOption[] = [];
+  
 
   // --- Branch ---
   branchOptions: BranchOption[] = [];
@@ -120,7 +59,10 @@ export class RequestDetails implements OnInit {
           return;
         }
         this.vendorService.filterVendorsMenu(type, term).subscribe({
-          next: (res: any) => (this.vendorOptions = res?.data?.items ?? res?.data ?? res ?? []),
+          next: (res: any) => {
+            console.log("result:", res);
+            (this.vendorOptions = res?.data?.items ?? res?.data ?? res ?? [])
+          },
           error: () => (this.vendorOptions = []),
         });
       });
@@ -132,10 +74,10 @@ export class RequestDetails implements OnInit {
           this.diagnosisOptions = [];
           return;
         }
-        this.approvalService.getDiagnosis(term).subscribe({
-          next: (res: any) => (this.diagnosisOptions = res?.data ?? res ?? []),
-          error: () => (this.diagnosisOptions = []),
-        });
+        // this.approvalService.getDiagnosis(term).subscribe({
+        //   next: (res: any) => (this.diagnosisOptions = res?.data ?? res ?? []),
+        //   error: () => (this.diagnosisOptions = []),
+        // });
       });
   }
 
@@ -197,7 +139,7 @@ export class RequestDetails implements OnInit {
   // =========================
   // 2. TYPE
   // =========================
-  selectType(type: 'Surgery' | 'Medicine' | 'Other'): void {
+  selectType(type: 'Surgical' | 'Pharmacy' | 'Public'): void {
     this.state.selectedType.set(type);
     this.state.selectedVendor.set(null);
     this.state.selectedBranch.set(null);
@@ -215,19 +157,20 @@ export class RequestDetails implements OnInit {
     }
     this.vendorSearch$.next(term);
   }
+selectedVendorId!: string;
 
-  onVendorSelect(vendor: VendorOption): void {
-    this.state.selectedVendor.set(vendor);
-    this.branchOptions = [];
-    this.state.selectedBranch.set(null);
+selectedVendorType!: string;
 
-    if (!vendor?.vendorId) return;
+onVendorSelect(vendor: any) {
+  this.selectedVendorId = vendor.id;
+  this.selectedVendorType = vendor.id.substring(0, 2); // مثال: Ph
 
-    this.vendorService.getVendorBranches(vendor.vendorId).subscribe({
-      next: (res: any) => (this.branchOptions = res?.data?.items ?? res?.data ?? res ?? []),
-      error: () => (this.branchOptions = []),
-    });
-  }
+  this.state.selectedVendor.set(vendor);
+
+  console.log("selectedVendorId:", this.selectedVendorId);
+  console.log("selectedVendorType:", this.selectedVendorType);
+  
+}
 
   onVendorClear(): void {
     this.state.selectedVendor.set(null);

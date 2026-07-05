@@ -12,7 +12,7 @@ export class RequestStateService {
   member = signal<MemberSearchResult | null>(null);
 
   // 2. Type
-  selectedType = signal<'Surgery' | 'Medicine' | 'Other' | null>(null);
+  selectedType = signal<'Surgical' | 'Pharmacy' | 'Public' | null>(null);
 
   // 3. Vendor
   selectedVendor = signal<VendorOption | null>(null);
@@ -61,10 +61,10 @@ export class RequestStateService {
       rowId: crypto.randomUUID(),
       serviceId: null,
       serviceName: '',
-      units: 1,
-      repeat: 1,
-      duration: 1,
-      qty: 1,
+      units: null,
+      repeat: null,
+      duration: null,
+      qty: null,
       itemPrice: 0,
       coPercent: 0,
       careItemId: null,

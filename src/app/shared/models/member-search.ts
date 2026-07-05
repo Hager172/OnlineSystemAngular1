@@ -9,7 +9,7 @@ export interface MemberSearchResult {
   status?: 'Active' | 'Inactive';
 }
 export interface VendorOption {
-  vendorId: string;
+  id: string;
   vendorName: string;
 }
 
@@ -50,21 +50,20 @@ export interface CareItemOption {
   id: string;
   name: string;
 }
-
 export interface ServiceRow {
   rowId: string;
   serviceId: string | null;
   serviceName: string;
 
   // خاصة بـ Medicine بس
-  units: number;
-  repeat: number;      // REP (dose_repeat) - داخل في معادلة الحساب
-  duration: number;
+  units: number | null;
+  repeat: number | null;      // REP (dose_repeat) - داخل في معادلة الحساب
+  duration: number | null;
   isChronic: boolean;
   repeatCount: number | null; // عمود REPEAT الأخير - منفصل، معناه لسه مش مؤكد
 
   // مشتركة بين الأنواع كلها
-  qty: number;
+  qty: number | null;
   itemPrice: number;
   coPercent: number;
   careItemId: string | null;

@@ -5,7 +5,8 @@ import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { VendorService } from '../../../core/services/vendor/vendor-service';
 import { RequestStateService } from '../../../core/services/request-state/request-state';
 import { ServiceOption, CareItemOption, ServiceRow } from '../../models/member-search';
-
+import { ApprovalService } from '../../../core/services/Approval/approval-service';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 @Component({
   selector: 'app-request-services',
   standalone: true,
@@ -16,46 +17,84 @@ import { ServiceOption, CareItemOption, ServiceRow } from '../../models/member-s
 export class RequestServices {
   constructor(
     private vendorService: VendorService,
-    public state: RequestStateService
+    public state: RequestStateService,
+  private approvalService: ApprovalService,
   ) {
-    effect(() => {
-      const vendor = this.state.selectedVendor();
-      this.serviceOptions = [];
-      this.state.serviceRows.set([]);
+effect(() => {
 
-      if (vendor?.vendorId) {
-        this.loadVendorServices(vendor.vendorId);
-      }
-    });
+  this.state.selectedVendor();
+
+  this.serviceOptions = [];
+  this.state.serviceRows.set([]);
+
+});
+
+    this.serviceSearch$
+  .pipe(
+    debounceTime(300),
+    distinctUntilChanged()
+  )
+  .subscribe(term => {
+
+    const vendor = this.state.selectedVendor();
+console.log("Selected Vendoridddd:", vendor?.id);
+    if (!vendor || !term || term.length < 2) {
+      this.serviceOptions = [];
+      return;
+    }
+
+    this.approvalService
+  .getAgentProducts(term, vendor.id)
+  .subscribe({
+    next: (res: any) => {
+
+      this.serviceOptions = res.map((x: any) => ({
+        serviceId: x.id,
+        serviceName: x.name,
+        price: x.price,
+        doseUnitNo: x.doseUnitNo,
+        subUnitNo: x.subUnitNo
+      }));
+
+      console.log(this.serviceOptions); // 👈 أضيفي دي
+
+    },
+    error: () => {
+      this.serviceOptions = [];
+    }
+  });
+
+  });
   }
 
   serviceOptions: ServiceOption[] = [];
   careItemOptions: CareItemOption[] = [];
   loadingServices: boolean = false;
+  serviceSearch$ = new Subject<string>();
 
-  private loadVendorServices(vendorId: string): void {
-    this.loadingServices = true;
-    this.vendorService.getVendorServices(vendorId).subscribe({
-      next: (res: any) => {
-        this.loadingServices = false;
-        const raw = res?.data?.items ?? res?.data ?? res ?? [];
-        this.serviceOptions = raw.map((s: any) => ({
-          serviceId: s.serviceId ?? s.id ?? s.itemId ?? '',
-          serviceName: s.serviceName ?? s.name ?? s.itemName ?? 'Unknown Service',
-          price: s.price ?? s.unitPrice ?? 0,
-          doseUnitNo: s.dose_unit_no ?? s.doseUnitNo,
-          subUnitNo: s.sub_unit_no ?? s.subUnitNo,
-        }));
-      },
-      error: () => {
-        this.loadingServices = false;
-        this.serviceOptions = [];
-      },
-    });
-  }
+  // private loadVendorServices(vendorId: string): void {
+  //   this.loadingServices = true;
+  //   this.vendorService.getVendorServices(vendorId).subscribe({
+  //     next: (res: any) => {
+  //       this.loadingServices = false;
+  //       const raw = res?.data?.items ?? res?.data ?? res ?? [];
+  //       this.serviceOptions = raw.map((s: any) => ({
+  //         serviceId: s.serviceId ?? s.id ?? s.itemId ?? '',
+  //         serviceName: s.serviceName ?? s.name ?? s.itemName ?? 'Unknown Service',
+  //         price: s.price ?? s.unitPrice ?? 0,
+  //         doseUnitNo: s.dose_unit_no ?? s.doseUnitNo,
+  //         subUnitNo: s.sub_unit_no ?? s.subUnitNo,
+  //       }));
+  //     },
+  //     error: () => {
+  //       this.loadingServices = false;
+  //       this.serviceOptions = [];
+  //     },
+  //   });
+  // }
 
   get isMedicineType(): boolean {
-    return this.state.selectedType() === 'Medicine';
+    return this.state.selectedType() === 'Pharmacy';
   }
 
   addServiceRow(): void {
@@ -142,5 +181,26 @@ export class RequestServices {
     }
 
     this.state.updateServiceRow(row.rowId, updated);
+  }
+//   onServiceSelectById(row: ServiceRow, serviceId: string | null): void {
+
+//   const selected = this.serviceOptions.find(x => x.serviceId === serviceId) ?? null;
+
+//   this.onServiceSelect(row, selected);
+// }
+
+onServiceSelectById(row: ServiceRow, serviceId: string | null): void {
+    const selected = this.serviceOptions.find(x => x.serviceId === serviceId) ?? null;
+
+    // نضمن إن العنصر المختار يفضل موجود في القايمة حتى لو نتائج البحث اتغيرت بعدين
+    if (selected && !this.serviceOptions.some(x => x.serviceId === selected.serviceId)) {
+      this.serviceOptions = [...this.serviceOptions, selected];
+    }
+
+    this.onServiceSelect(row, selected);
+  }
+
+  trackByRowId(index: number, row: ServiceRow): string {
+    return row.rowId;
   }
 }

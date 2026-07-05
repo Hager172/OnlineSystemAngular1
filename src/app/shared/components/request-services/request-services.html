@@ -36,16 +36,21 @@
         <tbody>
           <tr *ngFor="let row of state.serviceRows()">
             <td>
-              <ng-select
-                class="custom-diagnosis-select table-select"
-                [items]="serviceOptions"
-                bindLabel="serviceName"
-                (change)="onServiceSelect(row, $event)"
-                placeholder="Select medicine..."
-                [clearable]="true"
-                [searchable]="true"
-              ></ng-select>
-              <div class="selected-service-name" *ngIf="row.serviceName">{{ row.serviceName }}</div>
+<ng-select
+    class="custom-diagnosis-select table-select"
+    [items]="serviceOptions"
+    bindLabel="serviceName"
+    bindValue="serviceId"
+    [ngModel]="row.serviceId"
+    (ngModelChange)="onServiceSelectById(row, $event)"
+    [typeahead]="serviceSearch$"
+    (search)="serviceSearch$.next($event.term)"
+    placeholder="Select medicine..."
+    [clearable]="true"
+    [searchable]="true"
+    [appendTo]="'body'">
+</ng-select>
+              <!-- <div class="selected-service-name" *ngIf="row.serviceName">{{ row.serviceName }}</div> -->
             </td>
             <td><input type="number" class="table-input" min="0" [ngModel]="row.units" (ngModelChange)="onRowFieldChange(row, 'units', $event)" /></td>
             <td><input type="number" class="table-input" min="0" [ngModel]="row.repeat" (ngModelChange)="onRowFieldChange(row, 'repeat', $event)" /></td>
