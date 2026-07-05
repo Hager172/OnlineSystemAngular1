@@ -116,24 +116,30 @@
       </ng-container>
 
       <li class="sidebar-item">
-        <div>
-          <a [routerLink]="['/mem']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-house fa-s me-3"></i>
-            HOME
-          </a>
-        </div>
+        <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
+  <a
+    [routerLink]="['/mem']"
+    class="nav-link sidebar-link d-flex align-items-center"
+    style="cursor: pointer;">
+    <i class="fas fa-house fa-s me-3"></i>
+    HOME
+  </a>
+</div>
         <div >
           <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
             <i class="fas fa-house fa-s me-3"></i>
             Search Results
           </a>
         </div>
-        <div >
-          <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-house fa-s me-3"></i>
-            Month's register
-          </a>
-        </div>
+       <div *ngIf="currentRole === 'HEADOFFICE'">
+  <a
+    [routerLink]="['/monthlyapprovals']"
+    class="nav-link sidebar-link d-flex align-items-center"
+    style="cursor: pointer;">
+    <i class="fas fa-house fa-s me-3"></i>
+    Month's register
+  </a>
+</div>
       </li>
 
     </ul>
