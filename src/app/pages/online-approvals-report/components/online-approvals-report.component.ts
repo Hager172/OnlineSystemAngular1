@@ -40,6 +40,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { OnlineApprovalsReportService } from '../services/online-approvals-report.service';
 import { ApprovalReportDto, ReportStats, StatCard } from '../models/approval-report.model';
+import { AuthService } from '../../../core/services/auth/auth-service';
 
 // ─── Validator ────────────────────────────────────────────────────────────────
 function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
@@ -116,6 +117,7 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
   private readonly fb         = inject(FormBuilder);
   private readonly snackBar   = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth       = inject(AuthService);
 
   // ── State signals ─────────────────────────────────────────────────────────
   loading      = signal(false);
@@ -139,7 +141,6 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
   // ── Form ──────────────────────────────────────────────────────────────────
   readonly form: FormGroup = this.fb.group(
     {
-      clientId:  ['', Validators.required],
       startDate: [null as Date | null, Validators.required],
       endDate:   [null as Date | null, Validators.required],
     },
@@ -160,10 +161,15 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
       this.form.markAllAsTouched();
       return;
     }
-    const { clientId, startDate, endDate } = this.form.value as {
-      clientId: string; startDate: Date; endDate: Date;
-    };
-    this.persistFilters(clientId, startDate, endDate);
+    const clientId = this.auth.getclientid();
+    if (!clientId) {
+      const msg = 'No client is selected. Please log in again.';
+      this.error.set(msg);
+      this.snackBar.open(msg, 'Dismiss', { duration: 6000, panelClass: ['oar-snack-error'] });
+      return;
+    }
+    const { startDate, endDate } = this.form.value as { startDate: Date; endDate: Date };
+    this.persistFilters(startDate, endDate);
     this.load(clientId, startDate, endDate);
   }
 
@@ -317,9 +323,8 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
     URL.revokeObjectURL(url);
   }
 
-  private persistFilters(clientId: string, start: Date, end: Date): void {
+  private persistFilters(start: Date, end: Date): void {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-      clientId,
       startDate: start.toISOString(),
       endDate:   end.toISOString(),
     }));
@@ -329,9 +334,8 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return;
-      const s = JSON.parse(raw) as { clientId?: string; startDate?: string; endDate?: string };
+      const s = JSON.parse(raw) as { startDate?: string; endDate?: string };
       this.form.patchValue({
-        clientId:  s.clientId  ?? '',
         startDate: s.startDate ? new Date(s.startDate) : null,
         endDate:   s.endDate   ? new Date(s.endDate)   : null,
       });
