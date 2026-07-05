@@ -122,7 +122,7 @@
             HOME
           </a>
         </div>
-        <div >
+        <div *ngIf="currentRole === 'USER'">
           <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
             <i class="fas fa-house fa-s me-3"></i>
             Search Results
@@ -132,6 +132,12 @@
           <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
             <i class="fas fa-house fa-s me-3"></i>
             Month's register
+          </a>
+        </div>
+        <div>
+          <a [routerLink]="['/issue-approval']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-user fa-s me-3"></i>
+            Issue Approval
           </a>
         </div>
       </li>

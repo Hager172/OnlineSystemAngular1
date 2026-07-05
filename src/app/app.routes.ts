@@ -11,9 +11,10 @@ import { MemberApproval } from './shared/components/member-approval/member-appro
 import { Memberapprovaln } from './shared/components/memberapprovaln/memberapprovaln';
 import { Test } from './shared/components/test/test';
 import { Addapproval } from './shared/components/addapproval/addapproval';
-
+import { IssueApproval } from './shared/components/issue-approval/issue-approval';
+import { RequestDetails } from './shared/components/request-details/request-details';
 import { SearchResults } from './shared/components/search-results/search-results';
-
+import { RequestAttachments } from './shared/components/request-attachments/request-attachments'; 
 import { Chat } from './pages/chat/chat';
 import { Approvals3m } from './shared/components/approvals3m/approvals3m';
 import { ApprovalEditSearch } from './shared/components/approval-edit-search/approval-edit-search';
@@ -38,10 +39,9 @@ export const routes: Routes = [
       {path: 'mem' , component:Memberapprovaln},
       {path:'test', component:Test},
       {path: 'add', component:Addapproval},
-      {path: 'search-results', component: SearchResults},
-      {path:'monthlyapprovals',component:Approvals3m},
-      {path:'monthlyapprovals',component:Approvals3m},
 
+    {path: 'search-results', component: SearchResults},
+    {path:'monthlyapprovals',component:Approvals3m},
 
       {path: 'chat', component:Chat},
       {path: 'online-approvals-report', component: OnlineApprovalsReportComponent},
