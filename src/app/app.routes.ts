@@ -16,6 +16,8 @@ import { SearchResults } from './shared/components/search-results/search-results
 
 import { Chat } from './pages/chat/chat';
 import { Approvals3m } from './shared/components/approvals3m/approvals3m';
+import { ApprovalEditSearch } from './shared/components/approval-edit-search/approval-edit-search';
+import { OnlineApprovalsReportComponent } from './pages/online-approvals-report/components/online-approvals-report.component';
 
 
 
