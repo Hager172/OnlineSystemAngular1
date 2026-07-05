@@ -61,8 +61,8 @@
 // }
 // }
 
-//  
-import { Component, OnInit, signal } from '@angular/core';
+
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
@@ -70,7 +70,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { VendorService } from '../../../core/services/vendor/vendor-service';
-import { MemberSearchResult } from '../../models/member-search';
+import { RequestStateService } from '../../../core/services/request-state/request-state';
+import { VendorOption, BranchOption, DiagnosisOption } from '../../models/member-search';
 
 @Component({
   selector: 'app-request-details',
@@ -82,93 +83,91 @@ import { MemberSearchResult } from '../../models/member-search';
 export class RequestDetails implements OnInit {
   constructor(
     private approvalService: ApprovalService,
-    private vendorService: VendorService
+    private vendorService: VendorService,
+    public state: RequestStateService
   ) {}
 
-  // =========================
-  // 1. SELECT MEMBER
-  // =========================
+  // --- Member search ---
   searchTerm: string = '';
-  loading = signal<boolean>(false);
-  member = signal<MemberSearchResult | null>(null);
-
+  loading = false;
   private search$ = new Subject<string>();
 
-  // =========================
-  // 2. SELECT TYPE
-  // =========================
-  selectedType = signal<'Surgery' | 'Medicine' | 'Other' | null>(null);
-
-  // =========================
-  // 3. SELECT VENDOR
-  // =========================
+  // --- Vendor search ---
   vendorSearch$ = new Subject<string>();
-  vendorOptions: any[] = [];
-  selectedVendor = signal<any>(null);
+  vendorOptions: VendorOption[] = [];
 
-  // =========================
-  // 4. SELECT BRANCH (اختياري)
-  // =========================
-  branchOptions: any[] = [];
-  selectedBranch = signal<any>(null);
+  // --- Branch ---
+  branchOptions: BranchOption[] = [];
 
-  // =========================
-  // INIT
-  // =========================
+  // --- Diagnosis ---
+  diagnosisSearch$ = new Subject<string>();
+  diagnosisOptions: DiagnosisOption[] = [];
+
+  // --- Source (placeholder) ---
+  sourceOptions: string[] = ['Manual Entry', 'Call Center', 'Online Portal', 'Email'];
+
   ngOnInit(): void {
-    // بحث تلقائي عن العضو بعد ما اليوزر يوقف عن الكتابة بـ 400ms
     this.search$
       .pipe(debounceTime(400), distinctUntilChanged())
-      .subscribe((term) => this.doSearch(term));
+      .subscribe((term) => this.doMemberSearch(term));
 
-    // بحث تلقائي عن الـ Vendor
     this.vendorSearch$
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((term) => {
-        if (!term || term.length < 2 || !this.selectedType()) {
+        const type = this.state.selectedType();
+        if (!term || term.length < 2 || !type) {
           this.vendorOptions = [];
           return;
         }
-        this.vendorService
-          .filterVendorsMenu(this.selectedType()!, term)
-          .subscribe({
-            next: (res: any) => (this.vendorOptions = res?.data ?? res ?? []),
-            error: () => (this.vendorOptions = []),
-          });
+        this.vendorService.filterVendorsMenu(type, term).subscribe({
+          next: (res: any) => (this.vendorOptions = res?.data?.items ?? res?.data ?? res ?? []),
+          error: () => (this.vendorOptions = []),
+        });
+      });
+
+    this.diagnosisSearch$
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe((term) => {
+        if (!term || term.length < 2) {
+          this.diagnosisOptions = [];
+          return;
+        }
+        this.approvalService.getDiagnosis(term).subscribe({
+          next: (res: any) => (this.diagnosisOptions = res?.data ?? res ?? []),
+          error: () => (this.diagnosisOptions = []),
+        });
       });
   }
 
   // =========================
-  // MEMBER SEARCH
+  // 1. MEMBER
   // =========================
-  onInputChange(): void {
+  onMemberInputChange(): void {
     const value = this.searchTerm.trim();
     if (!value) {
-      this.member.set(null);
+      this.state.member.set(null);
       return;
     }
     this.search$.next(value);
   }
 
-  onSearchClick(): void {
+  onMemberSearchClick(): void {
     const value = this.searchTerm.trim();
     if (!value) return;
-    this.doSearch(value);
+    this.doMemberSearch(value);
   }
 
-  private doSearch(value: string): void {
-    this.loading.set(true);
+  private doMemberSearch(value: string): void {
+    this.loading = true;
 
     this.approvalService.getMemberInfo(value, 'ph').subscribe({
       next: (res: any) => {
-        this.loading.set(false);
-
+        this.loading = false;
         if (!res) {
-          this.member.set(null);
+          this.state.member.set(null);
           return;
         }
-
-        this.member.set({
+        this.state.member.set({
           memberId: res.memberId || value,
           memberName: res.memberName,
           customerName: res.customerName,
@@ -181,15 +180,10 @@ export class RequestDetails implements OnInit {
       },
       error: (err) => {
         console.error('getMemberInfo failed', err);
-        this.loading.set(false);
-        this.member.set(null);
+        this.loading = false;
+        this.state.member.set(null);
       },
     });
-  }
-
-  clearSelection(): void {
-    this.member.set(null);
-    this.searchTerm = '';
   }
 
   calculateAge(birthDate?: string): number | null {
@@ -201,60 +195,74 @@ export class RequestDetails implements OnInit {
   }
 
   // =========================
-  // TYPE SELECT
+  // 2. TYPE
   // =========================
-selectType(type: 'Surgery' | 'Medicine' | 'Other'): void {
-
-  this.selectedType.set(type);
-
-  this.selectedVendor.set(null);
-  this.selectedBranch.set(null);
-
-  this.vendorOptions = [];
-  this.branchOptions = [];
-
-}
-
-  // =========================
-  // VENDOR SELECT
-  // =========================
-onVendorSearch(term: string): void {
-
-  if (!term) {
-    this.vendorOptions = [];
-    return;
-  }
-
-  this.vendorSearch$.next(term);
-
-}
-
- onVendorSelect(vendor: any): void {
-
-  this.selectedVendor.set(vendor);
-
-  this.branchOptions = [];
-  this.selectedBranch.set(null);
-
-  if (!vendor) return;
-
-  const vendorId = vendor.vendorId;
-
-  this.vendorService.getVendorBranches(vendorId).subscribe({
-    next: (res: any) => {
-      this.branchOptions = res?.data ?? res ?? [];
-    },
-    error: () => {
-      this.branchOptions = [];
-    }
-  });
-
-}
-
-  onVendorClear(): void {
-    this.selectedVendor.set(null);
+  selectType(type: 'Surgery' | 'Medicine' | 'Other'): void {
+    this.state.selectedType.set(type);
+    this.state.selectedVendor.set(null);
+    this.state.selectedBranch.set(null);
     this.vendorOptions = [];
     this.branchOptions = [];
-    this.selectedBranch.set(null);
+  }
+
+  // =========================
+  // 3. VENDOR
+  // =========================
+  onVendorSearch(term: string): void {
+    if (!term) {
+      this.vendorOptions = [];
+      return;
+    }
+    this.vendorSearch$.next(term);
+  }
+
+  onVendorSelect(vendor: VendorOption): void {
+    this.state.selectedVendor.set(vendor);
+    this.branchOptions = [];
+    this.state.selectedBranch.set(null);
+
+    if (!vendor?.vendorId) return;
+
+    this.vendorService.getVendorBranches(vendor.vendorId).subscribe({
+      next: (res: any) => (this.branchOptions = res?.data?.items ?? res?.data ?? res ?? []),
+      error: () => (this.branchOptions = []),
+    });
+  }
+
+  onVendorClear(): void {
+    this.state.selectedVendor.set(null);
+    this.vendorOptions = [];
+    this.branchOptions = [];
+    this.state.selectedBranch.set(null);
+  }
+
+  // =========================
+  // DIAGNOSIS
+  // =========================
+  onDiagnosisSearch($event: any): void {
+    const term = $event?.term;
+    if (term && term.length >= 2) {
+      this.diagnosisSearch$.next(term);
+    } else {
+      this.diagnosisOptions = [];
+    }
+  }
+
+  onDiagnosisClear(): void {
+    this.diagnosisOptions = [];
+    this.diagnosisSearch$.next('');
+  }
+
+  // =========================
+  // CONTACT METHODS
+  // =========================
+  toggleContactMethod(method: string): void {
+    const current = new Set(this.state.selectedContactMethods());
+    current.has(method) ? current.delete(method) : current.add(method);
+    this.state.selectedContactMethods.set(current);
+  }
+
+  isContactMethodActive(method: string): boolean {
+    return this.state.selectedContactMethods().has(method);
   }
 }

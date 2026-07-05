@@ -1,0 +1,78 @@
+<div class="attachments-card">
+  <h6 class="section-title">Attachments</h6>
+  <p class="section-subtitle">Upload documents and medical reports.</p>
+
+  <input
+    type="file"
+    #fileInput
+    multiple
+    hidden
+    (change)="handleFileSelect($event)"
+  />
+
+  <div
+    class="dropzone"
+    (click)="fileInput.click()"
+    (dragover)="$event.preventDefault()"
+    (drop)="handleFileDrop($event)"
+  >
+    <div class="dropzone-icon">
+      <i class="fas fa-cloud-upload-alt"></i>
+    </div>
+    <p class="dropzone-text">Drag & drop files here</p>
+    <p class="dropzone-sub">or <span class="link">browse files</span></p>
+    <p class="dropzone-hint">Max file size: 25MB per file · Supported: PDF, JPG, PNG, DOCX, XLSX</p>
+  </div>
+
+  <div class="uploaded-files" *ngIf="state.selectedFiles().length > 0">
+    <div class="uploaded-files__header">
+      <span>Uploaded Files ({{ state.selectedFiles().length }})</span>
+      <span class="text-muted">Total size: {{ totalSizeMb() }} MB</span>
+    </div>
+
+    <div class="file-row" *ngFor="let file of state.selectedFiles(); let i = index">
+      <i class="fas fa-file file-icon"></i>
+      <div class="file-info">
+        <div class="file-name">{{ file.name }}</div>
+        <div class="file-meta">{{ fileSizeMb(file) }} MB</div>
+      </div>
+      <button type="button" class="btn-remove-file" (click)="removeFile(i)">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <h6 class="section-title">Request Summary</h6>
+
+    <div class="summary-row">
+      <span class="summary-label"><i class="fas fa-user"></i> Member</span>
+      <span class="summary-value">{{ state.member()?.memberName || '—' }}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="summary-label"><i class="fas fa-stethoscope"></i> Type</span>
+      <span class="summary-value">{{ state.selectedType() || 'Not Selected' }}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="summary-label"><i class="fas fa-building"></i> Provider</span>
+      <span class="summary-value">{{ state.selectedVendor()?.vendorName || 'Not Selected' }}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="summary-label"><i class="fas fa-paperclip"></i> Attachments</span>
+      <span class="summary-value">{{ state.selectedFiles().length }} files ({{ totalSizeMb() }} MB)</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="summary-label"><i class="fas fa-dollar-sign"></i> Max Limit</span>
+      <span class="summary-value">{{ state.maxLimit() || '—' }}</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="summary-label"><i class="fas fa-info-circle"></i> Request Status</span>
+      <span class="summary-badge">New Request</span>
+    </div>
+  </div>
+</div>

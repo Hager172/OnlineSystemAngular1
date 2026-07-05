@@ -1,0 +1,146 @@
+<div class="services-card" *ngIf="state.selectedVendor()">
+  <div class="services-header">
+    <div>
+      <h6 class="section-title mb-0">Services</h6>
+      <p class="section-subtitle">Add the services or items included in this request.</p>
+    </div>
+    <button type="button" class="btn-add-service" (click)="addServiceRow()">
+      <i class="fas fa-plus"></i> Add Service
+    </button>
+  </div>
+
+  <div class="text-muted mt-2" *ngIf="loadingServices">Loading services list...</div>
+
+  <div class="services-table-wrapper mt-3" *ngIf="state.serviceRows().length > 0">
+    <table class="services-table">
+
+      <!-- MEDICINE TABLE -->
+      <ng-container *ngIf="isMedicineType">
+        <thead>
+          <tr>
+            <th style="min-width: 240px;">Service</th>
+            <th>Units</th>
+            <th>Rep</th>
+            <th>Duration</th>
+            <th>Qty</th>
+            <th>Item Price</th>
+            <th>Value</th>
+            <th>CO%</th>
+            <th style="min-width: 160px;">Care Item</th>
+            <th style="min-width: 180px;">Notes</th>
+            <th>Chronic</th>
+            <th>Repeat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of state.serviceRows()">
+            <td>
+              <ng-select
+                class="custom-diagnosis-select table-select"
+                [items]="serviceOptions"
+                bindLabel="serviceName"
+                (change)="onServiceSelect(row, $event)"
+                placeholder="Select medicine..."
+                [clearable]="true"
+                [searchable]="true"
+              ></ng-select>
+              <div class="selected-service-name" *ngIf="row.serviceName">{{ row.serviceName }}</div>
+            </td>
+            <td><input type="number" class="table-input" min="0" [ngModel]="row.units" (ngModelChange)="onRowFieldChange(row, 'units', $event)" /></td>
+            <td><input type="number" class="table-input" min="0" [ngModel]="row.repeat" (ngModelChange)="onRowFieldChange(row, 'repeat', $event)" /></td>
+            <td><input type="number" class="table-input" min="0" [ngModel]="row.duration" (ngModelChange)="onRowFieldChange(row, 'duration', $event)" /></td>
+            <td><input type="number" class="table-input" [ngModel]="row.qty" (ngModelChange)="onRowFieldChange(row, 'qty', $event)" /></td>
+            <td><input type="number" class="table-input" [ngModel]="row.itemPrice" (ngModelChange)="onRowFieldChange(row, 'itemPrice', $event)" /></td>
+            <td class="fw-bold text-primary">{{ state.getRowValue(row) }}</td>
+            <td><input type="number" class="table-input" min="0" max="100" [ngModel]="row.coPercent" (ngModelChange)="onRowFieldChange(row, 'coPercent', $event)" /></td>
+            <td>
+              <ng-select
+                class="custom-diagnosis-select table-select"
+                [items]="careItemOptions"
+                bindLabel="name"
+                bindValue="id"
+                [ngModel]="row.careItemId"
+                (ngModelChange)="onRowFieldChange(row, 'careItemId', $event)"
+                placeholder="Care item"
+                [clearable]="true"
+              ></ng-select>
+            </td>
+            <td><input type="text" class="table-input" [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)" /></td>
+            <td class="text-center"><input type="checkbox" [ngModel]="row.isChronic" (ngModelChange)="onRowFieldChange(row, 'isChronic', $event)" /></td>
+            <td><input type="number" class="table-input" [ngModel]="row.repeatCount" (ngModelChange)="onRowFieldChange(row, 'repeatCount', $event)" /></td>
+            <td><button type="button" class="btn-remove-file" (click)="removeServiceRow(row.rowId)"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        </tbody>
+      </ng-container>
+
+      <!-- SURGERY / OTHER TABLE -->
+      <ng-container *ngIf="!isMedicineType">
+        <thead>
+          <tr>
+            <th style="min-width: 260px;">Service</th>
+            <th>Qty</th>
+            <th>Item Price</th>
+            <th>Value</th>
+            <th>CO%</th>
+            <th style="min-width: 180px;">Care Item</th>
+            <th style="min-width: 200px;">Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of state.serviceRows()">
+            <td>
+              <ng-select
+                class="custom-diagnosis-select table-select"
+                [items]="serviceOptions"
+                bindLabel="serviceName"
+                (change)="onServiceSelect(row, $event)"
+                placeholder="Select service..."
+                [clearable]="true"
+                [searchable]="true"
+              ></ng-select>
+              <div class="selected-service-name" *ngIf="row.serviceName">{{ row.serviceName }}</div>
+            </td>
+            <td><input type="number" class="table-input" min="0" [ngModel]="row.qty" (ngModelChange)="onRowFieldChange(row, 'qty', $event)" /></td>
+            <td><input type="number" class="table-input" [ngModel]="row.itemPrice" (ngModelChange)="onRowFieldChange(row, 'itemPrice', $event)" /></td>
+            <td class="fw-bold text-primary">{{ state.getRowValue(row) }}</td>
+            <td><input type="number" class="table-input" min="0" max="100" [ngModel]="row.coPercent" (ngModelChange)="onRowFieldChange(row, 'coPercent', $event)" /></td>
+            <td>
+              <ng-select
+                class="custom-diagnosis-select table-select"
+                [items]="careItemOptions"
+                bindLabel="name"
+                bindValue="id"
+                [ngModel]="row.careItemId"
+                (ngModelChange)="onRowFieldChange(row, 'careItemId', $event)"
+                placeholder="Care item"
+                [clearable]="true"
+              ></ng-select>
+            </td>
+            <td><input type="text" class="table-input" [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)" /></td>
+            <td><button type="button" class="btn-remove-file" (click)="removeServiceRow(row.rowId)"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        </tbody>
+      </ng-container>
+
+      <tfoot>
+        <tr>
+          <td [attr.colspan]="isMedicineType ? 6 : 3" class="text-end fw-bold">Subtotal:</td>
+          <td class="fw-bold text-primary">{{ state.getServicesSubtotal() }}</td>
+          <td [attr.colspan]="isMedicineType ? 6 : 4"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="state.serviceRows().length === 0 && !loadingServices">
+    <i class="fas fa-box-open"></i>
+    <p>No services added yet. Click "Add Service" to start.</p>
+  </div>
+</div>
+
+<div class="services-card services-card--placeholder" *ngIf="!state.selectedVendor()">
+  <i class="fas fa-store-slash"></i>
+  <p>Select a vendor first to add services.</p>
+</div>

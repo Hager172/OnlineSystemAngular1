@@ -1,9 +1,45 @@
 <div class="request-page">
+
   <div class="request-page__left">
     <app-request-details></app-request-details>
   </div>
 
   <div class="request-page__right">
-    <!-- هنا هنحط Attachments / Request Summary بعدين -->
+    <app-request-attachments></app-request-attachments>
   </div>
+
+  <div class="request-page__services">
+    <app-request-services></app-request-services>
+  </div>
+
+</div>
+
+<div class="request-footer">
+
+  <div class="request-footer__status">
+    Ready to submit
+  </div>
+
+  <div class="request-footer__actions">
+
+    <button
+      class="btn-footer btn-footer--outline"
+      (click)="cancel()">
+      Cancel
+    </button>
+
+    <button
+      class="btn-footer btn-footer--outline"
+      (click)="saveDraft()">
+      Save Draft
+    </button>
+
+    <button
+      class="btn-footer btn-footer--primary"
+      (click)="submitRequest()">
+      Submit Request
+    </button>
+
+  </div>
+
 </div>

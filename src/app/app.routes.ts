@@ -14,10 +14,10 @@ import { Addapproval } from './shared/components/addapproval/addapproval';
 import { IssueApproval } from './shared/components/issue-approval/issue-approval';
 import { RequestDetails } from './shared/components/request-details/request-details';
 import { SearchResults } from './shared/components/search-results/search-results';
-
+import { RequestAttachments } from './shared/components/request-attachments/request-attachments'; 
 import { Chat } from './pages/chat/chat';
 import { Approvals3m } from './shared/components/approvals3m/approvals3m';
-
+import { RequestServices } from './shared/components/request-services/request-services';  
 
 
 export const routes: Routes = [
@@ -38,10 +38,10 @@ export const routes: Routes = [
       {path: 'add', component:Addapproval},
       {path: 'issue-approval', component:IssueApproval},
       {path: 'request-details', component:RequestDetails},
-
+      {path: 'request-attachments', component: RequestAttachments },
     {path: 'search-results', component: SearchResults},
     {path:'monthlyapprovals',component:Approvals3m},
-
+{path: 'request-services', component: RequestServices}, 
       {path: 'chat', component:Chat},
 
     ],
