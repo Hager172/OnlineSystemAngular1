@@ -375,7 +375,7 @@ console.log('Vendor Type:', vendorType);
     this.updateSubTotals();
   }
 
-  onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
+onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
     console.log(product);
     if (!product) {
       item.product = undefined;
@@ -385,9 +385,9 @@ console.log('Vendor Type:', vendorType);
     }
 
     item.product = product;
-    item.price = product.price / (product.subUnitNo || 1);
+    item.price = product.price / (product.subUnitNo ?? 1);
     this.calculateQty(item);
-  }
+}
 
   onDiagnosisClear(): void {
     this.diagnosisOptions = [];    

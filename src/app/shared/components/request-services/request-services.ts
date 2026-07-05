@@ -49,12 +49,12 @@ console.log("Selected Vendoridddd:", vendor?.id);
     next: (res: any) => {
 
       this.serviceOptions = res.map((x: any) => ({
-        serviceId: x.id,
-        serviceName: x.name,
-        price: x.price,
-        doseUnitNo: x.doseUnitNo,
-        subUnitNo: x.subUnitNo
-      }));
+  serviceId: x.id,
+  serviceName: x.name,
+  price: x.price,
+  doseUnitNo: x.doseUnitNo,   
+  subUnitNo: x.subUnitNo     
+}));
 
       console.log(this.serviceOptions); // 👈 أضيفي دي
 
@@ -71,27 +71,6 @@ console.log("Selected Vendoridddd:", vendor?.id);
   careItemOptions: CareItemOption[] = [];
   loadingServices: boolean = false;
   serviceSearch$ = new Subject<string>();
-
-  // private loadVendorServices(vendorId: string): void {
-  //   this.loadingServices = true;
-  //   this.vendorService.getVendorServices(vendorId).subscribe({
-  //     next: (res: any) => {
-  //       this.loadingServices = false;
-  //       const raw = res?.data?.items ?? res?.data ?? res ?? [];
-  //       this.serviceOptions = raw.map((s: any) => ({
-  //         serviceId: s.serviceId ?? s.id ?? s.itemId ?? '',
-  //         serviceName: s.serviceName ?? s.name ?? s.itemName ?? 'Unknown Service',
-  //         price: s.price ?? s.unitPrice ?? 0,
-  //         doseUnitNo: s.dose_unit_no ?? s.doseUnitNo,
-  //         subUnitNo: s.sub_unit_no ?? s.subUnitNo,
-  //       }));
-  //     },
-  //     error: () => {
-  //       this.loadingServices = false;
-  //       this.serviceOptions = [];
-  //     },
-  //   });
-  // }
 
   get isMedicineType(): boolean {
     return this.state.selectedType() === 'Pharmacy';
@@ -127,8 +106,8 @@ console.log("Selected Vendoridddd:", vendor?.id);
   }
 
   private calculateMedicinePrice(rawPrice: number, subUnitNo?: number): number {
-    return rawPrice / (subUnitNo || 1);
-  }
+  return rawPrice / (subUnitNo || 1);
+}
 
   onServiceSelect(row: ServiceRow, selected: ServiceOption | null): void {
     if (!selected) {
@@ -139,9 +118,9 @@ console.log("Selected Vendoridddd:", vendor?.id);
     if (this.isMedicineType) {
       const price = this.calculateMedicinePrice(selected.price, selected.subUnitNo);
       const qty = this.calculateMedicineQty(
-        row.units || 1,
-        row.repeat || 1,
-        row.duration || 1,
+        row.units || 0,
+        row.repeat || 0,
+        row.duration || 0,
         selected.doseUnitNo || 1,
         selected.subUnitNo || 1
       );
@@ -172,9 +151,9 @@ console.log("Selected Vendoridddd:", vendor?.id);
       const duration = field === 'duration' ? value : row.duration;
 
       updated['qty'] = this.calculateMedicineQty(
-        units || 1,
-        repeat || 1,
-        duration || 1,
+        units || 0,
+        repeat || 0,
+        duration || 0,
         row.doseUnitNo || 1,
         row.subUnitNo || 1
       );
@@ -182,14 +161,8 @@ console.log("Selected Vendoridddd:", vendor?.id);
 
     this.state.updateServiceRow(row.rowId, updated);
   }
-//   onServiceSelectById(row: ServiceRow, serviceId: string | null): void {
 
-//   const selected = this.serviceOptions.find(x => x.serviceId === serviceId) ?? null;
-
-//   this.onServiceSelect(row, selected);
-// }
-
-onServiceSelectById(row: ServiceRow, serviceId: string | null): void {
+  onServiceSelectById(row: ServiceRow, serviceId: string | null): void {
     const selected = this.serviceOptions.find(x => x.serviceId === serviceId) ?? null;
 
     // نضمن إن العنصر المختار يفضل موجود في القايمة حتى لو نتائج البحث اتغيرت بعدين

@@ -34,7 +34,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of state.serviceRows()">
+          <tr *ngFor="let row of state.serviceRows(); trackBy: trackByRowId">
             <td>
 <ng-select
     class="custom-diagnosis-select table-select"
@@ -94,7 +94,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of state.serviceRows()">
+          <tr *ngFor="let row of state.serviceRows(); trackBy: trackByRowId">
             <td>
               <ng-select
                 class="custom-diagnosis-select table-select"
