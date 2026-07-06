@@ -1,0 +1,219 @@
+<div class="min-h-screen bg-slate-50 pt-10">
+
+
+  <div *ngIf="!approval()" class="max-w-md mx-auto mt-8 p-4">
+    <div class="card">
+      <div class="card-content pt-6">
+        <p class="text-center">Approval not found</p>
+        <button (click)="goBack()" class="btn-primary w-full mt-4">Go Back</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="approval()">
+    <div class="card">
+      <div class="card-content p-6 md:p-8 space-y-8">
+
+        <div class="border-b pb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p class="text-slate-500 text-xs uppercase font-semibold">Member Name</p>
+              <p class="font-medium mt-1 text-slate-900">{{ approval()?.clientName }}</p>
+            </div>
+            
+            <div>
+              <p class="text-slate-500 text-xs uppercase font-semibold">Customer (Company)</p>
+              <p class="font-medium mt-1 text-slate-900">{{ approval()?.companyName }}</p>
+            </div>
+
+            <div>
+              <p class="text-slate-500 text-xs uppercase font-semibold">Vendor</p>
+              <p class="font-medium mt-1 text-slate-900">{{ approval()?.vendorName || 'صيدليات العزبي' }}</p>
+            </div>
+
+            <div>
+              <p class="text-slate-500 text-xs uppercase font-semibold">Branch</p>
+              <p class="font-medium mt-1 text-slate-900">{{ approval()?.branch }}</p>
+            </div>
+            
+            <div>
+              <p class="text-slate-500 text-xs uppercase font-semibold">Client ID</p>
+              <p class="font-medium mt-1 text-base text-slate-700">{{ approval()?.clientId }}</p>
+            </div>
+
+            <div>
+              <p class="text-slate-500 text-xs uppercase font-semibold">Approval Date</p>
+              <p class="font-medium mt-1 text-base text-slate-700">{{ approval()?.date | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-blue-50 p-4 rounded-lg flex flex-col justify-between">
+            <label class="text-xs text-slate-500 uppercase font-semibold mb-2">Limit</label>
+          <input
+  type="number"
+  [ngModel]="approval()?.limit"
+  readonly
+  class="w-full bg-slate-100 border border-blue-200 rounded px-3 py-2 text-2xl font-bold text-blue-600 cursor-not-allowed"
+/>
+          </div>
+          
+          <div class="bg-slate-50 p-4 rounded-lg flex flex-col justify-between">
+            <label class="text-xs text-slate-500 uppercase font-semibold mb-2">Notes</label>
+            <textarea 
+              rows="2"
+              [ngModel]="approval()?.notes"
+              (ngModelChange)="approval() ? approval()!.notes = $event : null"
+              class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+            ></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-slate-800">Prescription Items</h2>
+            <button
+              type="button"
+              (click)="addPrescriptionItem()"
+              class="btn-primary px-4 py-2 text-sm flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Item
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-slate-50">
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">#</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Name</th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Quantity</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Qty Edit</th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Days</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Unit Price</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Total</th>
+                  <!-- <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Action</th> -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of items; let i = index" class="hover:bg-slate-50">
+                  <td class="px-4 py-3 text-slate-600">{{ i + 1 }}</td>
+
+                  <td class="px-4 py-3">
+                    <ng-container *ngIf="!item.isNew">
+                      <input
+                        type="text"
+                        [(ngModel)]="item.name"
+                        readonly
+                        style="width: 400px;"
+                        class="input w-full bg-slate-100 cursor-not-allowed"
+                      />
+                    </ng-container>
+
+                    <ng-container *ngIf="item.isNew">
+                      <div style="width: 400px;">
+                        <ng-select
+                          [items]="productOptions"
+                          bindLabel="name"
+                          bindValue="id"
+                          [typeahead]="productSearch$"
+                          [(ngModel)]="item.id"
+                          (change)="onProductSelect($event, item)"
+                          (search)="onProductSearch($event)"
+                          (clear)="onProductClear()"
+                          [placeholder]="'Search Product...'"
+                          [clearable]="true"
+                          [searchable]="true"
+  class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 custom-diagnosis-select custom-ng-select"
+                        >
+                          <ng-template ng-option-tmp let-item="item">
+                            <div class="flex items-center justify-between p-1">
+                              <span>{{ item.name }}</span>
+                              <span class="text-xs text-gray-400">({{ item.price }} EGP)</span>
+                            </div>
+                          </ng-template>
+                        </ng-select>
+                      </div>
+                    </ng-container>
+                  </td>
+
+                  <td class="px-4 py-3">
+                    <input
+                      type="number"
+                      [(ngModel)]="item.quantity"
+                      readonly
+                      class="input w-24 text-center bg-slate-100 cursor-not-allowed"
+                    />
+                  </td>
+
+                  <td class="px-4 py-3">
+                    <input
+                      type="number"
+                      [(ngModel)]="item.editqty"
+                      class="input w-28 border-blue-300 focus:ring-2 focus:ring-blue-400 text-center font-semibold"
+                    />
+                  </td>
+<td class="px-4 py-3">
+  <input
+    type="number"
+    [(ngModel)]="item.days"
+    class="input w-24 text-center border-blue-300 focus:ring-2 focus:ring-blue-400"
+  />
+</td>
+                  <td class="px-4 py-3 text-right">
+                    <input
+                      type="number"
+                      [(ngModel)]="item.unitPrice"
+                      class="input w-32 text-right border-blue-300 focus:ring-2 focus:ring-blue-400"
+                    />
+                  </td>
+
+                  <td class="px-4 py-3 text-right font-semibold text-slate-700">
+                    {{ ((item.editqty || 0) * (item.unitPrice || 0)).toFixed(2) }}
+                  </td>
+
+                  <!-- <td class="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      (click)="removePrescriptionItem(i)"
+                      class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Delete Item"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td> -->
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="max-w-md ml-auto space-y-3">
+            <div class="bg-slate-100 -mx-4 px-4 py-4 rounded-lg">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-slate-900">Total:</span>
+                <span class="text-3xl font-bold text-blue-600"> {{ getTotal().toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <button (click)="onSubmit()" class="btn-primary px-8 py-3 text-lg">
+           save
+          </button>
+        </div>
+
+      </div>
+    </div> 
+  </div> 
+</div>

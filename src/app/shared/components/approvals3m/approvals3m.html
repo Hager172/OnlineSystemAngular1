@@ -1,4 +1,4 @@
-<div class="p-6 bg-white rounded-lg shadow-sm">
+<div class="p-6 bg-white rounded-lg shadow-sm mt-6">
   
   <div *ngIf="isLoading()" class="flex justify-center items-center py-12">
     <div class="text-gray-500">Loading approvals...</div>
@@ -11,181 +11,164 @@
       <div class="flex flex-col gap-1.5">
         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Filter By Month</label>
         <div class="inline-flex rounded-lg p-1 bg-gray-100/80">
-          <button 
-            (click)="setMonthFilter('all')"
-            [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">
-            All 3 Months
-          </button>
 
-          <button 
-            (click)="setMonthFilter('twoMonthsAgo')"
-            [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'twoMonthsAgo' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">
-            {{ twoMonthsAgoName }}
-          </button>
 
-          <button 
-            (click)="setMonthFilter('last')"
-            [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'last' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">
-            {{ lastMonthName }}
-          </button>
+          <button (click)="setMonthFilter('last')"  [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
+              (selectedMonthFilter() === 'last' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">{{ lastMonthName }}</button>
 
-          <button 
-            (click)="setMonthFilter('current')"
-            [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'current' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">
-            {{ currentMonthName }} 
-          </button>
+<button (click)="setMonthFilter('twoMonthsAgo')" [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
+              (selectedMonthFilter() === 'twoMonthsAgo' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">{{ twoMonthsAgoName }}</button>
+
+<button (click)="setMonthFilter('threeMonthsAgo')" [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
+              (selectedMonthFilter() === 'threeMonthsAgo' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">{{ threeMonthsAgoName }}</button>
         </div>
       </div>
+<div class="flex items-center gap-3 self-end lg:self-auto">
+  
+ <div class="inline-flex rounded-lg shadow-sm">
+  <button 
+    (click)="exportToExcel()"
+    class="h-[34px] px-3 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-medium rounded-l-lg transition-all duration-200 flex items-center gap-1.5"
+    title="Export to Excel"
+  >
+    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+    </svg>
+    Excel
+  </button>
+  
+  <button 
+    (click)="exportToPDF()"
+    class="h-[34px] px-3 bg-purple-50 text-purple-700 border border-l-0 border-purple-200 hover:bg-purple-100 text-xs font-medium rounded-r-lg transition-all duration-200 flex items-center gap-1.5"
+    title="Export to PDF"
+  >
+    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+    </svg>
+    PDF
+  </button>
+</div>
+  <div class="relative">
+    <input 
+      type="search" 
+      [ngModel]="searchQuery()"
+      (ngModelChange)="updateSearchQuery($event)"
+      placeholder="Search in results..."
+      class="w-[260px] h-[34px] px-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-all placeholder:text-gray-400"
+    />
+  </div>
+</div>
 
-      <div class="flex items-center gap-3 self-end lg:self-auto">
-        <button 
-          (click)="exportToExcel()"
-          class="h-[34px] px-4 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-sm flex items-center gap-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-          </svg>
-          Export
-        </button>
-
-        <div class="relative">
-          <input 
-            type="search" 
-            [ngModel]="searchQuery()"
-            (ngModelChange)="updateSearchQuery($event)"
-            placeholder="Search in results..."
-            class="w-[260px] h-[34px] px-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-all placeholder:text-gray-400"
-          />
-        </div>
-      </div>
+      
     </div>
 
-    <div class="overflow-x-auto">
-     <table class="w-full">
+    <div class="overflow-x-auto" id="pdf-content">
+  <table class="w-full">
   <thead>
     <tr class="border-b border-gray-200 bg-gray-50">
-      
-   
-
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('formId')">
+        Form ID {{ getSortIcon('formId') }}
+      </th>
       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalId')">
         Approval ID {{ getSortIcon('approvalId') }}
       </th>
-
       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('memberId')">
-        Member Info {{ getSortIcon('memberId') }}
+        Member Id {{ getSortIcon('memberId') }}
       </th>
-
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('apType')">
-        Request Type {{ getSortIcon('apType') }}
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('memberName')">
+        Member Name {{ getSortIcon('memberName') }}
       </th>
-
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('requestSource')">
-        Request Source {{ getSortIcon('requestSource') }}
-      </th>
-
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalDate')">
-        Date {{ getSortIcon('approvalDate') }}
-      </th>
-
       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('vendorId')">
-         Company {{ getSortIcon('companyName') }}
+        Company {{ getSortIcon('companyName') }}
       </th>
-   <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('branchName')">
-         Branch {{ getSortIcon('branchName') }}
+       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('branchName')">
+        Branch {{ getSortIcon('branchName') }}
       </th>
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalDate')">
+        Claim Date {{ getSortIcon('approvalDate') }}
+      </th>     
       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('value')">
         Value {{ getSortIcon('value') }}
       </th>
-         <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('copaymentvalue')">
-        copaymentvalue {{ getSortIcon('copaymentvalue') }}
-      </th>
-         <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('importeddiscountvalue')">
-        importeddiscountvalue {{ getSortIcon('importeddiscountvalue') }}
-      </th>
       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('localdiscountvalue')">
-        localdiscountvalue {{ getSortIcon('localdiscountvalue') }}
+        Local Disc. {{ getSortIcon('localdiscountvalue') }}
       </th>
-         <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('netvalue')">
-        netvalue {{ getSortIcon('netvalue') }}
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('importeddiscountvalue')">
+        Imported Disc. {{ getSortIcon('importeddiscountvalue') }}
       </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('notes')">
-        Notes {{ getSortIcon('notes') }}
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('copaymentvalue')">
+        Copayment {{ getSortIcon('copaymentvalue') }}
+      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('netvalue')">
+        Net Value {{ getSortIcon('netvalue') }}
       </th>
-      
+     
     </tr>
   </thead>
   
   <tbody>
     <tr *ngFor="let item of currentItems()" class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      
-     
-
+      <td class="py-3 px-4">
+        <span class="text-sm font-medium text-gray-900">{{ item.formId }}</span>
+      </td>
       <td class="py-3 px-4">
         <span class="text-sm font-medium text-gray-900">{{ item.approvalId }}</span>
       </td>
-
       <td class="py-3 px-4">
-        <span class="text-sm font-medium text-gray-800 block">{{ item.memberName || 'No Name Found' }}</span>
-        <span class="text-xs text-gray-400 block max-w-[180px] truncate" [title]="item.memberName">
+       
+        <span class="text-sm font-medium text-gray-800 block" [title]="item.memberName">
            {{ item.memberId }}
         </span>
       </td>
-
       <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.apType }}</span>
+         <span class="text-sm font-medium text-gray-800 block">{{ item.memberName || 'No Name Found' }}</span>
       </td>
-
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.requestSource }}</span>
-      </td>
-
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ formatDate(item.approvalDate) }}</span>
-        <span class="text-xs text-gray-400 block">{{ formatTime(item.approvalDate) }}</span>
-      </td>
-
       <td class="py-3 px-4">
         <span class="text-sm font-medium text-gray-800 block">{{ item.companyName || '-' }}</span>
-      
       </td>
       <td class="py-3 px-4">
         <span class="text-sm font-medium text-gray-800 block">{{ item.branchName || '-' }}</span>
       </td>
       <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.value || '-' }}</span>
+        <span class="text-sm text-gray-700">{{ formatDate(item.approvalDate) }}</span>
       </td>
-       <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.copaymentvalue || '-' }}</span>
-      </td>
-      
-       <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.importeddiscountvalue || '-' }}</span>
+     
+    
+      <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.value | number:'1.2-2' }}</span>
       </td>
       <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.localdiscountvalue || '-' }}</span>
+        <span class="text-sm text-gray-700">{{ item.localdiscountvalue | number:'1.2-2' }}</span>
       </td>
-       <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.netvalue || '-' }}</span>
-      </td>
-      
       <td class="py-3 px-4">
-        <span class="text-sm text-gray-500 max-w-xs block truncate" [title]="item.notes">
-          {{ item.notes }}
-        </span>
+        <span class="text-sm text-gray-700">{{ item.importeddiscountvalue | number:'1.2-2' }}</span>
       </td>
-
+      <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.copaymentvalue | number:'1.2-2' }}</span>
+      </td>
+      <td class="py-3 px-4">
+        <span class="text-sm text-gray-700">{{ item.netvalue | number:'1.2-2' }}</span>
+      </td>
+     
     </tr>
     
     <tr *ngIf="currentItems().length === 0">
-      <td colspan="8" class="text-center py-8 text-gray-500">
+      <td colspan="13" class="text-center py-8 text-gray-500">
         No matching approvals found for the selected criteria.
       </td>
     </tr>
   </tbody>
+
+  <tfoot *ngIf="filteredApprovals().length > 0" class="bg-gray-100 font-bold border-t-2 border-gray-300 text-gray-800">
+    <tr>
+      <td class="py-3 px-4 text-sm" colspan="7">TOTALS (Filtered Data)</td>
+      <td class="py-3 px-4 text-sm text-gray-900">{{ totalGrossValue() | number:'1.2-2' }}</td>
+      <td class="py-3 px-4 text-sm text-gray-900">{{ totalLocalDiscount() | number:'1.2-2' }}</td>
+      <td class="py-3 px-4 text-sm text-gray-900">{{ totalImportedDiscount() | number:'1.2-2' }}</td>
+      <td class="py-3 px-4 text-sm text-gray-900">{{ totalCopayment() | number:'1.2-2' }}</td>
+      <td class="py-3 px-4 text-sm text-gray-900">{{ totalNetValue() | number:'1.2-2' }}</td>
+      <td class="py-3 px-4"></td>
+    </tr>
+  </tfoot>
 </table>
     </div>
 

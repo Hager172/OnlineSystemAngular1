@@ -4,7 +4,8 @@ import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, PLATFORM_ID } from '@angular/core';
-
+import { jwtDecode } from 'jwt-decode';
+import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root',
 })
@@ -27,6 +28,7 @@ private roleSubject = new BehaviorSubject<string | null>(null);
  
 constructor(
   private http: HttpClient,
+  private router: Router,
   @Inject(PLATFORM_ID) private platformId: Object
 ) {
 
@@ -75,6 +77,7 @@ private saveAuthData(data: any){
   if(isPlatformBrowser(this.platformId)){
     localStorage.setItem('vendorid',data.vendorId);
     localStorage.setItem('branchid', data.branchId);
+    localStorage.setItem('vtype', data.VType || '');
      localStorage.setItem('clients', JSON.stringify(data.clients || []));
   localStorage.setItem('currentClient', data.clientId ?? '');
     localStorage.setItem('token' , data.authToken);
@@ -85,6 +88,7 @@ private saveAuthData(data: any){
     localStorage.setItem('user', JSON.stringify({
       username: data.username,
       vendorId: data.vendorId, 
+      vType: data.VType  || '',
       branchId: data.branchId,    
       pages: data.pages,
       role: userRole
@@ -110,10 +114,11 @@ setPages(pages: any[]) {
   }
 }
 
-updateSessionData(vendorId: string, branchId: string, role?: string) {
+updateSessionData(vendorId: string, branchId: string, role?: string,VType?: string) {
     if (isPlatformBrowser(this.platformId)) {
       if (vendorId) localStorage.setItem('vendorid', vendorId);
       if (branchId) localStorage.setItem('branchid', branchId);
+      if (VType) localStorage.setItem('vtype', VType);
       if (role) {
         localStorage.setItem('role', role);
         this.roleSubject.next(role);
@@ -129,7 +134,26 @@ updateSessionData(vendorId: string, branchId: string, role?: string) {
       }
     }
   }
+getVendorType(): string | null {
+  if (isPlatformBrowser(this.platformId)) {
+    const token = this.getToken();
+    console.log('Retrieved Token:', token);
+    if (!token) return null;
 
+    try {
+      // فك التوكن وقراءة الـ Claims اللي جواه
+      const decoded: any = jwtDecode(token); 
+      console.log('Decoded Token Claims:', decoded);
+      
+      // بنرجع الـ VType زي ما الباك إند باعتها بالملي كابيتال
+      return decoded.VType || null; 
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }
+  return null;
+}
   getRole(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('role');
@@ -182,16 +206,23 @@ getclientid():string|null{
 }
 
 
-  logout(){
+logout() {
   if (isPlatformBrowser(this.platformId)) {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('vendorid');
+    localStorage.removeItem('branchid');
+    localStorage.removeItem('vtype');
+    localStorage.removeItem('role');
+    localStorage.removeItem('clients');
+    localStorage.removeItem('currentClient');
   }
 
   this.currentClientSubject.next(null);
   this.pagesSubject.next([]);
-}
 
+  this.router.navigate(['/login']);
+}
   
 }
