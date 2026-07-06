@@ -381,7 +381,7 @@ async exportToPDF(): Promise<void> {
       6: { cellWidth: 35, halign: 'right' }  // عمود الشركة
     },
     
-    didParseCell: (data) => {
+    didParseCell: (data:any) => {
       if (data.row.index === rows.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fillColor = [241, 245, 249];
