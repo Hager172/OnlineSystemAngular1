@@ -60,11 +60,14 @@ currentRole: string | null = '';
     if (isPlatformBrowser(this.platformId)) {
       this.isCollapsed = localStorage.getItem(this.storageKey) === '1';
     }
+
+    this.auth.role$.subscribe(role => {
+    this.currentRole = role?.toUpperCase() ?? '';
+  });
   }
 
  get isRtl(): boolean {
-  this.auth.role$.subscribe(role => {
-this.currentRole = role ? role.toUpperCase() : '';    });
+  
 
 console.log('Current Role:', this.currentRole);
     return this.currentLang === 'ar';

@@ -135,12 +135,6 @@ export class ApprovalService {
     },
   };
 
-  // getApproval(approvalNumber: string): Approval {
-  //   return this.mockApprovals[approvalNumber];
-  // }
-  // getApproval(approvalNumber: string): Approval {
-  //   return this.mapApprovalDetailsToApproval(this.getApprovalDetails(approvalNumber));
-  // }
   getApproval(approvalNumber: string): Observable<Approval> {
     console.log("approvalnum",approvalNumber);
   return this.getApprovalDetails(approvalNumber).pipe(
@@ -233,8 +227,7 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
       `${this.baseUrl}Approval/allapprovaltoday/${clientid}/${vendorId}`
     );
   }
-// api/Approval/allapprovaltoday
-  // جلب الـ approvals غير المكتملة (not complete)
+
   getTodayNotCompletedApprovals(clientid: string,vendorId:string): Observable<any> {
     return this.http.get<any>(
       `${this.baseUrl}Approval/allapprovalnottoday/${clientid}/${vendorId}`
@@ -252,6 +245,13 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     );
   }
 
+
+createRequestClaim(claim: ClaimDto) {
+  return this.http.post<CreateClaimResponseDto>(
+    `${this.baseUrl}Approval/create`,
+    claim
+  );
+}
 
 getDiagnosis(term: string) {
   return this.http.get<DiagnosisDto[]>(
@@ -294,6 +294,23 @@ editApproval(request: any): Observable<any> {
   return this.http.post<any>(
     `${this.baseUrl}Approval/edit`,
     request
+  );
+}
+getAgentProducts(term: string, vendorId: string) {
+  return this.http.get<ProductLookupDto[]>(
+    `${this.baseUrl}Approval/Agentproducts?term=${term}&vendor_id=${vendorId}`
+  );
+}
+getMemberCareItems(memberId: string) {
+  return this.http.get<any>(
+    `${this.baseUrl}Approval/GetMemberCareItems?member_id=${memberId}`
+  );
+}
+
+getCoinsuranceOfMedItem(memberId: string, careItemId: number) {
+  return this.http.get<any>(
+    `${this.baseUrl}Approval/getcoinsuranceofmeditem`,
+    { params: { memid: memberId, meditem: careItemId } }
   );
 }
 }

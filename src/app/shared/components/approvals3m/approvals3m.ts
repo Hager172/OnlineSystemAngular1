@@ -349,7 +349,6 @@ async exportToPDF(): Promise<void> {
     item.netvalue.toFixed(2)
   ]);
 
-
   // إضافة صف الإجمالي في نهاية الجدول
   rows.push([
     'TOTALS', '', '', '', '', '', '',

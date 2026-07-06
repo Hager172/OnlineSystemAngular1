@@ -1,0 +1,383 @@
+<!-- ═══════════════════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════════════════ -->
+<div class="oar-header">
+  <div class="oar-header__icon">
+    <mat-icon>fact_check</mat-icon>
+  </div>
+  <div class="oar-header__text">
+    <h1 class="oar-header__title">Online Approvals Report</h1>
+    <p class="oar-header__sub">Track all online approvals and their current status.</p>
+  </div>
+</div>
+
+<!-- Global progress bar -->
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" class="oar-progress"></mat-progress-bar>
+}
+
+<!-- ═══════════════════════════════════════════════════
+     FILTER CARD
+═══════════════════════════════════════════════════ -->
+<mat-card class="oar-card oar-filter-card" appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon class="oar-card-title-icon">tune</mat-icon>
+      Search Filters
+    </mat-card-title>
+    <mat-card-subtitle>Enter criteria and press Search or hit Enter</mat-card-subtitle>
+  </mat-card-header>
+  <mat-divider></mat-divider>
+
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="search()" class="oar-form">
+
+      <!-- Start Date -->
+      <mat-form-field appearance="outline" class="oar-form__field">
+        <mat-label>Start Date</mat-label>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate" readonly>
+        <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+        @if (form.get('startDate')?.hasError('required') && form.get('startDate')?.touched) {
+          <mat-error>Start date is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- End Date -->
+      <mat-form-field appearance="outline" class="oar-form__field">
+        <mat-label>End Date</mat-label>
+        <mat-icon matPrefix>event</mat-icon>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate" readonly>
+        <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+        @if (form.get('endDate')?.hasError('required') && form.get('endDate')?.touched) {
+          <mat-error>End date is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Cross-field error -->
+      @if (form.hasError('dateRange') && form.get('startDate')?.touched && form.get('endDate')?.touched) {
+        <div class="oar-form__range-error">
+          <mat-icon>warning_amber</mat-icon>
+          Start date must be before end date.
+        </div>
+      }
+
+      <!-- Buttons -->
+      <div class="oar-form__actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
+          <mat-icon>search</mat-icon>
+          Search
+        </button>
+        <button mat-stroked-button type="button" (click)="reset()" [disabled]="loading()">
+          <mat-icon>restart_alt</mat-icon>
+          Reset
+        </button>
+      </div>
+
+    </form>
+  </mat-card-content>
+</mat-card>
+
+<!-- ═══════════════════════════════════════════════════
+     SKELETON LOADER
+═══════════════════════════════════════════════════ -->
+@if (loading()) {
+  <div class="oar-skeleton-grid">
+    @for (_ of skeletonRows; track $index) {
+      <div class="oar-skeleton-card"></div>
+    }
+  </div>
+
+  <mat-card class="oar-card" appearance="outlined">
+    <mat-card-content>
+      <div class="oar-skeleton-table">
+        @for (_ of skeletonRows; track $index) {
+          <div class="oar-skeleton-row">
+            @for (__ of skeletonCols; track $index) {
+              <div class="oar-skeleton-cell"></div>
+            }
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+}
+
+<!-- ═══════════════════════════════════════════════════
+     ERROR STATE
+═══════════════════════════════════════════════════ -->
+@if (error() && !loading()) {
+  <mat-card class="oar-card oar-error-card" appearance="outlined">
+    <mat-card-content class="oar-error-card__body">
+      <mat-icon class="oar-error-card__icon">error_outline</mat-icon>
+      <h2 class="oar-error-card__title">Something went wrong</h2>
+      <p class="oar-error-card__msg">{{ error() }}</p>
+      <button mat-raised-button color="warn" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </mat-card-content>
+  </mat-card>
+}
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT (after first successful load)
+═══════════════════════════════════════════════════ -->
+@if (hasLoaded() && !loading() && !error()) {
+
+  <!-- ── Statistics Cards ──────────────────────────── -->
+  <div class="oar-stats-grid">
+    @for (card of statCards(); track card.title) {
+      <mat-card class="oar-stat-card {{ card.colorClass }}" appearance="outlined">
+        <mat-card-content>
+          <div class="oar-stat-card__row">
+            <div class="oar-stat-card__icon-wrap">
+              <mat-icon>{{ card.icon }}</mat-icon>
+            </div>
+            <div class="oar-stat-card__info">
+              <div class="oar-stat-card__val">
+                @if (card.isCurrency) {
+                  {{ card.value | number:'1.2-2' }}
+                } @else {
+                  {{ card.value | number:'1.0-0' }}
+                }
+              </div>
+              <div class="oar-stat-card__label">{{ card.title }}</div>
+              <div class="oar-stat-card__sub">{{ card.subtitle }}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <!-- ── Table Card ────────────────────────────────── -->
+  <mat-card class="oar-card oar-table-card" appearance="outlined">
+
+    <!-- Toolbar -->
+    <div class="oar-toolbar">
+
+      <!-- Record count badge -->
+      <div class="oar-toolbar__left">
+        <span class="oar-toolbar__count">
+          <mat-icon>table_rows</mat-icon>
+          {{ dataSource.filteredData.length | number }} record{{ dataSource.filteredData.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+
+      <!-- In-result search -->
+      <div class="oar-toolbar__search">
+        <mat-form-field appearance="outline" class="oar-toolbar__search-field">
+          <mat-label>Search within results…</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput
+                 [value]="globalFilter()"
+                 (input)="onGlobalFilter($any($event.target).value)"
+                 autocomplete="off">
+          @if (globalFilter()) {
+            <button matIconSuffix mat-icon-button
+                    (click)="onGlobalFilter('')"
+                    aria-label="Clear search">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="oar-toolbar__actions">
+        <button mat-icon-button matTooltip="Refresh" (click)="refresh()">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Export CSV" (click)="exportCsv()">
+          <mat-icon>download</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Export Excel" (click)="exportExcel()">
+          <mat-icon>table_view</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Print" (click)="print()">
+          <mat-icon>print</mat-icon>
+        </button>
+        <button mat-icon-button
+                matTooltip="Choose visible columns"
+                [matMenuTriggerFor]="colMenu">
+          <mat-icon>view_column</mat-icon>
+        </button>
+
+        <!-- Column chooser menu -->
+        <mat-menu #colMenu="matMenu" class="oar-col-menu">
+          @for (col of allColumns; track col.key) {
+            <button mat-menu-item (click)="$event.stopPropagation()">
+              <mat-checkbox
+                [checked]="isColumnVisible(col.key)"
+                (change)="toggleColumn(col.key)">
+                {{ col.label }}
+              </mat-checkbox>
+            </button>
+          }
+        </mat-menu>
+      </div>
+
+    </div>
+    <mat-divider></mat-divider>
+
+    <!-- ── Table ──────────────────────────────────── -->
+    @if (data().length > 0) {
+      <div class="oar-table-wrap">
+        <table mat-table [dataSource]="dataSource" matSort [trackBy]="trackByApproval" class="oar-table">
+
+          <!-- formId -->
+          <ng-container matColumnDef="formId">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Form ID</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell" [matTooltip]="row.formId">{{ row.formId }}</span>
+            </td>
+          </ng-container>
+
+          <!-- approvalId -->
+          <ng-container matColumnDef="approvalId">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="oar-th--right">Approval ID</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--right oar-td--mono">
+              {{ row.approvalId }}
+            </td>
+          </ng-container>
+
+          <!-- memberId -->
+          <ng-container matColumnDef="memberId">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Member ID</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--mono">{{ row.memberId }}</td>
+          </ng-container>
+
+          <!-- empName -->
+          <ng-container matColumnDef="empName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell" [matTooltip]="row.empName">{{ row.empName }}</span>
+            </td>
+          </ng-container>
+
+          <!-- customerName -->
+          <ng-container matColumnDef="customerName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell" [matTooltip]="row.customerName">{{ row.customerName }}</span>
+            </td>
+          </ng-container>
+
+          <!-- provName -->
+          <ng-container matColumnDef="provName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Provider</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell" [matTooltip]="row.provName">{{ row.provName }}</span>
+            </td>
+          </ng-container>
+
+          <!-- branchName -->
+          <ng-container matColumnDef="branchName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Branch</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell" [matTooltip]="row.branchName">{{ row.branchName }}</span>
+            </td>
+          </ng-container>
+
+          <!-- approvalDate -->
+          <ng-container matColumnDef="approvalDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Approval Date</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--nowrap">
+              {{ row.approvalDate | date:'mediumDate' }}
+            </td>
+          </ng-container>
+
+          <!-- value -->
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="oar-th--right">Value</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--right oar-td--numeric">
+              {{ row.value != null ? (row.value | number:'1.2-2') : '—' }}
+            </td>
+          </ng-container>
+
+          <!-- coinsurance -->
+          <ng-container matColumnDef="coinsurance">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="oar-th--right">Coinsurance</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--right oar-td--numeric">
+              {{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}
+            </td>
+          </ng-container>
+
+          <!-- onlineStatus -->
+          <ng-container matColumnDef="onlineStatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-badge oar-badge--{{ getStatusKey(row.onlineStatus) }}">
+                <mat-icon class="oar-badge__icon">{{ getStatusIcon(row.onlineStatus) }}</mat-icon>
+                {{ row.onlineStatus }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- notes -->
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Notes</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell oar-cell--notes"
+                    [matTooltip]="row.notes"
+                    [matTooltipShowDelay]="400">{{ row.notes }}</span>
+            </td>
+          </ng-container>
+
+          <!-- lastUpdateDate -->
+          <ng-container matColumnDef="lastUpdateDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--nowrap">
+              {{ row.lastUpdateDate | date:'medium' }}
+            </td>
+          </ng-container>
+
+          <!-- lastUpdateBy -->
+          <ng-container matColumnDef="lastUpdateBy">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Updated By</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="oar-cell" [matTooltip]="row.lastUpdateBy">{{ row.lastUpdateBy }}</span>
+            </td>
+          </ng-container>
+
+          <!-- onlineLud -->
+          <ng-container matColumnDef="onlineLud">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Online LUD</th>
+            <td mat-cell *matCellDef="let row" class="oar-td--nowrap">
+              {{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}
+            </td>
+          </ng-container>
+
+          <!-- Row definitions -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="oar-row"></tr>
+
+        </table>
+      </div>
+
+      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"
+                     showFirstLastButtons
+                     class="oar-paginator">
+      </mat-paginator>
+    }
+
+    <!-- ── Empty State ────────────────────────────── -->
+    @if (data().length === 0) {
+      <div class="oar-empty">
+        <mat-icon class="oar-empty__icon">search_off</mat-icon>
+        <h2 class="oar-empty__title">No approvals found</h2>
+        <p class="oar-empty__sub">
+          No records matched your criteria. Try a different date range or Client ID.
+        </p>
+        <button mat-stroked-button (click)="reset()">
+          <mat-icon>restart_alt</mat-icon>
+          Reset Filters
+        </button>
+      </div>
+    }
+
+  </mat-card>
+}
