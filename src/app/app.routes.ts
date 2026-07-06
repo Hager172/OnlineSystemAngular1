@@ -40,7 +40,7 @@ export const routes: Routes = [
       {path: 'mem' , component:Memberapprovaln},
       {path:'test', component:Test},
       {path: 'add', component:Addapproval},
-
+{path:'approvalreport',component:OnlineApprovalsReportComponent},
     {path: 'search-results', component: SearchResults},
     {path:'monthlyapprovals',component:Approvals3m},
 

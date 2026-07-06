@@ -141,12 +141,22 @@
   </a>
 </div>
 
- <div>
+
+ <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'" >
           <a [routerLink]="['/issue-approval']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
             <i class="fas fa-user fa-s me-3"></i>
             Issue Approval
           </a>
         </div>
+        <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
+  <a
+    [routerLink]="['/approvalreport']"
+    class="nav-link sidebar-link d-flex align-items-center"
+    style="cursor: pointer;">
+    <i class="fas fa-house fa-s me-3"></i>
+    Approval Report
+  </a>
+</div>
       </li>
 
     </ul>
