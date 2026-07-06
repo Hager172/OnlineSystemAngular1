@@ -45,46 +45,7 @@
     <ul class="app-sidebar__list">
       <ng-container *ngFor="let page of (auth.pages$ | async) || []; trackBy: trackByPage">
 
-        <!-- Item with a submenu -->
-        <!-- <li *ngIf="hasChildren(page); else leafItem" class="app-sidebar__item">
-          <button
-            type="button"
-            class="app-sidebar__link app-sidebar__link--group"
-            [class.is-expanded]="isExpanded(page)"
-            (click)="toggleSubmenu(page, $event)"
-            [attr.aria-expanded]="isExpanded(page)"
-            [title]="getPageName(page)">
-            <i class="app-sidebar__icon" [ngClass]="getPageIcon(page)" aria-hidden="true"></i>
-            <span class="app-sidebar__label">{{ getPageName(page) }}</span>
-            <i class="app-sidebar__chevron fas fa-chevron-down" aria-hidden="true"></i>
-          </button>
-
-          <ul class="app-sidebar__submenu" [class.is-open]="isExpanded(page)">
-            <li *ngFor="let child of page.children; trackBy: trackByPage" class="app-sidebar__item">
-              <a
-                *ngIf="getRoute(child); else childButton"
-                class="app-sidebar__link app-sidebar__link--sub"
-                [routerLink]="getRoute(child)"
-                routerLinkActive="is-active"
-                (click)="closeMobile()"
-                [title]="getPageName(child)">
-                <i class="app-sidebar__dot fas fa-circle" aria-hidden="true"></i>
-                <span class="app-sidebar__label">{{ getPageName(child) }}</span>
-              </a>
-              <ng-template #childButton>
-                <button
-                  type="button"
-                  class="app-sidebar__link app-sidebar__link--sub"
-                  [class.is-active]="isActive(child)"
-                  (click)="selectPage(child)"
-                  [title]="getPageName(child)">
-                  <i class="app-sidebar__dot fas fa-circle" aria-hidden="true"></i>
-                  <span class="app-sidebar__label">{{ getPageName(child) }}</span>
-                </button>
-              </ng-template>
-            </li>
-          </ul>
-        </li> -->
+       
 
         <!-- Leaf item: page with no children -->
         <ng-template #leafItem>
@@ -115,33 +76,90 @@
 
       </ng-container>
 
-      <li class="sidebar-item">
-        <div>
-          <a [routerLink]="['/mem']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-house fa-s me-3"></i>
-            HOME
-          </a>
-        </div>
-        <div *ngIf="currentRole === 'USER'">
+      <!-- <li class="sidebar-item">
+        <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
+  <a
+    [routerLink]="['/mem']"
+    class="nav-link sidebar-link d-flex align-items-center"
+    style="cursor: pointer;">
+    <i class="fas fa-house fa-s me-3"></i>
+    HOME
+  </a>
+</div>
+        <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'" >
           <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
             <i class="fas fa-house fa-s me-3"></i>
             Search Results
           </a>
         </div>
-        <div >
-          <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-house fa-s me-3"></i>
-            Month's register
-          </a>
-        </div>
-        <div>
+       <div *ngIf="currentRole === 'HEADOFFICE'">
+  <a
+    [routerLink]="['/monthlyapprovals']"
+    class="nav-link sidebar-link d-flex align-items-center"
+    style="cursor: pointer;">
+    <i class="fas fa-house fa-s me-3"></i>
+    Month's register
+  </a>
+</div>
+
+
+ <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'" >
           <a [routerLink]="['/issue-approval']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
             <i class="fas fa-user fa-s me-3"></i>
             Issue Approval
           </a>
         </div>
-      </li>
+        <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
+  <a
+    [routerLink]="['/approvalreport']"
+    class="nav-link sidebar-link d-flex align-items-center"
+    style="cursor: pointer;">
+    <i class="fas fa-house fa-s me-3"></i>
+    Approval Report
+  </a>
+</div>
+      </li> -->
+<li class="sidebar-item">
+    <!-- HOME -->
+    <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
+        <a [routerLink]="['/mem']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-house fa-s me-3"></i>
+            HOME
+        </a>
+    </div>
 
+    <!-- Search Results -->
+    <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
+        <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-search fa-s me-3"></i>
+            Search Results
+        </a>
+    </div>
+
+    <!-- Month's register -->
+    <div *ngIf="currentRole === 'HEADOFFICE'">
+        <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-calendar-alt fa-s me-3"></i>
+            Month's register
+        </a>
+    </div>
+
+    <!-- Issue Approval -->
+    <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
+        <a [routerLink]="['/issue-approval']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-check-circle fa-s me-3"></i>
+            Issue Approval
+        </a>
+    </div>
+
+    <!-- Approval Report -->
+    <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
+        <a [routerLink]="['/approvalreport']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
+            <i class="fas fa-chart-bar fa-s me-3"></i>
+            Approval Report
+        </a>
+    </div>
+</li>
     </ul>
   </nav>
 </aside>
