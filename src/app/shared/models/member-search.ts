@@ -19,11 +19,10 @@ export interface BranchOption {
 }
 
 export interface DiagnosisOption {
-  id: string; // أو number حسب الـ Database عندك
+  id: string; 
   name: string;
 }
 
-// الموديل الخاص بـ Submit للفورم بالكامل ليتوافق مع الـ ClaimDto في الباك إند
 export interface CreateClaimRequest {
   memberId: string;
   approvalType: string;
@@ -42,8 +41,8 @@ export interface ServiceOption {
   serviceId: string;
   serviceName: string;
   price: number;
-  doseUnitNo?: number; // خاص بالأدوية بس - بييجي من الـ service نفسه
-  subUnitNo?: number;  // خاص بالأدوية بس - بييجي من الـ service نفسه
+  doseUnitNo?: number; 
+  subUnitNo?: number;  
 }
 
 export interface CareItemOption {
@@ -55,21 +54,18 @@ export interface ServiceRow {
   serviceId: string | null;
   serviceName: string;
 
-  // خاصة بـ Medicine بس
   units: number | null;
-  repeat: number | null;      // REP (dose_repeat) - داخل في معادلة الحساب
+  repeat: number | null;      
   duration: number | null;
   isChronic: boolean;
-  repeatCount: number | null; // عمود REPEAT الأخير - منفصل، معناه لسه مش مؤكد
+  repeatCount: number | null;
 
-  // مشتركة بين الأنواع كلها
   qty: number | null;
   itemPrice: number;
   coPercent: number;
   careItemId: string | null;
   notes: string;
 
-  // مخزّنة وقت اختيار الدواء - مش ظاهرة في الجدول، بس محتاجينها للحساب
   doseUnitNo?: number;
   subUnitNo?: number;
 }

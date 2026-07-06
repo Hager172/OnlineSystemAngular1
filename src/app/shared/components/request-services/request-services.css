@@ -68,7 +68,7 @@
 .services-table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 1200px;
+  min-width: 1400px;
 }
 
 .services-table th {
@@ -101,50 +101,14 @@
   font-size: 13px;
 }
 
-
-
+/* ng-select الأساسي جوه الخلية */
 .table-select .ng-select-container {
   min-height: 36px !important;
   font-size: 13px;
-   min-width: 180px;
+  min-width: 180px;
   width: 200px;
 }
 
-.selected-service-name {
-  font-size: 12.5px;
-  color: #1a1d29;
-  font-weight: 500;
-  margin-top: 4px;
-}
-
-.services-table tfoot td {
-  border-top: 2px solid #eef0f4;
-  border-bottom: none;
-  padding: 12px 10px;
-  font-size: 14px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 40px;
-  color: #9aa1b1;
-  text-align: center;
-}
-
-.empty-state i {
-  font-size: 28px;
-}
-
-::ng-deep .ng-dropdown-panel {
-  z-index: 9999 !important;
-}
-.services-table {
-  min-width: 1400px; /* بدل 1200px، عشان الأعمدة متتزنقش */
-}
 ::ng-deep .table-select .ng-select-container {
   height: 36px !important;
   min-height: 36px !important;
@@ -180,4 +144,33 @@
 
 ::ng-deep .table-select .ng-arrow-wrapper {
   padding-right: 8px;
+}
+
+.selected-service-name {
+  font-size: 12.5px;
+  color: #1a1d29;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.services-table tfoot td {
+  border-top: 2px solid #eef0f4;
+  border-bottom: none;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: #9aa1b1;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 28px;
 }

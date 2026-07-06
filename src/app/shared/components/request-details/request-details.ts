@@ -68,17 +68,27 @@ export class RequestDetails implements OnInit {
       });
 
     this.diagnosisSearch$
-      .pipe(debounceTime(400), distinctUntilChanged())
-      .subscribe((term) => {
-        if (!term || term.length < 2) {
-          this.diagnosisOptions = [];
-          return;
-        }
-        // this.approvalService.getDiagnosis(term).subscribe({
-        //   next: (res: any) => (this.diagnosisOptions = res?.data ?? res ?? []),
-        //   error: () => (this.diagnosisOptions = []),
-        // });
-      });
+  .pipe(
+    debounceTime(400),
+    distinctUntilChanged()
+  )
+  .subscribe((term) => {
+
+    if (!term || term.length < 2) {
+      this.diagnosisOptions = [];
+      return;
+    }
+
+    this.approvalService.getDiagnosis(term).subscribe({
+      next: (res: any) => {
+        this.diagnosisOptions = res.data ?? res ?? [];
+      },
+      error: () => {
+        this.diagnosisOptions = [];
+      }
+    });
+
+  });
   }
 
   // =========================
@@ -182,20 +192,29 @@ onVendorSelect(vendor: any) {
   // =========================
   // DIAGNOSIS
   // =========================
-  onDiagnosisSearch($event: any): void {
-    const term = $event?.term;
-    if (term && term.length >= 2) {
-      this.diagnosisSearch$.next(term);
-    } else {
-      this.diagnosisOptions = [];
-    }
-  }
+  // onDiagnosisSearch($event: any): void {
+  //   const term = $event?.term;
+  //   if (term && term.length >= 2) {
+  //     this.diagnosisSearch$.next(term);
+  //   } else {
+  //     this.diagnosisOptions = [];
+  //   }
+  // }
 
-  onDiagnosisClear(): void {
+ onDiagnosisClear(): void {
+  this.diagnosisOptions = [];
+  this.diagnosisSearch$.next('');
+}
+
+onDiagnosisSearch(event: any): void {
+  const term = event?.term?.trim() ?? '';
+
+  if (term.length >= 2) {
+    this.diagnosisSearch$.next(term);
+  } else {
     this.diagnosisOptions = [];
-    this.diagnosisSearch$.next('');
   }
-
+}
   // =========================
   // CONTACT METHODS
   // =========================
