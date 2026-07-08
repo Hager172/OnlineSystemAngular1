@@ -13,6 +13,8 @@ export interface ApprovalItem {
   quantityUnit?: string;
   unitPrice: number;
 
+  copayment?: number;
+
   serviceId?: number;
 
   isNew?: boolean;
