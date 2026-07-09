@@ -1,383 +1,252 @@
-<!-- ═══════════════════════════════════════════════════
-     PAGE HEADER
-═══════════════════════════════════════════════════ -->
-<div class="oar-header">
-  <div class="oar-header__icon">
-    <mat-icon>fact_check</mat-icon>
+<div class="oar-page">
+
+  <!-- Breadcrumb -->
+  <div class="crumb no-print">
+    <a routerLink="/mem">Dashboard</a> / <b>Online Approvals Report</b>
   </div>
-  <div class="oar-header__text">
-    <h1 class="oar-header__title">Online Approvals Report</h1>
-    <p class="oar-header__sub">Track all online approvals and their current status.</p>
+
+  <!-- Page head -->
+  <div class="pull-head">
+    <div>
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v17a1 1 0 0 0 1 1h17"/><path d="M7 15v3M11.5 11v7M16 7v11M20.5 13v5"/></svg>
+        Online Approvals Report
+      </h2>
+      <div class="tiny">Track all online approvals and their current status.</div>
+    </div>
+    <div class="pull-actions no-print">
+      <button type="button" class="btn btn-ghost" (click)="print()" [disabled]="!hasLoaded()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Print
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="exportCsv()" [disabled]="!hasLoaded()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        CSV
+      </button>
+      <button type="button" class="btn export-btn" (click)="exportExcel()" [disabled]="!hasLoaded()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M8.5 12.5l3 4m0-4-3 4M15 12.5v4"/></svg>
+        Export to Excel
+      </button>
+    </div>
   </div>
-</div>
 
-<!-- Global progress bar -->
-@if (loading()) {
-  <mat-progress-bar mode="indeterminate" class="oar-progress"></mat-progress-bar>
-}
-
-<!-- ═══════════════════════════════════════════════════
-     FILTER CARD
-═══════════════════════════════════════════════════ -->
-<mat-card class="oar-card oar-filter-card" appearance="outlined">
-  <mat-card-header>
-    <mat-card-title>
-      <mat-icon class="oar-card-title-icon">tune</mat-icon>
-      Search Filters
-    </mat-card-title>
-    <mat-card-subtitle>Enter criteria and press Search or hit Enter</mat-card-subtitle>
-  </mat-card-header>
-  <mat-divider></mat-divider>
-
-  <mat-card-content>
-    <form [formGroup]="form" (ngSubmit)="search()" class="oar-form">
-
-      <!-- Start Date -->
-      <mat-form-field appearance="outline" class="oar-form__field">
-        <mat-label>Start Date</mat-label>
-        <mat-icon matPrefix>calendar_today</mat-icon>
-        <input matInput [matDatepicker]="startPicker" formControlName="startDate" readonly>
-        <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
-        <mat-datepicker #startPicker></mat-datepicker>
-        @if (form.get('startDate')?.hasError('required') && form.get('startDate')?.touched) {
-          <mat-error>Start date is required</mat-error>
-        }
-      </mat-form-field>
-
-      <!-- End Date -->
-      <mat-form-field appearance="outline" class="oar-form__field">
-        <mat-label>End Date</mat-label>
-        <mat-icon matPrefix>event</mat-icon>
-        <input matInput [matDatepicker]="endPicker" formControlName="endDate" readonly>
-        <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
-        <mat-datepicker #endPicker></mat-datepicker>
-        @if (form.get('endDate')?.hasError('required') && form.get('endDate')?.touched) {
-          <mat-error>End date is required</mat-error>
-        }
-      </mat-form-field>
-
-      <!-- Cross-field error -->
-      @if (form.hasError('dateRange') && form.get('startDate')?.touched && form.get('endDate')?.touched) {
-        <div class="oar-form__range-error">
-          <mat-icon>warning_amber</mat-icon>
-          Start date must be before end date.
-        </div>
-      }
-
-      <!-- Buttons -->
-      <div class="oar-form__actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
-          <mat-icon>search</mat-icon>
-          Search
+  <!-- FILTERS -->
+  <section class="card card-pad no-print">
+    <div class="filters-grid">
+      <div class="ci-field">
+        <label>Start Date <span class="req">*</span></label>
+        <input
+          type="date"
+          class="ci-input"
+          [ngModel]="startDate()"
+          (ngModelChange)="startDate.set($event)" />
+      </div>
+      <div class="ci-field">
+        <label>End Date <span class="req">*</span></label>
+        <input
+          type="date"
+          class="ci-input"
+          [ngModel]="endDate()"
+          (ngModelChange)="endDate.set($event)"
+          [min]="startDate()" />
+      </div>
+      <div class="filters-actions">
+        <button type="button" class="btn btn-primary" (click)="search()" [disabled]="loading()">
+          <svg *ngIf="!loading()" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <svg *ngIf="loading()" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+          {{ loading() ? 'Searching...' : 'Search' }}
         </button>
-        <button mat-stroked-button type="button" (click)="reset()" [disabled]="loading()">
-          <mat-icon>restart_alt</mat-icon>
+        <button type="button" class="btn btn-ghost" (click)="reset()" [disabled]="loading()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
           Reset
         </button>
       </div>
-
-    </form>
-  </mat-card-content>
-</mat-card>
-
-<!-- ═══════════════════════════════════════════════════
-     SKELETON LOADER
-═══════════════════════════════════════════════════ -->
-@if (loading()) {
-  <div class="oar-skeleton-grid">
-    @for (_ of skeletonRows; track $index) {
-      <div class="oar-skeleton-card"></div>
-    }
-  </div>
-
-  <mat-card class="oar-card" appearance="outlined">
-    <mat-card-content>
-      <div class="oar-skeleton-table">
-        @for (_ of skeletonRows; track $index) {
-          <div class="oar-skeleton-row">
-            @for (__ of skeletonCols; track $index) {
-              <div class="oar-skeleton-cell"></div>
-            }
-          </div>
-        }
-      </div>
-    </mat-card-content>
-  </mat-card>
-}
-
-<!-- ═══════════════════════════════════════════════════
-     ERROR STATE
-═══════════════════════════════════════════════════ -->
-@if (error() && !loading()) {
-  <mat-card class="oar-card oar-error-card" appearance="outlined">
-    <mat-card-content class="oar-error-card__body">
-      <mat-icon class="oar-error-card__icon">error_outline</mat-icon>
-      <h2 class="oar-error-card__title">Something went wrong</h2>
-      <p class="oar-error-card__msg">{{ error() }}</p>
-      <button mat-raised-button color="warn" (click)="refresh()">
-        <mat-icon>refresh</mat-icon>
-        Retry
-      </button>
-    </mat-card-content>
-  </mat-card>
-}
-
-<!-- ═══════════════════════════════════════════════════
-     MAIN CONTENT (after first successful load)
-═══════════════════════════════════════════════════ -->
-@if (hasLoaded() && !loading() && !error()) {
-
-  <!-- ── Statistics Cards ──────────────────────────── -->
-  <div class="oar-stats-grid">
-    @for (card of statCards(); track card.title) {
-      <mat-card class="oar-stat-card {{ card.colorClass }}" appearance="outlined">
-        <mat-card-content>
-          <div class="oar-stat-card__row">
-            <div class="oar-stat-card__icon-wrap">
-              <mat-icon>{{ card.icon }}</mat-icon>
-            </div>
-            <div class="oar-stat-card__info">
-              <div class="oar-stat-card__val">
-                @if (card.isCurrency) {
-                  {{ card.value | number:'1.2-2' }}
-                } @else {
-                  {{ card.value | number:'1.0-0' }}
-                }
-              </div>
-              <div class="oar-stat-card__label">{{ card.title }}</div>
-              <div class="oar-stat-card__sub">{{ card.subtitle }}</div>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    }
-  </div>
-
-  <!-- ── Table Card ────────────────────────────────── -->
-  <mat-card class="oar-card oar-table-card" appearance="outlined">
-
-    <!-- Toolbar -->
-    <div class="oar-toolbar">
-
-      <!-- Record count badge -->
-      <div class="oar-toolbar__left">
-        <span class="oar-toolbar__count">
-          <mat-icon>table_rows</mat-icon>
-          {{ dataSource.filteredData.length | number }} record{{ dataSource.filteredData.length !== 1 ? 's' : '' }}
-        </span>
-      </div>
-
-      <!-- In-result search -->
-      <div class="oar-toolbar__search">
-        <mat-form-field appearance="outline" class="oar-toolbar__search-field">
-          <mat-label>Search within results…</mat-label>
-          <mat-icon matPrefix>search</mat-icon>
-          <input matInput
-                 [value]="globalFilter()"
-                 (input)="onGlobalFilter($any($event.target).value)"
-                 autocomplete="off">
-          @if (globalFilter()) {
-            <button matIconSuffix mat-icon-button
-                    (click)="onGlobalFilter('')"
-                    aria-label="Clear search">
-              <mat-icon>close</mat-icon>
-            </button>
-          }
-        </mat-form-field>
-      </div>
-
-      <!-- Action buttons -->
-      <div class="oar-toolbar__actions">
-        <button mat-icon-button matTooltip="Refresh" (click)="refresh()">
-          <mat-icon>refresh</mat-icon>
-        </button>
-        <button mat-icon-button matTooltip="Export CSV" (click)="exportCsv()">
-          <mat-icon>download</mat-icon>
-        </button>
-        <button mat-icon-button matTooltip="Export Excel" (click)="exportExcel()">
-          <mat-icon>table_view</mat-icon>
-        </button>
-        <button mat-icon-button matTooltip="Print" (click)="print()">
-          <mat-icon>print</mat-icon>
-        </button>
-        <button mat-icon-button
-                matTooltip="Choose visible columns"
-                [matMenuTriggerFor]="colMenu">
-          <mat-icon>view_column</mat-icon>
-        </button>
-
-        <!-- Column chooser menu -->
-        <mat-menu #colMenu="matMenu" class="oar-col-menu">
-          @for (col of allColumns; track col.key) {
-            <button mat-menu-item (click)="$event.stopPropagation()">
-              <mat-checkbox
-                [checked]="isColumnVisible(col.key)"
-                (change)="toggleColumn(col.key)">
-                {{ col.label }}
-              </mat-checkbox>
-            </button>
-          }
-        </mat-menu>
-      </div>
-
     </div>
-    <mat-divider></mat-divider>
+    <div class="field-err" *ngIf="formError()">{{ formError() }}</div>
+  </section>
 
-    <!-- ── Table ──────────────────────────────────── -->
-    @if (data().length > 0) {
-      <div class="oar-table-wrap">
-        <table mat-table [dataSource]="dataSource" matSort [trackBy]="trackByApproval" class="oar-table">
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-note card card-pad">
+    <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+    Loading report...
+  </div>
 
-          <!-- formId -->
-          <ng-container matColumnDef="formId">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Form ID</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell" [matTooltip]="row.formId">{{ row.formId }}</span>
-            </td>
-          </ng-container>
+  <!-- Error banner -->
+  <div *ngIf="error() && !loading()" class="banner err no-print">
+    <div class="bicon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <div>
+      <h4>Something went wrong</h4>
+      <p>{{ error() }}</p>
+    </div>
+    <span class="spacer"></span>
+    <button type="button" class="btn btn-ghost" (click)="refresh()">Retry</button>
+  </div>
 
-          <!-- approvalId -->
-          <ng-container matColumnDef="approvalId">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header class="oar-th--right">Approval ID</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--right oar-td--mono">
-              {{ row.approvalId }}
-            </td>
-          </ng-container>
+  <!-- Hint before first search -->
+  <div *ngIf="!hasLoaded() && !loading() && !error()" class="hint-bar no-print">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>
+    Select a date range and press Search to load the report.
+  </div>
 
-          <!-- memberId -->
-          <ng-container matColumnDef="memberId">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Member ID</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--mono">{{ row.memberId }}</td>
-          </ng-container>
+  <!-- ═══════════ MAIN CONTENT ═══════════ -->
+  <ng-container *ngIf="hasLoaded() && !loading() && !error()">
 
-          <!-- empName -->
-          <ng-container matColumnDef="empName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell" [matTooltip]="row.empName">{{ row.empName }}</span>
-            </td>
-          </ng-container>
+    <!-- STAT TILES -->
+    <div class="req-stats">
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-blue-bg);color:var(--pp-blue);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ stats().total | number:'1.0-0' }}</div>
+          <div class="lbl">Total Approvals</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-purple-bg);color:var(--pp-purple);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v17a1 1 0 0 0 1 1h17"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ stats().totalValue | number:'1.2-2' }}</div>
+          <div class="lbl">Total Value</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-green-bg);color:var(--pp-green);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ stats().approved | number:'1.0-0' }}</div>
+          <div class="lbl">Approved</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-orange-bg);color:var(--pp-orange);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ stats().pending | number:'1.0-0' }}</div>
+          <div class="lbl">Pending</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-red-bg);color:var(--pp-red);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ (stats().rejected + stats().cancelled) | number:'1.0-0' }}</div>
+          <div class="lbl">Rejected / Cancelled</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--teal-50);color:var(--teal-600);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6M3 21h18"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ stats().totalCoinsurance | number:'1.2-2' }}</div>
+          <div class="lbl">Total Coinsurance</div>
+        </div>
+      </div>
+    </div>
 
-          <!-- customerName -->
-          <ng-container matColumnDef="customerName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell" [matTooltip]="row.customerName">{{ row.customerName }}</span>
-            </td>
-          </ng-container>
+    <!-- COLUMN CHOOSER CHIPS -->
+    <section class="card no-print">
+      <div class="chips-bar">
+        <span class="chips-label">Columns</span>
+        <button type="button" class="fchip"
+          *ngFor="let col of allColumns"
+          [class.on]="isColumnVisible(col.key)"
+          (click)="toggleColumn(col.key)">
+          {{ col.label }}
+        </button>
+      </div>
+    </section>
 
-          <!-- provName -->
-          <ng-container matColumnDef="provName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Provider</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell" [matTooltip]="row.provName">{{ row.provName }}</span>
-            </td>
-          </ng-container>
+    <!-- TABLE -->
+    <section class="card">
+      <div class="table-toolbar no-print">
+        <span class="count-pill">
+          {{ filteredData().length | number }} record{{ filteredData().length !== 1 ? 's' : '' }}
+        </span>
+        <div class="q-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input
+            type="search"
+            [ngModel]="globalFilter()"
+            (ngModelChange)="onGlobalFilter($event)"
+            placeholder="Search within results..." />
+        </div>
+        <button type="button" class="mini-btn" title="Refresh" (click)="refresh()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
 
-          <!-- branchName -->
-          <ng-container matColumnDef="branchName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Branch</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell" [matTooltip]="row.branchName">{{ row.branchName }}</span>
-            </td>
-          </ng-container>
-
-          <!-- approvalDate -->
-          <ng-container matColumnDef="approvalDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Approval Date</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--nowrap">
-              {{ row.approvalDate | date:'mediumDate' }}
-            </td>
-          </ng-container>
-
-          <!-- value -->
-          <ng-container matColumnDef="value">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header class="oar-th--right">Value</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--right oar-td--numeric">
-              {{ row.value != null ? (row.value | number:'1.2-2') : '—' }}
-            </td>
-          </ng-container>
-
-          <!-- coinsurance -->
-          <ng-container matColumnDef="coinsurance">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header class="oar-th--right">Coinsurance</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--right oar-td--numeric">
-              {{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}
-            </td>
-          </ng-container>
-
-          <!-- onlineStatus -->
-          <ng-container matColumnDef="onlineStatus">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-badge oar-badge--{{ getStatusKey(row.onlineStatus) }}">
-                <mat-icon class="oar-badge__icon">{{ getStatusIcon(row.onlineStatus) }}</mat-icon>
-                {{ row.onlineStatus }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- notes -->
-          <ng-container matColumnDef="notes">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Notes</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell oar-cell--notes"
-                    [matTooltip]="row.notes"
-                    [matTooltipShowDelay]="400">{{ row.notes }}</span>
-            </td>
-          </ng-container>
-
-          <!-- lastUpdateDate -->
-          <ng-container matColumnDef="lastUpdateDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--nowrap">
-              {{ row.lastUpdateDate | date:'medium' }}
-            </td>
-          </ng-container>
-
-          <!-- lastUpdateBy -->
-          <ng-container matColumnDef="lastUpdateBy">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Updated By</th>
-            <td mat-cell *matCellDef="let row">
-              <span class="oar-cell" [matTooltip]="row.lastUpdateBy">{{ row.lastUpdateBy }}</span>
-            </td>
-          </ng-container>
-
-          <!-- onlineLud -->
-          <ng-container matColumnDef="onlineLud">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Online LUD</th>
-            <td mat-cell *matCellDef="let row" class="oar-td--nowrap">
-              {{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}
-            </td>
-          </ng-container>
-
-          <!-- Row definitions -->
-          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="oar-row"></tr>
-
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th *ngIf="isColumnVisible('formId')" class="sortable" (click)="sort('formId')">Form ID {{ getSortIcon('formId') }}</th>
+              <th *ngIf="isColumnVisible('approvalId')" class="sortable" (click)="sort('approvalId')">Approval ID {{ getSortIcon('approvalId') }}</th>
+              <th *ngIf="isColumnVisible('memberId')" class="sortable" (click)="sort('memberId')">Member ID {{ getSortIcon('memberId') }}</th>
+              <th *ngIf="isColumnVisible('empName')" class="sortable" (click)="sort('empName')">Employee {{ getSortIcon('empName') }}</th>
+              <th *ngIf="isColumnVisible('customerName')" class="sortable" (click)="sort('customerName')">Customer {{ getSortIcon('customerName') }}</th>
+              <th *ngIf="isColumnVisible('provName')" class="sortable" (click)="sort('provName')">Provider {{ getSortIcon('provName') }}</th>
+              <th *ngIf="isColumnVisible('branchName')" class="sortable" (click)="sort('branchName')">Branch {{ getSortIcon('branchName') }}</th>
+              <th *ngIf="isColumnVisible('approvalDate')" class="sortable" (click)="sort('approvalDate')">Approval Date {{ getSortIcon('approvalDate') }}</th>
+              <th *ngIf="isColumnVisible('value')" class="sortable num-col" (click)="sort('value')">Value {{ getSortIcon('value') }}</th>
+              <th *ngIf="isColumnVisible('coinsurance')" class="sortable num-col" (click)="sort('coinsurance')">Coinsurance {{ getSortIcon('coinsurance') }}</th>
+              <th *ngIf="isColumnVisible('onlineStatus')" class="sortable" (click)="sort('onlineStatus')">Status {{ getSortIcon('onlineStatus') }}</th>
+              <th *ngIf="isColumnVisible('notes')">Notes</th>
+              <th *ngIf="isColumnVisible('lastUpdateDate')" class="sortable" (click)="sort('lastUpdateDate')">Last Updated {{ getSortIcon('lastUpdateDate') }}</th>
+              <th *ngIf="isColumnVisible('lastUpdateBy')" class="sortable" (click)="sort('lastUpdateBy')">Updated By {{ getSortIcon('lastUpdateBy') }}</th>
+              <th *ngIf="isColumnVisible('onlineLud')" class="sortable" (click)="sort('onlineLud')">Online LUD {{ getSortIcon('onlineLud') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="rep-row" *ngFor="let row of currentItems()">
+              <td *ngIf="isColumnVisible('formId')">{{ row.formId }}</td>
+              <td *ngIf="isColumnVisible('approvalId')"><b class="apid-cell">{{ row.approvalId }}</b></td>
+              <td *ngIf="isColumnVisible('memberId')">{{ row.memberId }}</td>
+              <td *ngIf="isColumnVisible('empName')"><span class="cell-clip" [title]="row.empName">{{ row.empName }}</span></td>
+              <td *ngIf="isColumnVisible('customerName')"><span class="cell-clip" [title]="row.customerName">{{ row.customerName }}</span></td>
+              <td *ngIf="isColumnVisible('provName')"><span class="cell-clip" [title]="row.provName">{{ row.provName }}</span></td>
+              <td *ngIf="isColumnVisible('branchName')"><span class="cell-clip" [title]="row.branchName">{{ row.branchName }}</span></td>
+              <td *ngIf="isColumnVisible('approvalDate')" class="nowrap">{{ row.approvalDate | date:'mediumDate' }}</td>
+              <td *ngIf="isColumnVisible('value')" class="num-col">{{ row.value != null ? (row.value | number:'1.2-2') : '—' }}</td>
+              <td *ngIf="isColumnVisible('coinsurance')" class="num-col">{{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}</td>
+              <td *ngIf="isColumnVisible('onlineStatus')">
+                <span class="status" [ngClass]="statusPillClass(row.onlineStatus)">{{ row.onlineStatus }}</span>
+              </td>
+              <td *ngIf="isColumnVisible('notes')"><span class="cell-clip notes" [title]="row.notes">{{ row.notes }}</span></td>
+              <td *ngIf="isColumnVisible('lastUpdateDate')" class="nowrap">{{ row.lastUpdateDate | date:'medium' }}</td>
+              <td *ngIf="isColumnVisible('lastUpdateBy')"><span class="cell-clip" [title]="row.lastUpdateBy">{{ row.lastUpdateBy }}</span></td>
+              <td *ngIf="isColumnVisible('onlineLud')" class="nowrap">{{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}</td>
+            </tr>
+            <tr *ngIf="currentItems().length === 0">
+              <td [attr.colspan]="visibleKeys().length" class="empty-cell">
+                {{ globalFilter() ? 'No records match your search.' : 'No records matched your criteria. Try a different date range.' }}
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
-      <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"
-                     showFirstLastButtons
-                     class="oar-paginator">
-      </mat-paginator>
-    }
-
-    <!-- ── Empty State ────────────────────────────── -->
-    @if (data().length === 0) {
-      <div class="oar-empty">
-        <mat-icon class="oar-empty__icon">search_off</mat-icon>
-        <h2 class="oar-empty__title">No approvals found</h2>
-        <p class="oar-empty__sub">
-          No records matched your criteria. Try a different date range or Client ID.
-        </p>
-        <button mat-stroked-button (click)="reset()">
-          <mat-icon>restart_alt</mat-icon>
-          Reset Filters
-        </button>
+      <!-- pager -->
+      <div class="pager no-print" *ngIf="filteredData().length > 0">
+        <span class="info">
+          Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to
+          {{ Math.min(currentPage() * itemsPerPage, filteredData().length) }} of
+          {{ filteredData().length }} entries
+        </span>
+        <button type="button" class="page-btn" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1">‹</button>
+        <button type="button" class="page-btn"
+          *ngFor="let page of getPagesArray()"
+          [class.on]="currentPage() === page"
+          (click)="changePage(page)">{{ page }}</button>
+        <button type="button" class="page-btn" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() === totalPages()">›</button>
       </div>
-    }
-
-  </mat-card>
-}
+    </section>
+  </ng-container>
+</div>

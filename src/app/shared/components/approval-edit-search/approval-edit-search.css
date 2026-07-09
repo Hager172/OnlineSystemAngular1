@@ -1,69 +1,544 @@
+/* ==========================================================================
+   Edit Request page — Provider Portal teal design
+   ========================================================================== */
 
-/* نفس تصميم PrimeNG */
-.custom-diagnosis-select {
-  width: 100%;
-}
-
-/* تنسيق الحاوية الخارجية زي PrimeNG */
-/* :host ::ng-deep .custom-diagnosis-select .ng-select-container {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
-  min-height: 42px;
-} */
-
-/* تنسيق الـ placeholder */
-:host ::ng-deep .custom-diagnosis-select .ng-placeholder {
-  color: #9ca3af;
+:host {
+  display: block;
+  color: var(--pp-text);
   font-size: 14px;
 }
 
-/* تنسيق العناصر المختارة زي PrimeNG chips */
-:host ::ng-deep .custom-diagnosis-select .ng-value {
-  background-color: #e0f2fe !important;
-  color: #0369a1 !important;
-  border-radius: 16px !important;
-  padding: 4px 8px !important;
-  margin: 2px !important;
-  font-size: 13px !important;
+.er-page {
+  display: flex;
+  flex-direction: column;
 }
 
-:host ::ng-deep .custom-diagnosis-select .ng-value-icon {
-  color: #0369a1 !important;
+.card {
+  background: var(--pp-card);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow);
+}
+.card-pad {
+  padding: 20px;
+}
+.muted {
+  color: var(--pp-text-2);
+}
+.tiny {
+  font-size: 12px;
+  color: var(--pp-text-3);
+  margin-top: 4px;
 }
 
-:host ::ng-deep .custom-diagnosis-select .ng-value-icon:hover {
-  background-color: #bae6fd !important;
-  border-radius: 16px !important;
+.loading-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 420px;
+  margin: 40px auto;
+  color: var(--pp-text-2);
+  font-size: 13px;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-/* تنسيق القائمة المنسدلة */
+/* ---------------- Buttons ---------------- */
+.btn {
+  border: none;
+  border-radius: 11px;
+  padding: 12px 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-sm {
+  padding: 9px 16px;
+  font-size: 12.5px;
+}
+.btn-primary {
+  background: var(--teal-600);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--teal-700);
+}
+.btn-ghost {
+  background: #fff;
+  color: var(--pp-text-2);
+  border: 1.5px solid var(--pp-border-2);
+}
+.btn-ghost:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-600);
+}
+
+/* ---------------- Head ---------------- */
+.crumb {
+  font-size: 12.5px;
+  color: var(--pp-text-3);
+  margin-bottom: 8px;
+}
+.crumb a {
+  cursor: pointer;
+  color: var(--pp-text-3);
+}
+.crumb a:hover {
+  color: var(--teal-600);
+  text-decoration: underline;
+}
+.crumb b {
+  color: var(--pp-text);
+}
+.pull-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.pull-head h2 {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-weight: 700;
+}
+.pull-head .apid {
+  color: var(--teal-700);
+}
+.pull-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* header Submit spans the summary-card column */
+.pull-actions .btn-submit {
+  min-width: 316px;
+  justify-content: center;
+}
+@media (max-width: 1180px) {
+  .pull-actions .btn-submit {
+    min-width: 0;
+  }
+}
+
+/* ---------------- Grid ---------------- */
+.pull-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 316px;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  .pull-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.pull-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.pull-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 78px;
+}
+@media (max-width: 1180px) {
+  .pull-aside {
+    position: static;
+  }
+}
+
+/* ---------------- Member info (photo layout) ---------------- */
+.ro-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.ro-lock {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  color: var(--pp-text-3);
+  background: #f2f6f4;
+  border: 1px solid var(--pp-border);
+  border-radius: 7px;
+  padding: 3.5px 9px;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+.mi-flex {
+  display: flex;
+  gap: 24px;
+  padding: 16px 20px 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.mi-photo {
+  width: 106px;
+  height: 126px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #dff0eb, #bcded4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.mi-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mi-name {
+  min-width: 150px;
+  padding-top: 4px;
+}
+.mi-name b {
+  font-size: 17px;
+  display: block;
+}
+.mi-name .en {
+  font-size: 13px;
+  color: var(--pp-text-2);
+  display: block;
+  margin: 3px 0 9px;
+}
+.mi-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 24px;
+  border-left: 1px solid var(--pp-border);
+  min-width: 160px;
+}
+.mi-field small {
+  display: block;
+  font-size: 11px;
+  color: var(--pp-text-3);
+  margin-bottom: 2px;
+}
+.mi-field b {
+  font-size: 13.5px;
+}
+@media (max-width: 760px) {
+  .mi-col {
+    border-left: none;
+    padding-left: 0;
+  }
+}
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 3.5px 10px;
+  display: inline-block;
+  margin-top: 6px;
+}
+.pill.active {
+  background: var(--pp-green-bg);
+  color: var(--pp-green);
+}
+
+/* ---------------- Service items ---------------- */
+.svc-items-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 14px;
+  flex-wrap: wrap;
+}
+.svc-items-head h3 {
+  font-size: 14.5px;
+  font-weight: 700;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.svc-items-head .tcount {
+  background: var(--teal-600);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 7px;
+  padding: 1.5px 8px;
+}
+.svc-note {
+  font-size: 12px;
+  color: var(--pp-text-2);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--pp-text-3);
+  text-align: left;
+  padding: 11px 14px;
+  background: #f7faf9;
+  border-top: 1px solid var(--pp-border);
+  border-bottom: 1px solid var(--pp-border);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--pp-border);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.qty-zero td {
+  opacity: 0.45;
+}
+.empty-cell {
+  text-align: center;
+  padding: 28px 14px;
+  color: var(--pp-text-3);
+}
+td .sub {
+  display: block;
+  font-size: 11px;
+  color: var(--pp-text-3);
+  margin-top: 2px;
+}
+.tfoot td {
+  background: #f7faf9;
+  font-weight: 700;
+  border-top: 2px solid var(--pp-border-2);
+  border-bottom: none;
+}
+
+.num-sm {
+  width: 70px;
+  padding: 8px 5px;
+  border: 1.5px solid var(--pp-border-2);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.num-sm:focus {
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px rgba(14, 115, 96, 0.1);
+}
+.price-in {
+  width: 92px;
+}
+
+.del-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #f5c9c9;
+  background: var(--pp-red-bg);
+  color: var(--pp-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.del-btn:hover {
+  background: var(--pp-red);
+  color: #fff;
+}
+
+/* ---------------- Financial tiles ---------------- */
+.fin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 16px 20px 20px;
+}
+.fin {
+  background: #f7faf9;
+  border: 1px solid var(--pp-border);
+  border-radius: 11px;
+  padding: 12px 14px;
+}
+.fin small {
+  display: block;
+  font-size: 11px;
+  color: var(--pp-text-3);
+  margin-bottom: 4px;
+}
+.fin b {
+  font-size: 15px;
+}
+.fin.hl {
+  background: var(--teal-50);
+  border-color: #cfe6df;
+}
+.fin.hl b {
+  color: var(--teal-700);
+  font-size: 17px;
+}
+.fin.over {
+  background: var(--pp-red-bg);
+  border-color: #f5c9c9;
+}
+.fin.over b {
+  color: var(--pp-red);
+}
+
+/* ---------------- Summary aside ---------------- */
+.sum-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 5.5px 0;
+  font-size: 12.5px;
+}
+.sum-row small {
+  color: var(--pp-text-2);
+}
+.sum-row b {
+  font-size: 13px;
+  text-align: right;
+  word-break: break-word;
+}
+.sum-row b.minus {
+  color: var(--pp-red);
+}
+.sum-row .over-lbl {
+  color: var(--pp-red);
+}
+.sum-row.big b {
+  font-size: 16px;
+  color: var(--pp-green);
+}
+.sum-div {
+  border-top: 1px dashed var(--pp-border-2);
+  margin: 9px 0;
+}
+
+.pull-note textarea {
+  width: 100%;
+  border: 1.5px solid var(--pp-border-2);
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 13px;
+  min-height: 84px;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  color: var(--pp-text);
+  transition: border-color 0.15s;
+}
+.pull-note textarea:focus {
+  border-color: var(--teal-600);
+}
+
+/* ---------------- ng-select (teal skin) ---------------- */
+.ci-select {
+  width: 100%;
+}
+.ci-select-inline {
+  min-width: 240px;
+  max-width: 360px;
+}
+:host ::ng-deep .ci-select .ng-select-container {
+  border: 1.5px solid var(--pp-border-2);
+  border-radius: 10px;
+  min-height: 42px;
+  box-shadow: none;
+}
+:host ::ng-deep .ci-select.ng-select-focused .ng-select-container {
+  border-color: var(--teal-600) !important;
+  box-shadow: 0 0 0 3px rgba(14, 115, 96, 0.1) !important;
+}
+:host ::ng-deep .ci-select .ng-placeholder {
+  color: var(--pp-text-3);
+  font-size: 13px;
+}
+:host ::ng-deep .ng-select.valid-green .ng-select-container {
+  border-color: var(--teal-500) !important;
+  background-color: #f0faf6 !important;
+}
 :host ::ng-deep .ng-dropdown-panel {
-  border-radius: 8px !important;
-  width: 90% !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--pp-border) !important;
+  box-shadow: 0 12px 32px rgba(10, 60, 50, 0.16) !important;
   margin-top: 4px !important;
 }
-
 :host ::ng-deep .ng-dropdown-panel .ng-option {
   padding: 10px 12px !important;
-  border-bottom: 1px solid #f0f0f0 !important;
+  border-bottom: 1px solid #f0f5f3 !important;
   background-color: #ffffff !important;
+  font-size: 13px !important;
 }
-
-:host ::ng-deep .ng-dropdown-panel .ng-option:hover {
-  background-color: #f0f9ff !important;
-}
-
+:host ::ng-deep .ng-dropdown-panel .ng-option:hover,
 :host ::ng-deep .ng-dropdown-panel .ng-option-marked {
-  background-color: #e0f2fe !important;
-  color: #0369a1 !important;
+  background-color: var(--teal-50) !important;
+  color: var(--teal-700) !important;
+}
+.opt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.opt-ico {
+  color: var(--teal-600);
+  font-size: 13px;
+}
+.opt-id {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--pp-text-3);
 }
 
-/* تنسيق الـ clear button */
-:host ::ng-deep .ng-clear-wrapper:hover .ng-clear {
-  color: #ef4444 !important;
-}
-
-/* تنسيق الـ dropdown button */
-:host ::ng-deep .ng-arrow-wrapper:hover .ng-arrow {
-  border-color: #3b82f6 !important;
+/* ---------------- Responsive ---------------- */
+@media (max-width: 640px) {
+  .pull-actions {
+    width: 100%;
+  }
+  .pull-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
 }

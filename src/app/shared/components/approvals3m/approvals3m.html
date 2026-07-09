@@ -1,205 +1,176 @@
-<div class="p-6 bg-white rounded-lg shadow-sm mt-6">
-  
-  <div *ngIf="isLoading()" class="flex justify-center items-center py-12">
-    <div class="text-gray-500">Loading approvals...</div>
+<div class="mr-page">
+
+  <!-- Breadcrumb -->
+  <div class="crumb">
+    <a routerLink="/mem">Dashboard</a> / <b>Month's Register</b>
   </div>
 
-  <div *ngIf="!isLoading()">
-    
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-5 pb-4 border-b border-gray-100">
-      
-      <div class="flex flex-col gap-1.5">
-        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Filter By Month</label>
-        <div class="inline-flex rounded-lg p-1 bg-gray-100/80">
+  <!-- Page head -->
+  <div class="pull-head">
+    <div>
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        Month's Register
+      </h2>
+      <div class="tiny">Review and export the monthly approvals register.</div>
+    </div>
+    <div class="pull-actions">
+      <button type="button" class="btn btn-ghost" (click)="exportToPDF()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M12 18v-6m0 6-2.5-2.5M12 18l2.5-2.5"/></svg>
+        Export PDF
+      </button>
+      <button type="button" class="btn export-btn" (click)="exportToExcel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M8.5 12.5l3 4m0-4-3 4M15 12.5v4"/></svg>
+        Export to Excel
+      </button>
+    </div>
+  </div>
 
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-note card card-pad">
+    <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+    Loading approvals...
+  </div>
 
-          <button (click)="setMonthFilter('last')"  [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'last' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">{{ lastMonthName }}</button>
+  <ng-container *ngIf="!isLoading()">
 
-<button (click)="setMonthFilter('twoMonthsAgo')" [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'twoMonthsAgo' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">{{ twoMonthsAgoName }}</button>
+    <!-- MONTH CHIPS + SEARCH -->
+    <section class="card">
+      <div class="chips-bar">
+        <span class="chips-label">Month</span>
+        <button type="button" class="fchip" [class.on]="selectedMonthFilter() === 'last'"
+          (click)="setMonthFilter('last')">{{ lastMonthName }}</button>
+        <button type="button" class="fchip" [class.on]="selectedMonthFilter() === 'twoMonthsAgo'"
+          (click)="setMonthFilter('twoMonthsAgo')">{{ twoMonthsAgoName }}</button>
+        <button type="button" class="fchip" [class.on]="selectedMonthFilter() === 'threeMonthsAgo'"
+          (click)="setMonthFilter('threeMonthsAgo')">{{ threeMonthsAgoName }}</button>
 
-<button (click)="setMonthFilter('threeMonthsAgo')" [class]="'px-4 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ' + 
-              (selectedMonthFilter() === 'threeMonthsAgo' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900')">{{ threeMonthsAgoName }}</button>
+        <div class="q-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input
+            type="search"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="updateSearchQuery($event)"
+            placeholder="Search by Member ID, Approval ID, Type, Notes..." />
         </div>
       </div>
-<div class="flex items-center gap-3 self-end lg:self-auto">
-  
- <div class="inline-flex rounded-lg shadow-sm">
-  <button 
-    (click)="exportToExcel()"
-    class="h-[34px] px-3 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-medium rounded-l-lg transition-all duration-200 flex items-center gap-1.5"
-    title="Export to Excel"
-  >
-    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-    </svg>
-    Excel
-  </button>
-  
-  <button 
-    (click)="exportToPDF()"
-    class="h-[34px] px-3 bg-purple-50 text-purple-700 border border-l-0 border-purple-200 hover:bg-purple-100 text-xs font-medium rounded-r-lg transition-all duration-200 flex items-center gap-1.5"
-    title="Export to PDF"
-  >
-    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-    </svg>
-    PDF
-  </button>
-</div>
-  <div class="relative">
-    <input 
-      type="search" 
-      [ngModel]="searchQuery()"
-      (ngModelChange)="updateSearchQuery($event)"
-      placeholder="Search in results..."
-      class="w-[260px] h-[34px] px-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-all placeholder:text-gray-400"
-    />
-  </div>
-</div>
+    </section>
 
-      
+    <!-- STAT TILES -->
+    <div class="req-stats">
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-blue-bg);color:var(--pp-blue);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ filteredApprovals().length }}</div>
+          <div class="lbl">Total Requests</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-purple-bg);color:var(--pp-purple);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v17a1 1 0 0 0 1 1h17"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ totalGrossValue() | number:'1.2-2' }}</div>
+          <div class="lbl">Gross Value</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-orange-bg);color:var(--pp-orange);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ totalCopayment() | number:'1.2-2' }}</div>
+          <div class="lbl">Copayment</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-red-bg);color:var(--pp-red);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19M6.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM17.5 20a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ (totalLocalDiscount() + totalImportedDiscount()) | number:'1.2-2' }}</div>
+          <div class="lbl">Total Discounts</div>
+        </div>
+      </div>
+      <div class="req-stat">
+        <div class="s-ico" style="background:var(--pp-green-bg);color:var(--pp-green);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+        </div>
+        <div>
+          <div class="num">{{ totalNetValue() | number:'1.2-2' }}</div>
+          <div class="lbl">Net Value</div>
+        </div>
+      </div>
     </div>
 
-    <div class="overflow-x-auto" id="pdf-content">
-  <table class="w-full">
-  <thead>
-    <tr class="border-b border-gray-200 bg-gray-50">
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('formId')">
-        Form ID {{ getSortIcon('formId') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalId')">
-        Approval ID {{ getSortIcon('approvalId') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('memberId')">
-        Member Id {{ getSortIcon('memberId') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('memberName')">
-        Member Name {{ getSortIcon('memberName') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('vendorId')">
-        Company {{ getSortIcon('companyName') }}
-      </th>
-       <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('branchName')">
-        Branch {{ getSortIcon('branchName') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalDate')">
-        Claim Date {{ getSortIcon('approvalDate') }}
-      </th>     
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('value')">
-        Value {{ getSortIcon('value') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('localdiscountvalue')">
-        Local Disc. {{ getSortIcon('localdiscountvalue') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('importeddiscountvalue')">
-        Imported Disc. {{ getSortIcon('importeddiscountvalue') }}
-      </th>
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('copaymentvalue')">
-        Copayment {{ getSortIcon('copaymentvalue') }}
-      <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('netvalue')">
-        Net Value {{ getSortIcon('netvalue') }}
-      </th>
-     
-    </tr>
-  </thead>
-  
-  <tbody>
-    <tr *ngFor="let item of currentItems()" class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      <td class="py-3 px-4">
-        <span class="text-sm font-medium text-gray-900">{{ item.formId }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm font-medium text-gray-900">{{ item.approvalId }}</span>
-      </td>
-      <td class="py-3 px-4">
-       
-        <span class="text-sm font-medium text-gray-800 block" [title]="item.memberName">
-           {{ item.memberId }}
+    <!-- TABLE -->
+    <section class="card">
+      <div class="table-scroll" id="pdf-content">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" (click)="sort('formId')">Form ID {{ getSortIcon('formId') }}</th>
+              <th class="sortable" (click)="sort('approvalId')">Approval ID {{ getSortIcon('approvalId') }}</th>
+              <th class="sortable" (click)="sort('memberId')">Member ID {{ getSortIcon('memberId') }}</th>
+              <th class="sortable" (click)="sort('memberName')">Member Name {{ getSortIcon('memberName') }}</th>
+              <th class="sortable" (click)="sort('companyName')">Company {{ getSortIcon('companyName') }}</th>
+              <th class="sortable" (click)="sort('branchName')">Branch {{ getSortIcon('branchName') }}</th>
+              <th class="sortable" (click)="sort('approvalDate')">Claim Date {{ getSortIcon('approvalDate') }}</th>
+              <th class="sortable num-col" (click)="sort('value')">Value {{ getSortIcon('value') }}</th>
+              <th class="sortable num-col" (click)="sort('localdiscountvalue')">Local Disc. {{ getSortIcon('localdiscountvalue') }}</th>
+              <th class="sortable num-col" (click)="sort('importeddiscountvalue')">Imported Disc. {{ getSortIcon('importeddiscountvalue') }}</th>
+              <th class="sortable num-col" (click)="sort('copaymentvalue')">Copayment {{ getSortIcon('copaymentvalue') }}</th>
+              <th class="sortable num-col" (click)="sort('netvalue')">Net Value {{ getSortIcon('netvalue') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="reg-row" *ngFor="let item of currentItems()">
+              <td>{{ item.formId }}</td>
+              <td><b class="apid-cell">{{ item.approvalId }}</b></td>
+              <td>{{ item.memberId }}</td>
+              <td>{{ item.memberName || '-' }}</td>
+              <td>{{ item.companyName || '-' }}</td>
+              <td>{{ item.branchName || '-' }}</td>
+              <td>{{ formatDate(item.approvalDate) }}</td>
+              <td class="num-col">{{ item.value | number:'1.2-2' }}</td>
+              <td class="num-col">{{ item.localdiscountvalue | number:'1.2-2' }}</td>
+              <td class="num-col">{{ item.importeddiscountvalue | number:'1.2-2' }}</td>
+              <td class="num-col">{{ item.copaymentvalue | number:'1.2-2' }}</td>
+              <td class="num-col"><b>{{ item.netvalue | number:'1.2-2' }}</b></td>
+            </tr>
+            <tr *ngIf="currentItems().length === 0">
+              <td colspan="12" class="empty-cell">No approvals match the selected month and search.</td>
+            </tr>
+          </tbody>
+          <tfoot *ngIf="filteredApprovals().length > 0">
+            <tr class="tfoot">
+              <td colspan="7">Totals ( {{ filteredApprovals().length }} requests )</td>
+              <td class="num-col">{{ totalGrossValue() | number:'1.2-2' }}</td>
+              <td class="num-col">{{ totalLocalDiscount() | number:'1.2-2' }}</td>
+              <td class="num-col">{{ totalImportedDiscount() | number:'1.2-2' }}</td>
+              <td class="num-col">{{ totalCopayment() | number:'1.2-2' }}</td>
+              <td class="num-col net">{{ totalNetValue() | number:'1.2-2' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- pager -->
+      <div class="pager" *ngIf="totalPages() > 0">
+        <span class="info">
+          Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to
+          {{ Math.min(currentPage() * itemsPerPage, filteredApprovals().length) }} of
+          {{ filteredApprovals().length }} entries
         </span>
-      </td>
-      <td class="py-3 px-4">
-         <span class="text-sm font-medium text-gray-800 block">{{ item.memberName || 'No Name Found' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm font-medium text-gray-800 block">{{ item.companyName || '-' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm font-medium text-gray-800 block">{{ item.branchName || '-' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ formatDate(item.approvalDate) }}</span>
-      </td>
-     
-    
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.value | number:'1.2-2' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.localdiscountvalue | number:'1.2-2' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.importeddiscountvalue | number:'1.2-2' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.copaymentvalue | number:'1.2-2' }}</span>
-      </td>
-      <td class="py-3 px-4">
-        <span class="text-sm text-gray-700">{{ item.netvalue | number:'1.2-2' }}</span>
-      </td>
-     
-    </tr>
-    
-    <tr *ngIf="currentItems().length === 0">
-      <td colspan="13" class="text-center py-8 text-gray-500">
-        No matching approvals found for the selected criteria.
-      </td>
-    </tr>
-  </tbody>
-
-  <tfoot *ngIf="filteredApprovals().length > 0" class="bg-gray-100 font-bold border-t-2 border-gray-300 text-gray-800">
-    <tr>
-      <td class="py-3 px-4 text-sm" colspan="7">TOTALS (Filtered Data)</td>
-      <td class="py-3 px-4 text-sm text-gray-900">{{ totalGrossValue() | number:'1.2-2' }}</td>
-      <td class="py-3 px-4 text-sm text-gray-900">{{ totalLocalDiscount() | number:'1.2-2' }}</td>
-      <td class="py-3 px-4 text-sm text-gray-900">{{ totalImportedDiscount() | number:'1.2-2' }}</td>
-      <td class="py-3 px-4 text-sm text-gray-900">{{ totalCopayment() | number:'1.2-2' }}</td>
-      <td class="py-3 px-4 text-sm text-gray-900">{{ totalNetValue() | number:'1.2-2' }}</td>
-      <td class="py-3 px-4"></td>
-    </tr>
-  </tfoot>
-</table>
-    </div>
-
-    <div *ngIf="totalPages() > 0" class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-      <div class="text-sm text-gray-600">
-        Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to 
-        {{ Math.min(currentPage() * itemsPerPage, filteredApprovals().length) }} of 
-        {{ filteredApprovals().length }} entries
-      </div>
-      <div class="flex items-center gap-2">
-        <button 
-          (click)="changePage(currentPage() - 1)"
-          [disabled]="currentPage() === 1"
-          class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-          ←
-        </button>
-        <button 
+        <button type="button" class="page-btn" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1">‹</button>
+        <button type="button" class="page-btn"
           *ngFor="let page of getPagesArray()"
-          (click)="changePage(page)"
-          [class]="'px-3 py-1 rounded-md transition-colors ' + 
-            (currentPage() === page ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50')">
-          {{ page }}
-        </button>
-        <button 
-          (click)="changePage(currentPage() + 1)"
-          [disabled]="currentPage() === totalPages()"
-          class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-          →
-        </button>
+          [class.on]="currentPage() === page"
+          (click)="changePage(page)">{{ page }}</button>
+        <button type="button" class="page-btn" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() === totalPages()">›</button>
       </div>
-    </div>
-
-  </div>
+    </section>
+  </ng-container>
 </div>

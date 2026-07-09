@@ -1,14 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Approval } from '../../../interfaces/approval/approval';
 import { ApprovalItem } from '../../../interfaces/approval/approvalitem';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ApprovalService } from '../../../../core/services/Approval/approval-service';
 import { CommonModule  } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-invoice-print',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './invoice-print.html',
   styleUrl: './invoice-print.css',
 })

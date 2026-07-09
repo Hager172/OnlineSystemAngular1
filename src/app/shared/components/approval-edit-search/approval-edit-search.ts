@@ -230,7 +230,12 @@ this.items.push({
   }
 
   goBack(): void {
-    this.router.navigate(['/mem']);
+    this.router.navigate(['/search-results']);
+  }
+
+  /** Count of service lines that remain in the request (edit qty > 0). */
+  getTotalItems(): number {
+    return this.items.filter((item) => (item.editqty || 0) > 0).length;
   }
 onSubmit(): void {
 

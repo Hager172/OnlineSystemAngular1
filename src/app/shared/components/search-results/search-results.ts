@@ -51,12 +51,38 @@ export class SearchResults implements OnInit {
   sortColumn = signal<string>('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
+  /** Status chip filter ('All' or a statusText value). */
+  statusFilter = signal<string>('All');
+  readonly statusChips = ['Pending', 'New', 'Approved', 'Cancelled', 'Rejected', 'Suspended'];
+
+  /** Row selected for the right-side details panel. */
+  selectedId = signal<number | null>(null);
+
   constructor(private service: ApprovalService,private authService: AuthService) {}
+
+  statusCounts = computed(() => {
+    const counts: Record<string, number> = {};
+    for (const i of this.approvals()) {
+      counts[i.statusText] = (counts[i.statusText] || 0) + 1;
+    }
+    return counts;
+  });
+
+  /** The request shown in the details panel — the selected row, else the first visible one. */
+  displayedItem = computed<BranchApprovalItem | null>(() => {
+    const list = this.filteredApprovals();
+    return list.find((i) => i.approvalId === this.selectedId()) ?? (list.length ? list[0] : null);
+  });
 
   filteredApprovals = computed(() => {
     let all = this.approvals();
     const query = this.searchQuery().toLowerCase();
-    
+
+    const status = this.statusFilter();
+    if (status !== 'All') {
+      all = all.filter(i => i.statusText === status);
+    }
+
     if (query) {
       all = all.filter(i =>
         i.approvalId.toString().includes(query) ||
@@ -203,6 +229,25 @@ export class SearchResults implements OnInit {
 
   changePage(p: number) { if (p >= 1 && p <= this.totalPages()) this.currentPage.set(p); }
   updateSearchQuery(q: string) { this.searchQuery.set(q); this.currentPage.set(1); }
+
+  setStatusFilter(status: string) {
+    this.statusFilter.set(status);
+    this.currentPage.set(1);
+  }
+
+  selectRow(item: BranchApprovalItem) {
+    this.selectedId.set(item.approvalId);
+  }
+
+  /** Template status-pill class for a request. */
+  statusPillClass(item: BranchApprovalItem): string {
+    switch (item.statusText) {
+      case 'Approved': return 'st-approved';
+      case 'Pending': return 'st-pending';
+      case 'New': return 'st-review';
+      default: return 'st-rejected';
+    }
+  }
   getPagesArray(): number[] {
     const total = this.totalPages(), current = this.currentPage(), max = 5;
     if (total <= max) return Array.from({length: total}, (_,i) => i+1);

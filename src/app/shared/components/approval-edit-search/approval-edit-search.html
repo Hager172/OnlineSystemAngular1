@@ -1,219 +1,298 @@
-<div class="min-h-screen bg-slate-50 pt-10">
+<!-- Loading -->
+<div *ngIf="!approval()" class="loading-note card card-pad">
+  <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+  Loading request...
+</div>
 
+<!-- ============ EDIT REQUEST PAGE ============ -->
+<div *ngIf="approval()" class="er-page">
 
-  <div *ngIf="!approval()" class="max-w-md mx-auto mt-8 p-4">
-    <div class="card">
-      <div class="card-content pt-6">
-        <p class="text-center">Approval not found</p>
-        <button (click)="goBack()" class="btn-primary w-full mt-4">Go Back</button>
-      </div>
+  <div class="crumb">
+    <a (click)="goBack()">Search Requests</a> / <b>Edit Request #{{ approvalNumber }}</b>
+  </div>
+
+  <div class="pull-head">
+    <div>
+      <h2>
+        Edit Request <span class="apid">#{{ approvalNumber }}</span>
+      </h2>
+      <div class="tiny">Adjust the prices and quantities, then submit the changes.</div>
+    </div>
+    <div class="pull-actions">
+      <button type="button" class="btn btn-ghost" (click)="goBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button type="button" class="btn btn-primary btn-submit" (click)="onSubmit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        Submit Changes
+      </button>
     </div>
   </div>
 
-  <div *ngIf="approval()">
-    <div class="card">
-      <div class="card-content p-6 md:p-8 space-y-8">
+  <div class="pull-grid">
+    <!-- MAIN COLUMN -->
+    <div class="pull-main">
 
-        <div class="border-b pb-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p class="text-slate-500 text-xs uppercase font-semibold">Member Name</p>
-              <p class="font-medium mt-1 text-slate-900">{{ approval()?.clientName }}</p>
-            </div>
-            
-            <div>
-              <p class="text-slate-500 text-xs uppercase font-semibold">Customer (Company)</p>
-              <p class="font-medium mt-1 text-slate-900">{{ approval()?.companyName }}</p>
-            </div>
+      <!-- Member & approval information -->
+      <section class="card">
+        <div class="ro-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
+          Member &amp; Approval Information
+          <span class="ro-lock">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Read only
+          </span>
+        </div>
 
-            <div>
-              <p class="text-slate-500 text-xs uppercase font-semibold">Vendor</p>
-              <p class="font-medium mt-1 text-slate-900">{{ approval()?.vendorName || 'صيدليات العزبي' }}</p>
+        <div class="mi-flex">
+          <div class="mi-photo">
+            <img src="assets/images/member-photo.png" alt="Member Photo" />
+          </div>
+          <div class="mi-name">
+            <b>{{ approval()?.clientName }}</b>
+            <span class="en" *ngIf="approval()?.companyName">{{ approval()?.companyName }}</span>
+            <span class="pill active">Active</span>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Member ID</small>
+              <b>{{ approval()?.clientId }}</b>
             </div>
-
-            <div>
-              <p class="text-slate-500 text-xs uppercase font-semibold">Branch</p>
-              <p class="font-medium mt-1 text-slate-900">{{ approval()?.branch }}</p>
+            <div class="mi-field" *ngIf="approval()?.vendorName">
+              <small>Provider</small>
+              <b>{{ approval()?.vendorName }}</b>
             </div>
-            
-            <div>
-              <p class="text-slate-500 text-xs uppercase font-semibold">Client ID</p>
-              <p class="font-medium mt-1 text-base text-slate-700">{{ approval()?.clientId }}</p>
+            <div class="mi-field" *ngIf="approval()?.branch">
+              <small>Branch</small>
+              <b>{{ approval()?.branch }}</b>
             </div>
-
-            <div>
-              <p class="text-slate-500 text-xs uppercase font-semibold">Approval Date</p>
-              <p class="font-medium mt-1 text-base text-slate-700">{{ approval()?.date | date:'dd/MM/yyyy' }}</p>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Approval #</small>
+              <b>{{ approvalNumber }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.date">
+              <small>Approval Date</small>
+              <b>{{ approval()?.date | date:'dd/MM/yyyy' }}</b>
+            </div>
+            <div class="mi-field">
+              <small>Copayment</small>
+              <b>{{ approval()?.copaymentPercentage || 0 }}%</b>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="bg-blue-50 p-4 rounded-lg flex flex-col justify-between">
-            <label class="text-xs text-slate-500 uppercase font-semibold mb-2">Limit</label>
-          <input
-  type="number"
-  [ngModel]="approval()?.limit"
-  readonly
-  class="w-full bg-slate-100 border border-blue-200 rounded px-3 py-2 text-2xl font-bold text-blue-600 cursor-not-allowed"
-/>
-          </div>
-          
-          <div class="bg-slate-50 p-4 rounded-lg flex flex-col justify-between">
-            <label class="text-xs text-slate-500 uppercase font-semibold mb-2">Notes</label>
-            <textarea 
-              rows="2"
-              [ngModel]="approval()?.notes"
-              (ngModelChange)="approval() ? approval()!.notes = $event : null"
-              class="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-            ></textarea>
-          </div>
-        </div>
-
-        <div>
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-slate-800">Prescription Items</h2>
-            <button
-              type="button"
-              (click)="addPrescriptionItem()"
-              class="btn-primary px-4 py-2 text-sm flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Add Item
-            </button>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead>
-                <tr class="bg-slate-50">
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">#</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Name</th>
-                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Quantity</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Qty Edit</th>
-                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Days</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Unit Price</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Total</th>
-                  <!-- <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Action</th> -->
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of items; let i = index" class="hover:bg-slate-50">
-                  <td class="px-4 py-3 text-slate-600">{{ i + 1 }}</td>
-
-                  <td class="px-4 py-3">
-                    <ng-container *ngIf="!item.isNew">
-                      <input
-                        type="text"
-                        [(ngModel)]="item.name"
-                        readonly
-                        style="width: 400px;"
-                        class="input w-full bg-slate-100 cursor-not-allowed"
-                      />
-                    </ng-container>
-
-                    <ng-container *ngIf="item.isNew">
-                      <div style="width: 400px;">
-                        <ng-select
-                          [items]="productOptions"
-                          bindLabel="name"
-                          bindValue="id"
-                          [typeahead]="productSearch$"
-                          [(ngModel)]="item.id"
-                          (change)="onProductSelect($event, item)"
-                          (search)="onProductSearch($event)"
-                          (clear)="onProductClear()"
-                          [placeholder]="'Search Product...'"
-                          [clearable]="true"
-                          [searchable]="true"
-  class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 custom-diagnosis-select custom-ng-select"
-                        >
-                          <ng-template ng-option-tmp let-item="item">
-                            <div class="flex items-center justify-between p-1">
-                              <span>{{ item.name }}</span>
-                              <span class="text-xs text-gray-400">({{ item.price }} EGP)</span>
-                            </div>
-                          </ng-template>
-                        </ng-select>
-                      </div>
-                    </ng-container>
-                  </td>
-
-                  <td class="px-4 py-3">
-                    <input
-                      type="number"
-                      [(ngModel)]="item.quantity"
-                      readonly
-                      class="input w-24 text-center bg-slate-100 cursor-not-allowed"
-                    />
-                  </td>
-
-                  <td class="px-4 py-3">
-                    <input
-                      type="number"
-                      [(ngModel)]="item.editqty"
-                      class="input w-28 border-blue-300 focus:ring-2 focus:ring-blue-400 text-center font-semibold"
-                    />
-                  </td>
-<td class="px-4 py-3">
-  <input
-    type="number"
-    [(ngModel)]="item.days"
-    class="input w-24 text-center border-blue-300 focus:ring-2 focus:ring-blue-400"
-  />
-</td>
-                  <td class="px-4 py-3 text-right">
-                    <input
-                      type="number"
-                      [(ngModel)]="item.unitPrice"
-                      class="input w-32 text-right border-blue-300 focus:ring-2 focus:ring-blue-400"
-                    />
-                  </td>
-
-                  <td class="px-4 py-3 text-right font-semibold text-slate-700">
-                    {{ ((item.editqty || 0) * (item.unitPrice || 0)).toFixed(2) }}
-                  </td>
-
-                  <!-- <td class="px-4 py-3 text-center">
-                    <button
-                      type="button"
-                      (click)="removePrescriptionItem(i)"
-                      class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title="Delete Item"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </td> -->
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div>
-          <div class="max-w-md ml-auto space-y-3">
-            <div class="bg-slate-100 -mx-4 px-4 py-4 rounded-lg">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-slate-900">Total:</span>
-                <span class="text-3xl font-bold text-blue-600"> {{ getTotal().toFixed(2) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end pt-4">
-          <button (click)="onSubmit()" class="btn-primary px-8 py-3 text-lg">
-           save
+      <!-- Service items (editable) -->
+      <section class="card">
+        <div class="svc-items-head">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+            Service Items
+            <span class="tcount">{{ items.length }}</span>
+            <span class="svc-note">Adjust the edit quantity — limited to the approved quantity.</span>
+          </h3>
+          <button type="button" class="btn btn-primary btn-sm" (click)="addPrescriptionItem()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Service Item
           </button>
         </div>
 
-      </div>
-    </div> 
-  </div> 
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:44px;">#</th>
+                <th style="min-width:240px;">Service</th>
+                <th>Approved</th>
+                <th>Edit Qty</th>
+                <th>Days</th>
+                <th>Unit Price</th>
+                <th style="text-align:right;">Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of items; let i = index" [class.qty-zero]="!item.editqty">
+                <td class="muted">{{ i + 1 }}</td>
+                <td>
+                  <ng-container *ngIf="!item.isNew">
+                    <b>{{ item.name }}</b>
+                    <small class="sub" *ngIf="item.description && item.description !== item.name">{{ item.description }}</small>
+                  </ng-container>
+                  <ng-container *ngIf="item.isNew">
+                    <ng-select
+                      class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
+                      [items]="productOptions"
+                      bindLabel="name"
+                      bindValue="id"
+                      [typeahead]="productSearch$"
+                      [(ngModel)]="item.id"
+                      (change)="onProductSelect($event, item)"
+                      (search)="onProductSearch($event)"
+                      (clear)="onProductClear()"
+                      [placeholder]="'Search Product...'"
+                      [class.valid-green]="item.serviceId"
+                      [clearable]="true"
+                      [searchable]="true"
+                    >
+                      <ng-template ng-option-tmp let-item="item">
+                        <div class="opt-row">
+                          <i class="pi pi-search opt-ico"></i>
+                          <div>{{ item.name }}</div>
+                          <span class="opt-id">({{ item.price }} EGP)</span>
+                        </div>
+                      </ng-template>
+                    </ng-select>
+                  </ng-container>
+                </td>
+                <td class="muted">{{ item.isNew ? '-' : item.quantity }}</td>
+                <td>
+                  <input
+                    type="number"
+                    class="num-sm"
+                    [(ngModel)]="item.editqty"
+                    min="0"
+                    (ngModelChange)="item.isNew ? updateSubTotals() : limitQuantity(item)" />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    class="num-sm"
+                    [(ngModel)]="item.days"
+                    min="0" />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    class="num-sm price-in"
+                    [(ngModel)]="item.unitPrice"
+                    min="0"
+                    step="0.5"
+                    (ngModelChange)="updateSubTotals()" />
+                </td>
+                <td style="text-align:right;"><b>{{ ((item.editqty || 0) * (item.unitPrice || 0)).toFixed(2) }}</b></td>
+                <td>
+                  <button type="button" class="del-btn" *ngIf="item.isNew"
+                    (click)="removePrescriptionItem(i)" title="Remove item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!items.length">
+                <td colspan="8" class="empty-cell">No services on this request</td>
+              </tr>
+            </tbody>
+            <tfoot *ngIf="items.length">
+              <tr class="tfoot">
+                <td colspan="6" style="text-align:right;">Subtotal</td>
+                <td style="text-align:right;">{{ getSubtotal().toFixed(2) }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="fin-grid">
+          <div class="fin">
+            <small>Total Value</small>
+            <b>{{ getSubtotal().toFixed(2) }}</b>
+          </div>
+          <div class="fin over" *ngIf="approval()?.limit">
+            <small>Approval Limit</small>
+            <b>{{ approval()?.limit }}</b>
+          </div>
+          <div class="fin" *ngIf="approval()?.limit">
+            <small>Covered Amount</small>
+            <b>{{ getWithinLimit().toFixed(2) }}</b>
+          </div>
+          <div class="fin">
+            <small>Copayment · Member Share ({{ approval()?.copaymentPercentage || 0 }}%)</small>
+            <b>- {{ getTotalCopayment().toFixed(2) }}</b>
+          </div>
+          <div class="fin over" *ngIf="approval()?.limit && getExceedingAmount() > 0">
+            <small>Over Limit — Not Covered</small>
+            <b>{{ getExceedingAmount().toFixed(2) }}</b>
+          </div>
+          <div class="fin hl">
+            <small>Net Value</small>
+            <b>{{ getTotal().toFixed(2) }}</b>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SUMMARY ASIDE -->
+    <aside class="pull-aside">
+      <section class="card card-pad">
+        <div class="sum-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+          Request Summary
+        </div>
+
+        <div class="sum-row">
+          <small>Approval ID</small>
+          <b>#{{ approvalNumber }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.clientName">
+          <small>Member Name</small>
+          <b>{{ approval()?.clientName }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.clientId">
+          <small>Member ID</small>
+          <b>{{ approval()?.clientId }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.branch">
+          <small>Branch</small>
+          <b>{{ approval()?.branch }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row">
+          <small>Total Value</small>
+          <b>{{ getSubtotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.limit">
+          <small class="over-lbl">Approval Limit</small>
+          <b class="over-lbl">{{ approval()?.limit }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.limit">
+          <small>Covered Amount</small>
+          <b>{{ getWithinLimit().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Copayment ({{ approval()?.copaymentPercentage || 0 }}%)</small>
+          <b class="minus">- {{ getTotalCopayment().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.limit && getExceedingAmount() > 0">
+          <small class="over-lbl">Over Limit — Member Pays</small>
+          <b class="over-lbl">{{ getExceedingAmount().toFixed(2) }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row big">
+          <small>Net Amount</small>
+          <b>{{ getTotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Total Items</small>
+          <b>{{ getTotalItems() }}</b>
+        </div>
+      </section>
+
+      <!-- Notes (editable, submitted with the request) -->
+      <section class="card card-pad pull-note">
+        <div class="sum-title">Notes</div>
+        <textarea
+          rows="4"
+          [ngModel]="approval()?.notes"
+          (ngModelChange)="approval() ? approval()!.notes = $event : null"
+          placeholder="Enter any additional notes..."></textarea>
+      </section>
+    </aside>
+  </div>
 </div>

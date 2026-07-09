@@ -1,56 +1,21 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   OnInit,
-  ViewChild,
   computed,
   inject,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import {
-  AbstractControl,
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSelectModule } from '@angular/material/select';
 
 import { OnlineApprovalsReportService } from '../services/online-approvals-report.service';
-import { ApprovalReportDto, ReportStats, StatCard } from '../models/approval-report.model';
+import { ApprovalReportDto, ReportStats } from '../models/approval-report.model';
 import { AuthService } from '../../../core/services/auth/auth-service';
-
-// ─── Validator ────────────────────────────────────────────────────────────────
-function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
-  const start = group.get('startDate')?.value as Date | null;
-  const end   = group.get('endDate')?.value as Date | null;
-  if (start && end && new Date(start) > new Date(end)) {
-    return { dateRange: true };
-  }
-  return null;
-}
 
 // ─── Column definitions ────────────────────────────────────────────────────────
 const COLUMN_DEFS = [
@@ -72,49 +37,21 @@ const COLUMN_DEFS = [
 ] as const;
 
 const SESSION_KEY = 'oar-filters';
+const DATE_COLUMNS = ['approvalDate', 'lastUpdateDate', 'onlineLud'];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 @Component({
   selector: 'app-online-approvals-report',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideNativeDateAdapter()],
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatProgressBarModule,
-    MatTooltipModule,
-    MatChipsModule,
-    MatMenuModule,
-    MatDividerModule,
-    MatIconModule,
-    MatCheckboxModule,
-    MatSelectModule,
-  ],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './online-approvals-report.component.html',
   styleUrl: './online-approvals-report.component.scss',
 })
-export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
-
-  // ── ViewChildren ─────────────────────────────────────────────────────────
-  @ViewChild(MatSort) set matSort(sort: MatSort) {
-    if (sort) this.dataSource.sort = sort;
-  }
-  @ViewChild(MatPaginator) set matPaginator(p: MatPaginator) {
-    if (p) this.dataSource.paginator = p;
-  }
+export class OnlineApprovalsReportComponent implements OnInit {
 
   // ── DI ───────────────────────────────────────────────────────────────────
   private readonly service    = inject(OnlineApprovalsReportService);
-  private readonly fb         = inject(FormBuilder);
   private readonly snackBar   = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth       = inject(AuthService);
@@ -126,39 +63,79 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
   data         = signal<ApprovalReportDto[]>([]);
   globalFilter = signal('');
 
-  stats     = computed<ReportStats>(() => this.calcStats(this.data()));
-  statCards = computed<StatCard[]>(() => this.buildCards(this.stats()));
+  // filters (yyyy-MM-dd strings for the date inputs)
+  startDate = signal<string>('');
+  endDate   = signal<string>('');
+  formError = signal<string>('');
 
-  // ── Table ────────────────────────────────────────────────────────────────
-  readonly allColumns  = COLUMN_DEFS;
-  readonly dataSource  = new MatTableDataSource<ApprovalReportDto>([]);
-  readonly skeletonRows = Array(6).fill(0);
-  readonly skeletonCols = Array(7).fill(0);
+  // sorting / paging
+  sortColumn    = signal<string>('');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+  currentPage   = signal(1);
+  itemsPerPage  = 10;
+  Math = Math;
 
+  readonly allColumns = COLUMN_DEFS;
   visibleKeys = signal<string[]>(COLUMN_DEFS.map(c => c.key));
-  get displayedColumns(): string[] { return this.visibleKeys(); }
 
-  // ── Form ──────────────────────────────────────────────────────────────────
-  readonly form: FormGroup = this.fb.group(
-    {
-      startDate: [null as Date | null, Validators.required],
-      endDate:   [null as Date | null, Validators.required],
-    },
-    { validators: dateRangeValidator }
-  );
+  stats = computed<ReportStats>(() => this.calcStats(this.data()));
+
+  // ── Derived data (filter → sort) ──────────────────────────────────────────
+  filteredData = computed<ApprovalReportDto[]>(() => {
+    let all = this.data();
+    const q = this.globalFilter().trim().toLowerCase();
+    if (q) {
+      all = all.filter(row =>
+        Object.values(row).some(v => String(v ?? '').toLowerCase().includes(q))
+      );
+    }
+    const col = this.sortColumn();
+    if (col) {
+      const dir = this.sortDirection();
+      all = [...all].sort((a, b) => {
+        let x: any = a[col as keyof ApprovalReportDto];
+        let y: any = b[col as keyof ApprovalReportDto];
+        if (DATE_COLUMNS.includes(col)) {
+          x = x ? new Date(x).getTime() : 0;
+          y = y ? new Date(y).getTime() : 0;
+        } else if (typeof x === 'string' || typeof y === 'string') {
+          x = String(x ?? '').toLowerCase();
+          y = String(y ?? '').toLowerCase();
+        } else {
+          x = x ?? 0;
+          y = y ?? 0;
+        }
+        if (x < y) return dir === 'asc' ? -1 : 1;
+        if (x > y) return dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return all;
+  });
+
+  currentItems = computed(() => {
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    return this.filteredData().slice(start, start + this.itemsPerPage);
+  });
+
+  totalPages = computed(() => Math.ceil(this.filteredData().length / this.itemsPerPage) || 1);
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.restoreFilters();
-    this.dataSource.filterPredicate = this.buildFilterPredicate();
   }
-
-  ngAfterViewInit(): void { /* sort/paginator set via ViewChild setters */ }
 
   // ── Actions ───────────────────────────────────────────────────────────────
   search(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    this.formError.set('');
+    const start = this.startDate();
+    const end = this.endDate();
+    if (!start || !end) {
+      this.formError.set('Start date and end date are required.');
+      return;
+    }
+    if (new Date(start) > new Date(end)) {
+      this.formError.set('Start date must be before end date.');
       return;
     }
     const clientId = this.auth.getclientid();
@@ -168,28 +145,58 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
       this.snackBar.open(msg, 'Dismiss', { duration: 6000, panelClass: ['oar-snack-error'] });
       return;
     }
-    const { startDate, endDate } = this.form.value as { startDate: Date; endDate: Date };
-    this.persistFilters(startDate, endDate);
-    this.load(clientId, startDate, endDate);
+    this.persistFilters(start, end);
+    this.load(clientId, start, end);
   }
 
   reset(): void {
-    this.form.reset();
+    this.startDate.set('');
+    this.endDate.set('');
+    this.formError.set('');
     this.data.set([]);
-    this.dataSource.data = [];
     this.error.set(null);
     this.hasLoaded.set(false);
     this.onGlobalFilter('');
+    this.currentPage.set(1);
     sessionStorage.removeItem(SESSION_KEY);
   }
 
   refresh(): void {
-    if (this.form.valid) this.search();
+    if (this.startDate() && this.endDate()) this.search();
   }
 
   onGlobalFilter(value: string): void {
     this.globalFilter.set(value);
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.currentPage.set(1);
+  }
+
+  // ── Sorting / paging ──────────────────────────────────────────────────────
+  sort(col: string): void {
+    if (this.sortColumn() === col) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(col);
+      this.sortDirection.set('asc');
+    }
+    this.currentPage.set(1);
+  }
+
+  getSortIcon(col: string): string {
+    if (this.sortColumn() !== col) return '↕';
+    return this.sortDirection() === 'asc' ? '↑' : '↓';
+  }
+
+  changePage(p: number): void {
+    if (p >= 1 && p <= this.totalPages()) this.currentPage.set(p);
+  }
+
+  getPagesArray(): number[] {
+    const total = this.totalPages(), current = this.currentPage(), max = 5;
+    if (total <= max) return Array.from({ length: total }, (_, i) => i + 1);
+    let start = Math.max(1, current - Math.floor(max / 2));
+    let end = start + max - 1;
+    if (end > total) { end = total; start = end - max + 1; }
+    return Array.from({ length: max }, (_, i) => start + i);
   }
 
   // ── Column chooser ────────────────────────────────────────────────────────
@@ -207,23 +214,15 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
   }
 
   // ── Status helpers ────────────────────────────────────────────────────────
-  getStatusKey(status: string): string {
-    const map: Record<string, string> = {
-      approved: 'approved', pending: 'pending',
-      rejected: 'rejected', cancelled: 'cancelled',
-    };
-    return map[status?.toLowerCase()] ?? 'unknown';
+  statusPillClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'approved':  return 'st-approved';
+      case 'pending':   return 'st-pending';
+      case 'rejected':
+      case 'cancelled': return 'st-rejected';
+      default:          return 'st-review';
+    }
   }
-
-  getStatusIcon(status: string): string {
-    const map: Record<string, string> = {
-      approved: 'check_circle', pending: 'schedule',
-      rejected: 'cancel',       cancelled: 'block',
-    };
-    return map[status?.toLowerCase()] ?? 'help_outline';
-  }
-
-  trackByApproval = (_: number, row: ApprovalReportDto): number => row.approvalId;
 
   // ── Export / Print ────────────────────────────────────────────────────────
   exportCsv(): void {
@@ -239,17 +238,17 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
-  private load(clientId: string, start: Date, end: Date): void {
+  private load(clientId: string, start: string, end: string): void {
     this.loading.set(true);
     this.error.set(null);
 
     this.service
-      .getOnlineApprovalsReport(clientId, start, end)
+      .getOnlineApprovalsReport(clientId, new Date(start), new Date(end))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: rows => {
           this.data.set(rows);
-          this.dataSource.data = rows;
+          this.currentPage.set(1);
           this.hasLoaded.set(true);
           this.loading.set(false);
         },
@@ -283,26 +282,9 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
     };
   }
 
-  private buildCards(s: ReportStats): StatCard[] {
-    return [
-      { title: 'Total Approvals',   value: s.total,            icon: 'assignment',      colorClass: 'oar-sc--blue',    subtitle: 'All records',        isCurrency: false },
-      { title: 'Total Value',       value: s.totalValue,       icon: 'payments',        colorClass: 'oar-sc--green',   subtitle: 'Sum of values',      isCurrency: true  },
-      { title: 'Average Value',     value: s.avgValue,         icon: 'show_chart',      colorClass: 'oar-sc--violet',  subtitle: 'Per approval',       isCurrency: true  },
-      { title: 'Approved',          value: s.approved,         icon: 'check_circle',    colorClass: 'oar-sc--emerald', subtitle: 'Approved count',     isCurrency: false },
-      { title: 'Rejected',          value: s.rejected,         icon: 'cancel',          colorClass: 'oar-sc--red',     subtitle: 'Rejected count',     isCurrency: false },
-      { title: 'Pending',           value: s.pending,          icon: 'schedule',        colorClass: 'oar-sc--amber',   subtitle: 'Awaiting decision',  isCurrency: false },
-      { title: 'Total Coinsurance', value: s.totalCoinsurance, icon: 'account_balance', colorClass: 'oar-sc--cyan',    subtitle: 'Sum of coinsurance', isCurrency: true  },
-    ];
-  }
-
-  private buildFilterPredicate(): (row: ApprovalReportDto, filter: string) => boolean {
-    return (row, filter) =>
-      Object.values(row).some(v => String(v ?? '').toLowerCase().includes(filter));
-  }
-
   private buildCsv(): string {
     const header = COLUMN_DEFS.map(c => `"${c.label}"`).join(',');
-    const rows   = this.dataSource.filteredData.map(r =>
+    const rows   = this.filteredData().map(r =>
       [
         r.formId, r.approvalId, r.memberId, r.empName, r.customerName,
         r.provName, r.branchName, r.approvalDate, r.value ?? '',
@@ -323,10 +305,10 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
     URL.revokeObjectURL(url);
   }
 
-  private persistFilters(start: Date, end: Date): void {
+  private persistFilters(start: string, end: string): void {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-      startDate: start.toISOString(),
-      endDate:   end.toISOString(),
+      startDate: new Date(start).toISOString(),
+      endDate:   new Date(end).toISOString(),
     }));
   }
 
@@ -335,10 +317,9 @@ export class OnlineApprovalsReportComponent implements OnInit, AfterViewInit {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return;
       const s = JSON.parse(raw) as { startDate?: string; endDate?: string };
-      this.form.patchValue({
-        startDate: s.startDate ? new Date(s.startDate) : null,
-        endDate:   s.endDate   ? new Date(s.endDate)   : null,
-      });
+      const toInput = (iso?: string) => (iso ? iso.split('T')[0] : '');
+      this.startDate.set(toInput(s.startDate));
+      this.endDate.set(toInput(s.endDate));
     } catch { /* ignore malformed storage */ }
   }
 }

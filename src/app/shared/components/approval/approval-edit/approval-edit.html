@@ -1,9 +1,7 @@
-<!-- Approval not found -->
-<div *ngIf="!approval()" class="notfound">
-  <div class="card card-pad">
-    <p class="muted">Approval not found</p>
-    <button type="button" (click)="goBack()" class="btn btn-primary">Go Back</button>
-  </div>
+<!-- Loading -->
+<div *ngIf="!approval()" class="loading-note card card-pad">
+  <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+  Loading approval...
 </div>
 
 <!-- ============ PULL APPROVAL PAGE ============ -->
@@ -14,21 +12,20 @@
   </div>
 
   <div class="pull-head">
-    <h2>
-      Pull Approval <span class="apid">#{{ approvalNumber }}</span>
-    </h2>
+    <div>
+      <h2>
+        Pull Approval <span class="apid">#{{ approvalNumber }}</span>
+      </h2>
+      <div class="tiny">Adjust the quantity to pull (down to 0 — it cannot go below 0), then submit the request.</div>
+    </div>
     <div class="pull-actions no-print">
       <button type="button" class="btn btn-ghost" (click)="goBack()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
         Back
       </button>
-      <button type="button" class="btn btn-ghost" (click)="print()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-        Print
-      </button>
-      <button type="button" class="btn btn-primary" (click)="onSubmit()">
+      <button type="button" class="btn btn-primary btn-submit" (click)="onSubmit()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
-        Submit &amp; Generate Invoice
+        Submit Request
       </button>
     </div>
   </div>
@@ -41,7 +38,7 @@
       <section class="card">
         <div class="ro-head">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
-          Member Information
+          Member &amp; Approval Information
           <span class="ro-lock">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             Read only
@@ -85,50 +82,50 @@
               <b>{{ approval()?.expiryDate }}</b>
             </div>
           </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Copayment</small>
+              <b>{{ approval()?.copaymentPercentage }}%</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.extraCopaymentPercentage">
+              <small>Extra Copayment</small>
+              <b>{{ approval()?.extraCopaymentPercentage }}%</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.branch">
+              <small>Branch</small>
+              <b>{{ approval()?.branch }}</b>
+            </div>
+          </div>
         </div>
 
         <div class="dx-wrap" *ngIf="approval()?.diagnose">
           <small>Diagnosis</small>
           <span class="dx-chip">{{ approval()?.diagnose }}</span>
         </div>
-      </section>
-
-      <!-- Approval information (read only) -->
-      <section class="card">
-        <div class="ro-head">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
-          Approval Information
-        </div>
-        <div class="ro-grid">
-          <div class="ro">
-            <small>Copayment</small>
-            <b>{{ approval()?.copaymentPercentage }}%</b>
-          </div>
-          <div class="ro" *ngIf="approval()?.extraCopaymentPercentage">
-            <small>Extra Copayment</small>
-            <b>{{ approval()?.extraCopaymentPercentage }}%</b>
-          </div>
-          <div class="ro" *ngIf="approval()?.branch">
-            <small>Branch</small>
-            <b>{{ approval()?.branch }}</b>
-          </div>
-        </div>
 
         <div class="fin-grid">
-          <div class="fin hl">
-            <small>Limit</small>
-            <b>{{ approval()?.limit }}</b>
-          </div>
-          <div class="fin" [class.over]="getExceedingAmount() > 0">
-            <small>Subtotal</small>
+          <div class="fin">
+            <small>Total Value</small>
             <b>{{ getSubtotal().toFixed(2) }}</b>
           </div>
+          <div class="fin over">
+            <small>Approval Limit</small>
+            <b>{{ approval()?.limit }}</b>
+          </div>
           <div class="fin">
-            <small>Copayment</small>
+            <small>Covered Amount</small>
+            <b>{{ getWithinLimit().toFixed(2) }}</b>
+          </div>
+          <div class="fin">
+            <small>Copayment · Member Share ({{ approval()?.copaymentPercentage }}%)</small>
             <b>- {{ getTotalCopayment().toFixed(2) }}</b>
           </div>
+          <div class="fin over" *ngIf="getExceedingAmount() > 0">
+            <small>Over Limit — Not Covered</small>
+            <b>{{ getExceedingAmount().toFixed(2) }}</b>
+          </div>
           <div class="fin hl">
-            <small>Net Total</small>
+            <small>Net Value</small>
             <b>{{ getTotal().toFixed(2) }}</b>
           </div>
         </div>
@@ -193,9 +190,28 @@
     <aside>
       <section class="card card-pad">
         <div class="sum-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v17a1 1 0 0 0 1 1h17"/><path d="M7 15v3M11.5 11v7M16 7v11M20.5 13v5"/></svg>
-          Summary
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+          Request Summary
         </div>
+
+        <div class="sum-row">
+          <small>Approval ID</small>
+          <b>#{{ approvalNumber }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.memberId">
+          <small>Member ID</small>
+          <b>{{ approval()?.memberId }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.clientName">
+          <small>Member Name</small>
+          <b>{{ approval()?.clientName }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.date">
+          <small>Approval Date</small>
+          <b>{{ approval()?.date }}</b>
+        </div>
+
+        <div class="sum-div"></div>
 
         <div class="sum-row">
           <small>Subtotal</small>
@@ -220,14 +236,10 @@
           <small>Total</small>
           <b>{{ getTotal().toFixed(2) }}</b>
         </div>
-
-        <button type="button" class="btn btn-primary sum-btn no-print" (click)="onSubmit()">
-          Submit &amp; Generate Invoice
-        </button>
-        <button type="button" class="btn btn-ghost sum-btn no-print" (click)="print()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-          Print
-        </button>
+        <div class="sum-row">
+          <small>Total Items</small>
+          <b>{{ getTotalItems() }}</b>
+        </div>
       </section>
     </aside>
   </div>
