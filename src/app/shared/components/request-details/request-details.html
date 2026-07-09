@@ -143,8 +143,70 @@
               (ngModelChange)="state.approvalDate.set($event)"
             />
           </div>
-          <div class="col-md-4">
-            <label class="sub-label">Max Limit <span class="text-muted">(Optional)</span></label>
+         
+        </div>
+      </div>
+
+      <!-- 5. Diagnosis -->
+    <div class="step-block">
+  <label
+    class="step-label"
+    [class.label-active]="state.diagnosisIds().length > 0">
+    5. Diagnosis
+  </label>
+
+  <ng-select
+    class="custom-diagnosis-select"
+    [items]="diagnosisOptions"
+    bindLabel="name"
+    bindValue="id"
+    [multiple]="true"
+    [typeahead]="diagnosisSearch$"
+    [ngModel]="state.diagnosisIds()"
+    (ngModelChange)="state.diagnosisIds.set($event)"
+    [placeholder]="state.diagnosisIds().length ? '' : 'Search Diagnosis'"
+    [clearable]="true"
+    [searchable]="true"
+    (search)="onDiagnosisSearch($event)"
+    (clear)="onDiagnosisClear()"
+  >
+
+    <ng-template ng-option-tmp let-item="item">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-search"
+           style="color:#3b82f6;font-size:14px"></i>
+
+        <div>{{ item.name }}</div>
+
+        <span class="text-xs text-gray-400 ml-auto">
+          ({{ item.id }})
+        </span>
+      </div>
+    </ng-template>
+
+    <ng-template ng-multiselect-label-tmp let-items="items">
+      <div class="flex flex-wrap gap-1">
+        <div
+          *ngFor="let item of items"
+          class="bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 text-sm flex items-center gap-1">
+
+          <i class="pi pi-tag" style="font-size:10px"></i>
+
+          {{ item.name }}
+        </div>
+      </div>
+    </ng-template>
+
+  </ng-select>
+</div>
+
+     
+     <!-- 6. Approval Code / Source / Contact -->
+<div class="step-block">
+  <!-- <label class="step-label">6. Approval Code, Source & Contact</label> -->
+ <div class="col-md-4">
+  <label class="step-label">6. Max Limit <span class="text-muted">(Optional)</span></label>
+            <!-- <label class="sub-label">Max Limit <span class="text-muted">(Optional)</span></label> -->
             <input
               type="number"
               class="custom-input"
@@ -153,36 +215,7 @@
               (ngModelChange)="state.maxLimit.set($event)"
             />
           </div>
-        </div>
-      </div>
-
-      <!-- 5. Diagnosis -->
-      <div class="step-block">
-        <label class="step-label">5. Diagnosis</label>
-        <ng-select
-          class="custom-diagnosis-select"
-          [items]="diagnosisOptions"
-          bindLabel="name"
-          bindValue="id"
-          [multiple]="true"
-          [typeahead]="diagnosisSearch$"
-          [ngModel]="state.diagnosisIds()"
-          (ngModelChange)="state.diagnosisIds.set($event)"
-          placeholder="Select Diagnosis"
-          [clearable]="true"
-          [searchable]="true"
-          (search)="onDiagnosisSearch($event)"
-          (clear)="onDiagnosisClear()"
-        ></ng-select>
-      </div>
-
-      <!-- 6. Approval Code / Source / Contact -->
-     <!-- 6. Approval Code / Source / Contact -->
-<div class="step-block">
-  <label class="step-label">6. Approval Code, Source & Contact</label>
-
-  <!-- First Row -->
-  <div class="row g-3 mb-3">
+  <!-- <div class="row g-3 mb-3">
     <div class="col-md-6">
       <label class="sub-label">
         Approval Code <span class="text-muted">(Optional)</span>
@@ -211,9 +244,8 @@
         </option>
       </select>
     </div>
-  </div>
-
-  <!-- Second Row -->
+  </div> -->
+<!-- 
   <div class="row">
     <div class="col-12">
       <label class="sub-label">Contact Method</label>
@@ -253,11 +285,8 @@
           [class.active]="isContactMethodActive('Other')"
           (click)="toggleContactMethod('Other')">
           Other
-        </button>
+        </button> -->
 
-      </div>
-    </div>
-  </div>
 </div>
 
       <!-- 7. Notes -->

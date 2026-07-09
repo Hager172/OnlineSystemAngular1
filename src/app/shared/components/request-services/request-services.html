@@ -36,20 +36,20 @@
         <tbody>
           <tr *ngFor="let row of state.serviceRows(); trackBy: trackByRowId">
             <td>
-<ng-select
-    class="custom-diagnosis-select table-select"
-    [items]="serviceOptions"
-    bindLabel="serviceName"
-    bindValue="serviceId"
-    [ngModel]="row.serviceId"
-    (ngModelChange)="onServiceSelectById(row, $event)"
-    [typeahead]="serviceSearch$"
-    (search)="serviceSearch$.next($event.term)"
-    placeholder="Select medicine..."
-    [clearable]="true"
-    [searchable]="true"
-    [appendTo]="'body'">
-</ng-select>
+            <ng-select
+                class="custom-diagnosis-select table-select"
+                [items]="serviceOptions"
+                bindLabel="serviceName"
+                bindValue="serviceId"
+                [ngModel]="row.serviceId"
+                (ngModelChange)="onServiceSelectById(row, $event)"
+                [typeahead]="serviceSearch$"
+                (search)="serviceSearch$.next($event.term)"
+                placeholder="Select medicine..."
+                [clearable]="true"
+                [searchable]="true"
+                [appendTo]="'body'">
+            </ng-select>
               <!-- <div class="selected-service-name" *ngIf="row.serviceName">{{ row.serviceName }}</div> -->
             </td>
             <td><input type="number" class="table-input" min="0" [ngModel]="row.units" (ngModelChange)="onRowFieldChange(row, 'units', $event)" /></td>
@@ -60,16 +60,17 @@
             <td class="fw-bold text-primary">{{ state.getRowValue(row) }}</td>
             <td><input type="number" class="table-input" min="0" max="100" [ngModel]="row.coPercent" (ngModelChange)="onRowFieldChange(row, 'coPercent', $event)" /></td>
             <td>
-              <ng-select
-                class="custom-diagnosis-select table-select"
-                [items]="careItemOptions"
-                bindLabel="name"
-                bindValue="id"
-                [ngModel]="row.careItemId"
-                (ngModelChange)="onRowFieldChange(row, 'careItemId', $event)"
-                placeholder="Care item"
-                [clearable]="true"
-              ></ng-select>
+             <ng-select
+  class="custom-diagnosis-select table-select"
+  [items]="careItemOptions"
+  bindLabel="name"
+  bindValue="id"
+  [ngModel]="row.careItemId"
+  (ngModelChange)="onCareItemSelect(row, $event)"
+  placeholder="Care item"
+  [clearable]="true"
+  appendTo="body"
+></ng-select>
             </td>
             <td><input type="text" class="table-input" [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)" /></td>
             <td class="text-center"><input type="checkbox" [ngModel]="row.isChronic" (ngModelChange)="onRowFieldChange(row, 'isChronic', $event)" /></td>
@@ -92,7 +93,7 @@
             <th style="min-width: 200px;">Notes</th>
             <th></th>
           </tr>
-        </thead>
+        </thead> 
         <tbody>
           <tr *ngFor="let row of state.serviceRows(); trackBy: trackByRowId">
             <td>
@@ -119,9 +120,11 @@
                 bindValue="id"
                 [ngModel]="row.careItemId"
                 (ngModelChange)="onRowFieldChange(row, 'careItemId', $event)"
-                placeholder="Care item"
+                placeholder="Select Care Item"
                 [clearable]="true"
-              ></ng-select>
+                appendTo="body"
+              >
+              </ng-select>
             </td>
             <td><input type="text" class="table-input" [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)" /></td>
             <td><button type="button" class="btn-remove-file" (click)="removeServiceRow(row.rowId)"><i class="fas fa-trash"></i></button></td>

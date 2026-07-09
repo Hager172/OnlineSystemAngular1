@@ -7,6 +7,7 @@ import { RequestStateService } from '../../../core/services/request-state/reques
 import { ServiceOption, CareItemOption, ServiceRow } from '../../models/member-search';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+
 @Component({
   selector: 'app-request-services',
   standalone: true,
@@ -18,53 +19,72 @@ export class RequestServices {
   constructor(
     private vendorService: VendorService,
     public state: RequestStateService,
-  private approvalService: ApprovalService,
+    private approvalService: ApprovalService,
   ) {
-effect(() => {
+    effect(() => {
+      const member = this.state.member();
+      console.log('Selected Member =>', member);
 
-  this.state.selectedVendor();
+      if (!member?.memberId) {
+        this.careItemOptions = [];
+        return;
+      }
 
-  this.serviceOptions = [];
-  this.state.serviceRows.set([]);
+      this.approvalService.getMemberCareItems(member.memberId).subscribe({
+        next: (res: any) => {
+          const data = res.data ?? res;
 
-});
+          this.careItemOptions = data.map((x: any) => ({
+            id: x.careItemCode,
+            name: x.careItemName
+          }));
+
+          console.log('Care Items:', this.careItemOptions);
+        },
+        error: () => {
+          this.careItemOptions = [];
+        }
+      });
+    });
+
+    effect(() => {
+      this.state.selectedVendor();
+      this.serviceOptions = [];
+      this.state.serviceRows.set([]);
+    });
 
     this.serviceSearch$
-  .pipe(
-    debounceTime(300),
-    distinctUntilChanged()
-  )
-  .subscribe(term => {
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(term => {
+        const vendor = this.state.selectedVendor();
+        console.log("Selected Vendoridddd:", vendor?.id);
+        if (!vendor || !term || term.length < 2) {
+          this.serviceOptions = [];
+          return;
+        }
 
-    const vendor = this.state.selectedVendor();
-console.log("Selected Vendoridddd:", vendor?.id);
-    if (!vendor || !term || term.length < 2) {
-      this.serviceOptions = [];
-      return;
-    }
+        this.approvalService
+          .getAgentProducts(term, vendor.id)
+          .subscribe({
+            next: (res: any) => {
+              this.serviceOptions = res.map((x: any) => ({
+                serviceId: x.id,
+                serviceName: x.name,
+                price: x.price,
+                doseUnitNo: x.doseUnitNo,
+                subUnitNo: x.subUnitNo
+              }));
 
-    this.approvalService
-  .getAgentProducts(term, vendor.id)
-  .subscribe({
-    next: (res: any) => {
-
-      this.serviceOptions = res.map((x: any) => ({
-  serviceId: x.id,
-  serviceName: x.name,
-  price: x.price,
-  doseUnitNo: x.doseUnitNo,   
-  subUnitNo: x.subUnitNo     
-}));
-
-      console.log(this.serviceOptions); // 👈 أضيفي دي
-
-    },
-    error: () => {
-      this.serviceOptions = [];
-    }
-  });
-
-  });
+              console.log(this.serviceOptions);
+            },
+            error: () => {
+              this.serviceOptions = [];
+            }
+          });
+      });
   }
 
   serviceOptions: ServiceOption[] = [];
@@ -72,9 +92,11 @@ console.log("Selected Vendoridddd:", vendor?.id);
   loadingServices: boolean = false;
   serviceSearch$ = new Subject<string>();
 
-  get isMedicineType(): boolean {
-    return this.state.selectedType() === 'Pharmacy';
-  }
+ get isMedicineType(): boolean {
+  console.log('Selected Type = ', this.state.selectedType());
+  return this.state.selectedType() === 'Pharmacy';
+}
+
 
   addServiceRow(): void {
     this.state.addEmptyServiceRow();
@@ -106,8 +128,8 @@ console.log("Selected Vendoridddd:", vendor?.id);
   }
 
   private calculateMedicinePrice(rawPrice: number, subUnitNo?: number): number {
-  return rawPrice / (subUnitNo || 1);
-}
+    return rawPrice / (subUnitNo || 1);
+  }
 
   onServiceSelect(row: ServiceRow, selected: ServiceOption | null): void {
     if (!selected) {
@@ -142,30 +164,50 @@ console.log("Selected Vendoridddd:", vendor?.id);
     }
   }
 
-  onRowFieldChange(row: ServiceRow, field: keyof ServiceRow, value: any): void {
-    const updated: Partial<ServiceRow> = { [field]: value };
+ onRowFieldChange(row: ServiceRow, field: keyof ServiceRow, value: any): void {
+console.log({
+    field,
+    value,
+    isMedicine: this.isMedicineType,
+    dose: row.doseUnitNo,
+    sub: row.subUnitNo
+  });
+  console.log('field =', field);
+  console.log('selectedType =', this.state.selectedType());
+  console.log('isMedicineType =', this.isMedicineType);
 
-    if (this.isMedicineType && (field === 'units' || field === 'repeat' || field === 'duration')) {
-      const units = field === 'units' ? value : row.units;
-      const repeat = field === 'repeat' ? value : row.repeat;
-      const duration = field === 'duration' ? value : row.duration;
+  const updated: Partial<ServiceRow> = { [field]: value };
 
-      updated['qty'] = this.calculateMedicineQty(
-        units || 0,
-        repeat || 0,
-        duration || 0,
-        row.doseUnitNo || 1,
-        row.subUnitNo || 1
-      );
-    }
+  if (this.isMedicineType &&
+      (field === 'units' || field === 'repeat' || field === 'duration')) {
 
-    this.state.updateServiceRow(row.rowId, updated);
+    console.log('>>>> CALCULATING QTY <<<<');
+const currentRow =
+  this.state.serviceRows().find(r => r.rowId === row.rowId)!;
+
+const units =
+  field === 'units' ? value : currentRow.units;
+
+const repeat =
+  field === 'repeat' ? value : currentRow.repeat;
+
+const duration =
+  field === 'duration' ? value : currentRow.duration;
+
+    updated.qty = this.calculateMedicineQty(
+      units || 0,
+      repeat || 0,
+      duration || 0,
+      row.doseUnitNo || 1,
+      row.subUnitNo || 1
+    );
   }
 
+  this.state.updateServiceRow(row.rowId, updated);
+}
   onServiceSelectById(row: ServiceRow, serviceId: string | null): void {
     const selected = this.serviceOptions.find(x => x.serviceId === serviceId) ?? null;
 
-    // نضمن إن العنصر المختار يفضل موجود في القايمة حتى لو نتائج البحث اتغيرت بعدين
     if (selected && !this.serviceOptions.some(x => x.serviceId === selected.serviceId)) {
       this.serviceOptions = [...this.serviceOptions, selected];
     }
@@ -173,7 +215,37 @@ console.log("Selected Vendoridddd:", vendor?.id);
     this.onServiceSelect(row, selected);
   }
 
+  onCareItemSelect(row: ServiceRow, careItemId: string | null): void {
+    this.onRowFieldChange(row, 'careItemId', careItemId);
+
+    if (!careItemId) {
+      this.state.updateServiceRow(row.rowId, { coPercent: 0 });
+      return;
+    }
+
+    const memberId = this.state.member()?.memberId;
+    if (!memberId) {
+      return;
+    }
+
+    this.approvalService
+      .getCoinsuranceOfMedItem(memberId, Number(careItemId))
+      .subscribe({
+        next: (res: any) => {
+          const coValue = res?.data?.coPercent ?? res?.coPercent ?? res?.data ?? res ?? 0;
+
+          this.state.updateServiceRow(row.rowId, {
+            coPercent: coValue,
+          });
+        },
+        error: () => {
+          this.state.updateServiceRow(row.rowId, { coPercent: 0 });
+        }
+      });
+  }
+
   trackByRowId(index: number, row: ServiceRow): string {
     return row.rowId;
   }
+  
 }
