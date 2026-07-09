@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth/auth-service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 interface BranchApprovalItem {
+  formId: string;
   approvalId: number;
   approvalDate: string;
   apStatus: string;
@@ -179,8 +180,8 @@ export class Approvals3m implements OnInit {
       default: statusText = 'Unknown'; statusIcon = '❓'; statusColor = 'text-gray-700';
     }
     return {
-      approvalId: i.approvalId, approvalDate: i.approvalDate, apStatus: i.apStatus,
-      apType: i.apType || 'General', requestSource: i.requestSource || 'Manual',
+      approvalId: i.approvalId, approvalDate: i.approvalDate, apStatus: i.apStatus
+      ,formId: i.formId,  apType: i.apType || 'General', requestSource: i.requestSource || 'Manual',
       notes: i.notes || '-', memberId: i.memberId, memberName: i.memberName, value: i.value || 0, netvalue: i.netvalue || 0,
       localdiscountvalue: i.localdiscountvalue || 0, importeddiscountvalue: i.importeddiscountvalue || 0, copaymentvalue: i.copaymentvalue || 0,
       vendorId: i.vendorId, companyName: i.companyName || '-', branchName: i.branchName || '-', statusText, statusIcon, statusColor
@@ -227,35 +228,31 @@ export class Approvals3m implements OnInit {
     }
 
     const excelRows: any[] = dataToExport.map(item => ({
+      'Form ID': item.formId,
       'Approval ID': item.approvalId,
-      'Date': this.formatDate(item.approvalDate),
-      'Time': this.formatTime(item.approvalDate),
-      'Status': item.statusText,
-      'Request Type': item.apType,
-      'Request Source': item.requestSource,
       'Member ID': item.memberId,
       'Member Name': item.memberName || '-',
       'Company Name': item.companyName || '-',
       'Branch Name': item.branchName || '-',
+      'Date': this.formatDate(item.approvalDate),
       'Vendor ID': item.vendorId,
       'Gross Value': item.value,
-      'Copayment (Coinsurance)': item.copaymentvalue,
-      'Imported Discount': item.importeddiscountvalue,
       'Local Discount': item.localdiscountvalue,
+      'Imported Discount': item.importeddiscountvalue,
+      'Copayment (Coinsurance)': item.copaymentvalue,
       'Net Value': item.netvalue,
-      'Notes': item.notes
     }));
 
     excelRows.push({
+      'Form ID': '',
       'Approval ID': 'TOTALS',
-      'Date': '', 'Time': '', 'Status': '', 'Request Type': '', 'Request Source': '',
-      'Member ID': '', 'Member Name': '', 'Company Name': '', 'Branch Name': '', 'Vendor ID': '',
+      'Date': '', 
+      'Member ID': '', 'Member Name': '', 'Company Name': '', 'Branch Name': '',
       'Gross Value': this.totalGrossValue(),
-      'Copayment (Coinsurance)': this.totalCopayment(),
-      'Imported Discount': this.totalImportedDiscount(),
       'Local Discount': this.totalLocalDiscount(),
+      'Imported Discount': this.totalImportedDiscount(),
+      'Copayment (Coinsurance)': this.totalCopayment(),
       'Net Value': this.totalNetValue(),
-      'Notes': ''
     });
 
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelRows);
@@ -272,8 +269,37 @@ export class Approvals3m implements OnInit {
   cancelApproval(item: BranchApprovalItem) { console.log('Canceling:', item.approvalId); }
 
 
+  // كاش لملفات الخط حتى لا يتم تحميلها مع كل تصدير
+  private amiriFonts: { regular: string; bold: string } | null = null;
+
+  private async fetchFontAsBase64(url: string): Promise<string> {
+    const buffer = await (await fetch(url)).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  // تسجيل خط Amiri الداعم للعربية داخل مستند الـ PDF
+  private async registerArabicFont(doc: jsPDF): Promise<void> {
+    if (!this.amiriFonts) {
+      const [regular, bold] = await Promise.all([
+        this.fetchFontAsBase64('assets/fonts/Amiri-Regular.ttf'),
+        this.fetchFontAsBase64('assets/fonts/Amiri-Bold.ttf'),
+      ]);
+      this.amiriFonts = { regular, bold };
+    }
+    doc.addFileToVFS('Amiri-Regular.ttf', this.amiriFonts.regular);
+    doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+    doc.addFileToVFS('Amiri-Bold.ttf', this.amiriFonts.bold);
+    doc.addFont('Amiri-Bold.ttf', 'Amiri', 'bold');
+  }
+
   //pdf
-exportToPDF(): void {
+async exportToPDF(): Promise<void> {
   const dataToExport = this.filteredApprovals();
   if (dataToExport.length === 0) {
     alert('No data available to export!');
@@ -283,12 +309,12 @@ exportToPDF(): void {
   // 1. إنشاء كائن الـ PDF بالوضع الأفقي
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-  // 2. إضافة خط يدعم اللغة العربية (خط Amiri متوفر كـ ديفولت يدعم العربية في الـ Unicode)
-  // سنقوم بجلب الخط بصيغة خفيفة، أو يمكنك تحميل ملف Amiri-Regular.ttf وتحويله لـ Base64
-  // للسهولة والسرعة، نستخدم إضافة الخط القياسي الذي يتعامل مع الحروف العربية عبر ضبط الفونت أو الـ styles.
-  
-  // ملحوظة: jsPDF يحتاج تحويل الخط إلى Base64 ليعمل 100% بدون إنترنت، ولكن لتشغيل الدعم الفوري للـ Unicode العربي:
-  // نقوم بضبط الخصائص للـ autoTable لتدعم النص العربي.
+  // 2. تحميل وتسجيل خط Amiri (خط يحتوي على الحروف العربية فعلياً)
+  // الخطوط المدمجة في jsPDF مثل Courier و Helvetica لا تحتوي على حروف عربية،
+  // لذلك كانت تظهر رموز غير مفهومة. بعد تسجيل الخط، jsPDF يتولى تشكيل
+  // الحروف العربية (وصل الحروف) تلقائياً.
+  await this.registerArabicFont(doc);
+  doc.setFont('Amiri', 'normal');
 
   // عنوان التقرير داخل الملف
   doc.setFontSize(16);
@@ -298,20 +324,27 @@ exportToPDF(): void {
 
   // الأعمدة التي ستظهر في الـ PDF
   const columns = [
-    'ID', 'Date', 'Status', 'Type', 'Source', 
-    'Member Info', 'Company', 'Gross', 'Copay', 'Net'
+    
+
+      'Form ID',
+      'Approval ID',
+      'Member ID', 'Member Name', 'Company Name', 'Branch Name',      'Date', 
+      'Gross Value', 'Local Discount', 'Imported Discount', 'Copayment (Coinsurance)',
+      'Net Value'
   ];
 
   // تجهيز الصفوف من البيانات المفلترة
   const rows = dataToExport.map(item => [
+    item.formId,
     item.approvalId,
-    this.formatDate(item.approvalDate),
-    item.statusText,
-    item.apType,
-    item.requestSource,
-    `${item.memberName || '-'}\n(${item.memberId})`,
+    item.memberId,
+    item.memberName || '-',
     item.companyName || '-',
+    item.branchName || '-',
+    this.formatDate(item.approvalDate),
     item.value.toFixed(2),
+    item.localdiscountvalue.toFixed(2),
+    item.importeddiscountvalue.toFixed(2),
     item.copaymentvalue.toFixed(2),
     item.netvalue.toFixed(2)
   ]);
@@ -320,6 +353,8 @@ exportToPDF(): void {
   rows.push([
     'TOTALS', '', '', '', '', '', '',
     this.totalGrossValue().toFixed(2),
+    this.totalLocalDiscount().toFixed(2),
+    this.totalImportedDiscount().toFixed(2),
     this.totalCopayment().toFixed(2),
     this.totalNetValue().toFixed(2)
   ]);
@@ -332,12 +367,11 @@ exportToPDF(): void {
     theme: 'striped',
     headStyles: { fillColor: [30, 41, 59] }, 
     
-    // الخصائص الحركية لحل مشكلة الحروف العربية وعلامات الاستفهام:
-    styles: { 
-      fontSize: 8, 
+    // استخدام خط Amiri المسجل أعلاه حتى تظهر الحروف العربية بشكل صحيح
+    styles: {
+      fontSize: 8,
       overflow: 'linebreak',
-      // إذا كنتِ قد أضفت خط مخصص، اكتبيه هنا، وإلا فإن النظام سيتعرف على الحروف عند إعطاء أمر الـ font الأصلي للمتصفح
-      font: 'Courier', // أو أي خط متاح يدعم الـ glyphs 
+      font: 'Amiri',
     },
     
     // تفعيل اتجاه النص من اليمين إلى اليسار للأعمدة التي قد تحتوي على عربي (مثل اسم العضو أو الشركة)
@@ -346,7 +380,7 @@ exportToPDF(): void {
       6: { cellWidth: 35, halign: 'right' }  // عمود الشركة
     },
     
-    didParseCell: (data) => {
+    didParseCell: (data:any) => {
       if (data.row.index === rows.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fillColor = [241, 245, 249];

@@ -26,7 +26,7 @@ export class InvoicePrint implements OnInit {
 
   ngOnInit(): void {
     this.approvalNumber = this.route.snapshot.paramMap.get('approvalNumber') || '';
-    this.approvalService.getApproval(this.approvalNumber).subscribe({
+    this.approvalService.getApprovalView(this.approvalNumber).subscribe({
     next: (data) => {
       console.log('data:', data);
     this.approval.set(data);

@@ -141,6 +141,18 @@ export class ApprovalService {
     map(res => this.mapApprovalDetailsToApproval(res))
   );
 }
+getApprovalView(approvalNumber: string): Observable<Approval> {
+    console.log("approvalnum",approvalNumber);
+  return this.getApprovalViewDetails(approvalNumber).pipe(
+    map(res => this.mapApprovalDetailsToApproval(res))
+  );
+}
+getApprovalPrint(approvalNumber: string): Observable<Approval> {
+    console.log("approvalnum",approvalNumber);
+  return this.getApprovalPrintDetails(approvalNumber).pipe(
+    map(res => this.mapApprovalDetailsToApproval(res))
+  );
+}
 getApprovalsearchDetails(approvalNumber: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}Approval/${approvalNumber}/searchdetails`);
 }
@@ -171,9 +183,15 @@ getApprovalsearchDetails(approvalNumber: string): Observable<any> {
   }
   getApprovalDetails(id: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}Approval/${id}/details`);
-  
-
 }
+ getApprovalViewDetails(id: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}Approval/${id}/view`);
+}
+
+ getApprovalPrintDetails(id: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}Approval/${id}/print`);
+}
+
 
 mapApprovalDetailsToApproval(apiRes: any): Approval {
   console.log('Mapping API to Approval:', apiRes);
@@ -181,8 +199,8 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     approvalNumber: apiRes.approvalId?.toString() || '',
     date: apiRes.approvalDate || new Date().toISOString(),
     companyName: apiRes.vendorName || 'Unknown Company',
-    companyLogo: '',
-    vendorLogo: '', 
+    companyLogo: apiRes.clientImage || apiRes.companyLogo || '',
+    vendorLogo: apiRes.vendorImage || apiRes.vendorLogo || '',
     branch: apiRes.v_branch_id || 'Main Branch',
     invoiceNumber: apiRes.approvalId?.toString() || '',
     serviceDate: apiRes.approvalDate || '',
@@ -191,7 +209,8 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     diagnose: apiRes.diagnoses?.map((d: any) => d.name).join(', ') || '',
     notes: apiRes.notes || '',
     limit: apiRes.maxValue || null,
-    copaymentPercentage: 0,
+    // نسبة التحمل (coinsurance): تؤخذ من أول خدمة، وإن لم توجد فمن رأس الموافقة
+    copaymentPercentage: apiRes.services?.[0]?.coinsurance ?? apiRes.coinsurance ?? 0,
     extraCopaymentPercentage: 0,
     items: (apiRes.services || []).map((s: any) => ({
       description: s.itemDesc || '',
@@ -199,6 +218,7 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
       quantityUnit: s.doseUnits?.toString() || 'Unit',
       unitPrice: s.price || 0,
       name: s.servicename || '',
+      copayment: s.coinsurance ?? 0,
     })),
   };
 }
@@ -255,15 +275,17 @@ getProducts(term: string, vtype: string) {
 
 
 
-getbranchapprovals(branchid: string): Observable<any> {
-  return this.http.get<any>(
-    `${this.baseUrl}Approval/branch-approvals?office_id=${branchid}`
-  );}
+getbranchapprovals(branchid: string, starts?: string, ends?: string): Observable<any> {
+  let url = `${this.baseUrl}Approval/branch-approvals?office_id=${branchid}`;
+  if (starts) url += `&starts=${encodeURIComponent(starts)}`;
+  if (ends) url += `&ends=${encodeURIComponent(ends)}`;
+  return this.http.get<any>(url);
+}
 
 
 getbrancha3mpprovals(branchid: string): Observable<any> {
   return this.http.get<any>(
-    `${this.baseUrl}Approval/branch-3mapprovals?office_id=${branchid}`
+    `${this.baseUrl}Approval/monthlycliams?office_id=${branchid}`
   );}
 
   cancelApproval(approvalId: number): Observable<any> {
