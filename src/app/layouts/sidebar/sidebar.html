@@ -12,154 +12,98 @@
 
 <!-- Backdrop for the mobile off-canvas drawer -->
 <div
-  class="sidebar-backdrop"
-  [class.is-visible]="isMobileOpen"
+  class="backdrop"
+  [class.show]="isMobileOpen"
   (click)="closeMobile()"
   aria-hidden="true"></div>
 
 <aside
   id="app-sidebar-nav"
-  class="app-sidebar"
-  [class.is-open]="isMobileOpen"
-  [class.is-collapsed]="isCollapsed"
-  [class.is-rtl]="isRtl"
+  class="sidebar"
+  [class.mobile-open]="isMobileOpen"
+  [class.collapsed]="isCollapsed"
   [attr.dir]="isRtl ? 'rtl' : 'ltr'">
 
-  <!-- Sidebar header: section label + desktop collapse toggle -->
-  <div class="app-sidebar__header">
-    <span class="app-sidebar__title">{{ isRtl ? 'القائمة' : 'Menu' }}</span>
-    <button
-      type="button"
-      class="app-sidebar__collapse"
-      (click)="toggleCollapsed()"
-      [attr.aria-pressed]="isCollapsed"
-      [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-      [title]="isCollapsed ? 'Expand' : 'Collapse'">
-      <i class="fas" [class.fa-angles-left]="!isRtl" [class.fa-angles-right]="isRtl"></i>
-    </button>
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-logo">
+      <img src="assets/logos/ac-logo.svg" alt="Logo">
+    </div>
+    <div>
+      <div class="brand-name">{{ isRtl ? 'البوابة' : 'Provider Portal' }}</div>
+      <div class="brand-sub">{{ isRtl ? 'النظام الإلكتروني' : 'Online System' }}</div>
+    </div>
   </div>
 
   <!-- Navigation -->
-  <nav class="app-sidebar__nav" aria-label="Primary">
+  <nav class="nav" aria-label="Primary">
+    <div class="nav-sec">{{ isRtl ? 'القائمة' : 'Menu' }}</div>
 
-    <ul class="app-sidebar__list">
-      <ng-container *ngFor="let page of (auth.pages$ | async) || []; trackBy: trackByPage">
-
-       
-
-        <!-- Leaf item: page with no children -->
-        <ng-template #leafItem>
-          <li class="app-sidebar__item">
-            <a
-              *ngIf="getRoute(page); else leafBtn"
-              class="app-sidebar__link"
-              [routerLink]="getRoute(page)"
-              routerLinkActive="is-active"
-              (click)="closeMobile()"
-              [title]="getPageName(page)">
-              <i class="app-sidebar__icon" [ngClass]="getPageIcon(page)" aria-hidden="true"></i>
-              <span class="app-sidebar__label">{{ getPageName(page) }}</span>
-            </a>
-            <ng-template #leafBtn>
-              <button
-                type="button"
-                class="app-sidebar__link"
-                [class.is-active]="isActive(page)"
-                (click)="selectPage(page)"
-                [title]="getPageName(page)">
-                <i class="app-sidebar__icon" [ngClass]="getPageIcon(page)" aria-hidden="true"></i>
-                <span class="app-sidebar__label">{{ getPageName(page) }}</span>
-              </button>
-            </ng-template>
-          </li>
-        </ng-template>
-
-      </ng-container>
-
-      <!-- <li class="sidebar-item">
-        <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
-  <a
-    [routerLink]="['/mem']"
-    class="nav-link sidebar-link d-flex align-items-center"
-    style="cursor: pointer;">
-    <i class="fas fa-house fa-s me-3"></i>
-    HOME
-  </a>
-</div>
-        <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'" >
-          <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-house fa-s me-3"></i>
-            Search Results
-          </a>
-        </div>
-       <div *ngIf="currentRole === 'HEADOFFICE'">
-  <a
-    [routerLink]="['/monthlyapprovals']"
-    class="nav-link sidebar-link d-flex align-items-center"
-    style="cursor: pointer;">
-    <i class="fas fa-house fa-s me-3"></i>
-    Month's register
-  </a>
-</div>
-
-
- <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'" >
-          <a [routerLink]="['/issue-approval']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-user fa-s me-3"></i>
-            Issue Approval
-          </a>
-        </div>
-        <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
-  <a
-    [routerLink]="['/approvalreport']"
-    class="nav-link sidebar-link d-flex align-items-center"
-    style="cursor: pointer;">
-    <i class="fas fa-house fa-s me-3"></i>
-    Approval Report
-  </a>
-</div>
-      </li> -->
-<li class="sidebar-item">
     <!-- HOME -->
-    <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
-        <a [routerLink]="['/mem']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-house fa-s me-3"></i>
-            HOME
-        </a>
-    </div>
+    <a *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'"
+      class="nav-item"
+      [routerLink]="['/mem']"
+      routerLinkActive="active"
+      (click)="closeMobile()"
+      title="Home">
+      <i class="fas fa-house"></i>
+      <span class="grow">{{ isRtl ? 'الرئيسية' : 'Home' }}</span>
+    </a>
 
     <!-- Search Results -->
-    <div *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'">
-        <a [routerLink]="['/search-results']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-search fa-s me-3"></i>
-            Search Results
-        </a>
-    </div>
+    <a *ngIf="currentRole !== 'CLINETAGENT' && currentRole !== 'SITEAGENT'"
+      class="nav-item"
+      [routerLink]="['/search-results']"
+      routerLinkActive="active"
+      (click)="closeMobile()"
+      title="Search Results">
+      <i class="fas fa-magnifying-glass"></i>
+      <span class="grow">{{ isRtl ? 'نتائج البحث' : 'Search Results' }}</span>
+    </a>
 
     <!-- Month's register -->
-    <div *ngIf="currentRole === 'HEADOFFICE'">
-        <a [routerLink]="['/monthlyapprovals']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-calendar-alt fa-s me-3"></i>
-            Month's register
-        </a>
-    </div>
+    <a *ngIf="currentRole === 'HEADOFFICE'"
+      class="nav-item"
+      [routerLink]="['/monthlyapprovals']"
+      routerLinkActive="active"
+      (click)="closeMobile()"
+      title="Month's register">
+      <i class="fas fa-calendar-days"></i>
+      <span class="grow">{{ isRtl ? 'سجل الشهر' : "Month's register" }}</span>
+    </a>
 
     <!-- Issue Approval -->
-    <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
-        <a [routerLink]="['/issue-approval']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-check-circle fa-s me-3"></i>
-            Issue Approval
-        </a>
-    </div>
+    <a *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'"
+      class="nav-item"
+      [routerLink]="['/issue-approval']"
+      routerLinkActive="active"
+      (click)="closeMobile()"
+      title="Issue Approval">
+      <i class="fas fa-circle-check"></i>
+      <span class="grow">{{ isRtl ? 'إصدار موافقة' : 'Issue Approval' }}</span>
+    </a>
 
     <!-- Approval Report -->
-    <div *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'">
-        <a [routerLink]="['/approvalreport']" class="nav-link sidebar-link d-flex align-items-center" style="cursor: pointer;">
-            <i class="fas fa-chart-bar fa-s me-3"></i>
-            Approval Report
-        </a>
-    </div>
-</li>
-    </ul>
+    <a *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'"
+      class="nav-item"
+      [routerLink]="['/approvalreport']"
+      routerLinkActive="active"
+      (click)="closeMobile()"
+      title="Approval Report">
+      <i class="fas fa-chart-column"></i>
+      <span class="grow">{{ isRtl ? 'تقرير الموافقات' : 'Approval Report' }}</span>
+    </a>
   </nav>
+
+  <!-- Desktop collapse toggle -->
+  <button
+    type="button"
+    class="collapse-btn"
+    (click)="toggleCollapsed()"
+    [attr.aria-pressed]="isCollapsed"
+    [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+    [title]="isCollapsed ? 'Expand' : 'Collapse'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg>
+    <span class="clabel">{{ isRtl ? 'طيّ القائمة' : 'Collapse' }}</span>
+  </button>
 </aside>

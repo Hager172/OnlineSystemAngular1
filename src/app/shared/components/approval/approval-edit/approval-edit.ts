@@ -79,6 +79,10 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
   goBack(): void {
     this.router.navigate(['/mem']);
   }
+
+  print(): void {
+    window.print();
+  }
 //   goBack(): void {
 //   window.history.state.backData = { approvalNumber: this.approvalNumber };
 //   window.history.back();

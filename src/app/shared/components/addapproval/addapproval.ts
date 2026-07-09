@@ -313,6 +313,10 @@ console.log('Vendor Type:', vendorType);
     console.log('Selected Files:', this.selectedFiles);
   }
 
+  removeFile(index: number): void {
+    this.selectedFiles.splice(index, 1);
+  }
+
   resetForm(): void {
     this.claimId = '';
     this.claimDate = this.maxClaimDate;

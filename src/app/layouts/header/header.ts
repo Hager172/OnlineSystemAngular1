@@ -21,6 +21,13 @@ export class Header implements OnInit {
   clients: any[] = [];
   selectedClient: any = null;
   isClientDropdownOpen = false;
+  roleLabel = 'User';
+
+  private readonly roleLabels: Record<string, string> = {
+    HEADOFFICE: 'Head Office',
+    CLINETAGENT: 'Client Agent',
+    SITEAGENT: 'Site Agent',
+  };
 
   /** Maps a clientId to its company logo. Replace these files with the
    *  official assets at the same paths to change the displayed logos. */
@@ -31,6 +38,11 @@ export class Header implements OnInit {
 
   constructor(private auth: AuthService, private elRef: ElementRef){
 
+  }
+
+  get roleInitials(): string {
+    const parts = this.roleLabel.trim().split(/\s+/);
+    return parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'U';
   }
 
   getClientLogo(clientId: any): string | null {
@@ -84,6 +96,11 @@ selectClient(client: any): void {
   
 
 ngOnInit(): void {
+  this.auth.role$.subscribe(role => {
+    const key = (role || '').toUpperCase();
+    this.roleLabel = this.roleLabels[key] || role || 'User';
+  });
+
   this.auth.clients$.subscribe(clients => {
 console.log("clients",clients);
 

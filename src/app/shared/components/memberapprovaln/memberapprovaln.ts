@@ -56,6 +56,7 @@ isModalOpen = signal(false);
   currentMemberId: string = '';
   memberApprovals: Approval[] = [];
   currentApproval = signal<Approval | null>(null);
+  selectedApproval: Approval | null = null;
   
   // هنا التعديل - خليها 'approved' عشان يبقى هو default
   activeTab: 'pending' | 'approved' = 'pending';  // ✅改了这里
@@ -70,6 +71,13 @@ isModalOpen = signal(false);
   vendorid: string = '';
   Math = Math;
   error= signal<string>('');
+  roleLabel: string = 'User';
+
+  private readonly roleLabels: Record<string, string> = {
+    HEADOFFICE: 'Head Office',
+    CLINETAGENT: 'Client Agent',
+    SITEAGENT: 'Site Agent',
+  };
 
   // User Manual Data
   manualItems: ManualItem[] = [
@@ -99,6 +107,11 @@ isModalOpen = signal(false);
   ngOnInit(): void {
     this.updateDate();
     this.getVendorId();
+
+    this.authService.role$.subscribe((role: string | null) => {
+      const key = (role || '').toUpperCase();
+      this.roleLabel = this.roleLabels[key] || role || 'User';
+    });
     // this.activeTab = 'pending';
        
 
@@ -220,10 +233,26 @@ loadApprovedApprovals(): void {
     this.memberApprovals = [];
     this.currentMemberId = '';
     this.error.set('');
+    this.selectedApproval = null;
+  }
+
+  /** Toggles the inline details panel for an approval row (presentation only). */
+  selectApproval(approval: Approval): void {
+    this.selectedApproval = this.selectedApproval === approval ? null : approval;
+  }
+
+  /** Subtotal of an approval's items (qty × unit price). */
+  getApprovalSubtotal(approval: Approval | null): number {
+    if (!approval?.items) return 0;
+    return approval.items.reduce(
+      (sum: number, item: any) => sum + ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)),
+      0
+    );
   }
 
   handleLookup(): void {
           this.error.set('');
+    this.selectedApproval = null;
 
     const value = (this.lookupValue || '').trim();
     if (!value) return;
