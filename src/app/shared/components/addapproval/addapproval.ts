@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router'; 
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { AuthService } from '../../../core/services/auth/auth-service';
@@ -31,9 +31,13 @@ export class Addapproval implements OnInit {
   constructor(
     private approvalService: ApprovalService,
     private router: Router,
+    private route: ActivatedRoute,
     private authService: AuthService,
     private memberService: MemberService
   ) {}
+
+  /** True when the member search found a valid member with no approvals and sent the user here. */
+  redirectedNoApprovals = false;
 
   diagnosisSearch$ = new Subject<string>();
   productSearch$ = new Subject<string>();
@@ -82,6 +86,7 @@ vendorType: string | null = null;
  ngOnInit(): void {
   this.vendorType = this.authService.getVendorType();
   console.log('Vendor Type on Init:', this.vendorType);
+  this.redirectedNoApprovals = this.route.snapshot.queryParamMap.get('noApprovals') === '1';
   // حساب نطاق الـ 7 أيام (كودك زي ما هو)
   const today = new Date();
   const sevenDaysAgo = new Date();
@@ -280,6 +285,11 @@ console.log('Vendor Type:', vendorType);
   calculateNet(): string {
     const subTotal = parseFloat(this.calculateSubTotal());
     return (subTotal - (this.coPaymentAmount || 0)).toFixed(2);
+  }
+
+  /** Count of prescription lines with a chosen product and quantity. */
+  getTotalItems(): number {
+    return this.prescriptionItems.filter((x) => x.productId && (x.qty || 0) > 0).length;
   }
 
   onCoPercentChange(): void {

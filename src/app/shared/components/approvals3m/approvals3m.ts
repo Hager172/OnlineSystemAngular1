@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import * as XLSX from 'xlsx';
 import { AuthService } from '../../../core/services/auth/auth-service';
 import jsPDF from 'jspdf';
@@ -31,7 +32,7 @@ interface BranchApprovalItem {
 
 @Component({
   selector: 'app-approvals3m',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './approvals3m.html',
   styleUrl: './approvals3m.css',
 })

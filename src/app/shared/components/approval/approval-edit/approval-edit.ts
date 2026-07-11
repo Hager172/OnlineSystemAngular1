@@ -39,6 +39,8 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
       },
       error: (err) => {
         console.error(err);
+        // approval could not be loaded → back to the dashboard, no "not found" card
+        this.router.navigate(['/mem']);
       }
     });
   }
@@ -71,6 +73,11 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
     return this.getSubtotal() - this.getTotalCopayment();
   }
 
+  /** Count of service lines that will actually be pulled (qty > 0). */
+  getTotalItems(): number {
+    return this.items.filter((item) => (item.quantity || 0) > 0).length;
+  }
+
   onSubmit(): void {
     this.approvalService.saveEditedItems(this.approvalNumber, this.items);
     this.router.navigate(['/invoice-print', this.approvalNumber]);
@@ -79,14 +86,6 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
   goBack(): void {
     this.router.navigate(['/mem']);
   }
-
-  print(): void {
-    window.print();
-  }
-//   goBack(): void {
-//   window.history.state.backData = { approvalNumber: this.approvalNumber };
-//   window.history.back();
-// }
 limitQuantity(item: any): void {
   if (
     item.originalQuantity != null &&

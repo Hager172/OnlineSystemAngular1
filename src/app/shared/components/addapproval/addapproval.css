@@ -26,6 +26,152 @@
 .muted {
   color: var(--pp-text-2);
 }
+.tiny {
+  font-size: 12px;
+  color: var(--pp-text-3);
+  margin-top: 4px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------- Banner (redirected: member has no approvals) ---------------- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  animation: fadeUp 0.35s ease;
+}
+.banner.info {
+  background: var(--pp-blue-bg);
+  border: 1px solid #cadff5;
+}
+.banner .bicon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.banner.info .bicon {
+  background: var(--pp-blue);
+  color: #fff;
+}
+.banner h4 {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.banner.info h4 {
+  color: var(--pp-blue);
+}
+.banner p {
+  font-size: 12.5px;
+  color: var(--pp-text-2);
+}
+
+/* ---------------- Two-column layout (main + summary aside) ---------------- */
+.pull-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 316px;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  .pull-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.pull-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.pull-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 78px;
+}
+@media (max-width: 1180px) {
+  .pull-aside {
+    position: static;
+  }
+}
+
+/* ---------------- Summary aside ---------------- */
+.sum-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 5.5px 0;
+  font-size: 12.5px;
+}
+.sum-row small {
+  color: var(--pp-text-2);
+}
+.sum-row b {
+  font-size: 13px;
+  text-align: right;
+  word-break: break-word;
+}
+.sum-row b.minus {
+  color: var(--pp-red);
+}
+.sum-row.big b {
+  font-size: 16px;
+  color: var(--pp-green);
+}
+.sum-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* ---------------- Pills / read-only lock ---------------- */
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 3.5px 10px;
+  display: inline-block;
+  margin-top: 6px;
+}
+.pill.active {
+  background: var(--pp-green-bg);
+  color: var(--pp-green);
+}
+.ro-lock {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  color: var(--pp-text-3);
+  background: #f2f6f4;
+  border: 1px solid var(--pp-border);
+  border-radius: 7px;
+  padding: 3.5px 9px;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  text-transform: uppercase;
+}
 
 /* ---------------- Buttons ---------------- */
 .btn {
@@ -98,6 +244,16 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+/* header Submit spans the summary-card column (matches the aside width) */
+.pull-actions .btn-submit {
+  min-width: 316px;
+  justify-content: center;
+}
+@media (max-width: 1180px) {
+  .pull-actions .btn-submit {
+    min-width: 0;
+  }
+}
 
 .ro-head {
   display: flex;
@@ -106,6 +262,73 @@
   padding: 16px 20px 0;
   font-size: 14px;
   font-weight: 700;
+}
+/* member identity + claim form side by side inside one card */
+.mi-claim {
+  display: flex;
+  gap: 24px;
+  padding: 16px 20px 20px;
+  align-items: flex-start;
+}
+.mi-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+  flex-shrink: 0;
+  width: 300px;
+}
+.mi-id {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+/* member inputs (Mobile / National ID) under the photo + name */
+.mi-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .mi-left {
+    width: 100%;
+  }
+}
+.mi-claim-right {
+  flex: 1;
+  min-width: 0;
+  padding-left: 24px;
+  border-left: 1px solid var(--pp-border);
+}
+.mi-claim-right .sub-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+/* two rows only: 4 fields on one row + full-width diagnosis row */
+.mi-claim-right .ci-grid {
+  padding: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 1280px) {
+  .mi-claim-right .ci-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .mi-claim {
+    flex-direction: column;
+  }
+  .mi-claim-right {
+    width: 100%;
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px dashed var(--pp-border-2);
+    padding-top: 16px;
+  }
 }
 
 /* ---------------- Member info (photo layout) ---------------- */
@@ -190,6 +413,10 @@
   color: var(--pp-text-2);
   margin-bottom: 6px;
 }
+/* field spanning the whole grid width (single row) */
+.ci-grid .ci-full {
+  grid-column: 1 / -1;
+}
 .ci-field label .req {
   color: var(--pp-red);
 }
@@ -237,6 +464,15 @@
   height: 15px;
   accent-color: var(--teal-600);
   cursor: pointer;
+}
+/* checkbox occupying a grid slot — aligned with the inputs beside it */
+.ci-check-field {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 11px;
+}
+.ci-check-field .ci-check {
+  margin-top: 0;
 }
 
 /* filled-field state (kept from the previous UX, tinted teal) */

@@ -5,394 +5,472 @@
   </div>
 
   <div class="pull-head">
-    <h2>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 15l2 2 4-4"/></svg>
-      Claim Issuing
-    </h2>
+    <div>
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 15l2 2 4-4"/></svg>
+        Claim Issuing
+      </h2>
+      <div class="tiny">Enter claim information and add services.</div>
+    </div>
     <div class="pull-actions">
-      <button type="button" routerLink="/mem" class="btn btn-ghost">Cancel</button>
-      <button type="button" (click)="handleSubmit()" class="btn btn-primary">
+      <button type="button" routerLink="/mem" class="btn btn-ghost">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button type="button" (click)="handleSubmit()" class="btn btn-primary btn-submit">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
-        Submit
+        Submit Request
       </button>
     </div>
   </div>
 
-  <!-- ============ MEMBER INFORMATION ============ -->
-  <section class="card">
-    <div class="ro-head">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
-      Member Information
+  <!-- Redirected here because the member has no approvals -->
+  <!-- <div *ngIf="redirectedNoApprovals" class="banner info">
+    <div class="bicon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>
     </div>
+    <div>
+      <h4>Member Found — No Existing Approvals</h4>
+      <p>Member <b>{{ member()?.memberName || insuredId }}</b> is valid but has no approvals, so you were directed here to issue a new claim.</p>
+    </div>
+  </div> -->
 
-    <div class="mi-flex" *ngIf="member()">
-      <div class="mi-photo">
-        <img
-          [src]="memberPhoto"
-          alt="Member Photo"
-          (error)="memberPhoto = 'assets/images/member-photo.png'" />
-      </div>
-      <div class="mi-name">
-        <b>{{ member().memberName }}</b>
-        <span class="en">{{ member().customerName }}</span>
-      </div>
-      <div class="mi-col">
-        <div class="mi-field">
-          <small>Mobile</small>
-          <b>{{ member().mobile || 'No Mobile' }}</b>
+  <div class="pull-grid">
+    <!-- ============ LEFT / MAIN COLUMN ============ -->
+    <div class="pull-main">
+
+      <!-- MEMBER INFORMATION -->
+      <section class="card">
+        <div class="ro-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
+          Member Information
+          <!-- <span class="ro-lock">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Read only
+          </span> -->
         </div>
-        <div class="mi-field">
-          <small>Birth Date</small>
-          <b>{{ member().birthDate }}</b>
-        </div>
-      </div>
-    </div>
 
-    <div class="mi-loading" *ngIf="!member()">
-      <p>Loading member profile...</p>
-    </div>
-  </section>
-
-  <!-- ============ CLAIM DETAILS ============ -->
-  <section class="card">
-    <div class="ro-head">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
-      Claim Details
-    </div>
-
-    <div class="ci-grid">
-      <div class="ci-field">
-        <label [class.label-active]="insuredId">
-          Insured ID <span class="req">*</span>
-        </label>
-        <input
-          type="text"
-          [(ngModel)]="insuredId"
-          placeholder="Enter Insured ID"
-          [class.has-value]="insuredId"
-          class="ci-input form-control" />
-      </div>
-
-      <div class="ci-field">
-        <label [hidden]="externalPrescription" [class.label-active]="claimId">
-          Claim ID <span *ngIf="!externalPrescription" class="req">*</span>
-        </label>
-        <input
-          type="text"
-          [(ngModel)]="claimId"
-          placeholder="Enter Claim ID"
-          [hidden]="externalPrescription"
-          [class.has-value]="claimId"
-          class="ci-input form-control" />
-        <label class="ci-check">
-          <input
-            type="checkbox"
-            [(ngModel)]="externalPrescription"
-            (change)="onExternalPrescriptionChange()" />
-          <span>External Prescription</span>
-        </label>
-      </div>
-
-      <div class="ci-field">
-        <label [class.label-active]="diagnosisIds.length > 0">
-          Diagnosis <span class="req">*</span>
-        </label>
-        <ng-select
-          class="ci-select custom-diagnosis-select"
-          [items]="diagnosisOptions"
-          bindLabel="name"
-          bindValue="id"
-          [multiple]="true"
-          [typeahead]="diagnosisSearch$"
-          [(ngModel)]="diagnosisIds"
-          [placeholder]="diagnosisIds.length ? '' : 'Search Diagnosis'"
-          [clearable]="true"
-          [searchable]="true"
-          (clear)="onDiagnosisClear()"
-        >
-          <ng-template ng-option-tmp let-item="item">
-            <div class="opt-row">
-              <i class="pi pi-search opt-ico"></i>
-              <div>{{ item.name }}</div>
-              <span class="opt-id">({{ item.id }})</span>
-            </div>
-          </ng-template>
-
-          <ng-template ng-multiselect-label-tmp let-items="items">
-            <div class="dx-tags">
-              <div *ngFor="let item of items" class="dx-tag">
-                <i class="pi pi-tag"></i>
-                {{ item.name }}
+        <div class="mi-claim">
+          <!-- left: member identity + member inputs -->
+          <div class="mi-left">
+            <div class="mi-id" *ngIf="member()">
+              <div class="mi-photo">
+                <img
+                  [src]="memberPhoto"
+                  alt="Member Photo"
+                  (error)="memberPhoto = 'assets/images/member-photo.png'" />
+              </div>
+              <div class="mi-name">
+                <b>{{ member().memberName }}</b>
+                <span class="en">{{ member().customerName }}</span>
+                <span class="pill active">Active Member</span>
               </div>
             </div>
-          </ng-template>
-        </ng-select>
-      </div>
+            <div class="mi-loading" *ngIf="!member()">
+              <p>Loading member profile...</p>
+            </div>
 
-      <div class="ci-field">
-        <label [class.label-active]="claimDate">
-          Claim Date <span class="req">*</span>
-        </label>
-        <input
-          type="date"
-          [(ngModel)]="claimDate"
-          [min]="minClaimDate"
-          [max]="maxClaimDate"
-          [class.has-value]="claimDate"
-          class="ci-input form-control" />
-      </div>
+            <div class="mi-inputs">
+              <div class="ci-field">
+                <label [class.label-active]="mobile()">
+                  Mobile <span class="req">*</span>
+                </label>
+                <input
+                  type="tel"
+                  [ngModel]="mobile()"
+                  (ngModelChange)="mobile.set($event)"
+                  placeholder="01xxxxxxxxx"
+                  [class.has-value]="mobile()"
+                  class="ci-input form-control" />
+              </div>
 
-      <div class="ci-field">
-        <label [class.label-active]="nationalId()">
-          National ID
-        </label>
-        <input
-          type="text"
-          [(ngModel)]="nationalId"
-          #natIdCtrl="ngModel"
-          pattern="^[0-9]{14}$"
-          placeholder="e.g., 2950101xxxxxxx (14 Digits)"
-          [class.has-value]="nationalId()"
-          class="ci-input form-control"
-          [class.invalid]="natIdCtrl.invalid && natIdCtrl.dirty" />
-        <span *ngIf="natIdCtrl.invalid && natIdCtrl.dirty" class="field-err">
-          National ID must be exactly 14 digits.
-        </span>
-      </div>
-
-      <div class="ci-field">
-        <label [class.label-active]="mobile()">
-          Mobile <span class="req">*</span>
-        </label>
-        <input
-          type="tel"
-          [ngModel]="mobile()"
-          (ngModelChange)="mobile.set($event)"
-          placeholder="01xxxxxxxxx"
-          [class.has-value]="mobile()"
-          class="ci-input form-control" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SERVICE ITEMS ============ -->
-  <section class="card">
-    <div class="svc-items-head">
-      <h3>
-        Prescription Items
-        <span class="tcount">{{ prescriptionItems.length }}</span>
-      </h3>
-      <button type="button" id="ciAddBtn" (click)="addPrescriptionItem()" class="btn btn-primary btn-sm">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        Add Item
-      </button>
-    </div>
-
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:44px;">#</th>
-            <th style="min-width:240px;">Product</th>
-            <th *ngIf="vendorType?.toLowerCase() === 'ph'">Units</th>
-            <th *ngIf="vendorType?.toLowerCase() === 'ph'">Repeat</th>
-            <th *ngIf="vendorType?.toLowerCase() === 'ph'">Days</th>
-            <th *ngIf="vendorType?.toLowerCase() === 'dt'">Tooth</th>
-            <th *ngIf="vendorType?.toLowerCase() === 'dt'">Position</th>
-            <th>Price</th>
-            <th *ngIf="vendorType?.toLowerCase() != 'dt'">Qty</th>
-            <th>Total</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of prescriptionItems; let i = index">
-            <td class="muted">{{ i + 1 }}</td>
-            <td>
-              <ng-select
-                class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
-                [items]="productOptions"
-                bindLabel="name"
-                bindValue="id"
-                [typeahead]="productSearch$"
-                [(ngModel)]="item.productId"
-                (change)="onProductSelect($event, item)"
-                [placeholder]="item.productId ? '' : 'Search Product'"
-                [class.valid-green]="item.productId"
-                [clearable]="true"
-                [searchable]="true"
-                (clear)="productSearch$.next('')"
-              >
-                <ng-template ng-option-tmp let-item="item">
-                  <div class="opt-row">
-                    <i class="pi pi-search opt-ico"></i>
-                    <div>{{ item.name }}</div>
-                    <span class="opt-id">({{ item.id }})</span>
-                  </div>
-                </ng-template>
-              </ng-select>
-            </td>
-            <td *ngIf="vendorType?.toLowerCase() === 'ph'">
-              <input
-                type="number"
-                [(ngModel)]="item.units"
-                (ngModelChange)="onItemChange(item)"
-                [class.has-value]="item.units"
-                class="num-sm" />
-            </td>
-            <td *ngIf="vendorType?.toLowerCase() === 'ph'">
-              <input
-                type="number"
-                [(ngModel)]="item.repeat"
-                (ngModelChange)="onItemChange(item)"
-                [class.has-value]="item.repeat"
-                class="num-sm" />
-            </td>
-            <td *ngIf="vendorType?.toLowerCase() === 'ph'">
-              <input
-                type="number"
-                [(ngModel)]="item.days"
-                (ngModelChange)="onItemChange(item)"
-                [class.has-value]="item.days"
-                class="num-sm" />
-            </td>
-            <td *ngIf="vendorType?.toLowerCase() === 'dt'">
-              <select [(ngModel)]="item.tooth" class="svc-select">
-                <option [value]="null" disabled selected>Select Tooth</option>
-                <option *ngFor="let num of [1,2,3,4,5,6,7,8]" [value]="num">{{ num }}</option>
-              </select>
-            </td>
-            <td *ngIf="vendorType?.toLowerCase() === 'dt'">
-              <select [(ngModel)]="item.position" class="svc-select">
-                <option [value]="null" disabled selected>Select Position</option>
-                <option value="top-right">Top Right</option>
-                <option value="top-left">Top Left</option>
-                <option value="bottom-right">Bottom Right</option>
-                <option value="bottom-left">Bottom Left</option>
-              </select>
-            </td>
-            <td>
-              <input
-                type="number"
-                [(ngModel)]="item.price"
-                (ngModelChange)="onItemChange(item)"
-                [class.has-value]="item.price"
-                class="num-sm price-in" />
-            </td>
-            <td *ngIf="vendorType?.toLowerCase() != 'dt'">
-              <input
-                type="number"
-                [(ngModel)]="item.qty"
-                (ngModelChange)="updateSubTotals()"
-                [class.has-value]="item.qty"
-                class="num-sm" />
-            </td>
-            <td><b class="line-total">{{ calculateTotal(item) }}</b></td>
-            <td>
-              <button type="button" class="del-btn" (click)="removePrescriptionItem(i)" title="Remove item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Totals -->
-    <div class="totals-block">
-      <div class="t-row">
-        <small>Sub Total</small>
-        <b>{{ calculateSubTotal() }}</b>
-      </div>
-      <div class="t-row">
-        <small>Co. Payment (%)</small>
-        <span class="t-in">
-          <input
-            type="number"
-            [(ngModel)]="coPayment"
-            (ngModelChange)="onCoPaymentChange()"
-            [class.has-value]="coPayment"
-            class="num-sm pct-in" />
-          <span class="pct-sign">%</span>
-        </span>
-      </div>
-      <div class="t-row">
-        <small>Co. Payment Amount</small>
-        <input
-          type="number"
-          [(ngModel)]="coPaymentAmount"
-          (ngModelChange)="onCoAmountChange()"
-          [class.has-value]="coPaymentAmount"
-          class="num-sm paid-in"
-          placeholder="Amount" />
-      </div>
-      <div class="sum-div"></div>
-      <div class="t-row net">
-        <small>Net</small>
-        <b>{{ calculateNet() }}</b>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ NOTES & ATTACHMENTS ============ -->
-  <section class="card card-pad">
-    <div class="ci-field pull-note">
-      <label [class.label-active]="notes">Notes</label>
-      <textarea
-        [(ngModel)]="notes"
-        placeholder="Enter any additional notes or comments..."
-        rows="4"
-        maxlength="500"
-        [class.has-value]="notes"></textarea>
-      <div class="note-counter">{{ notes.length || 0 }}/500</div>
-    </div>
-
-    <div class="ci-field att-field">
-      <label>Attach Files</label>
-      <input
-        type="file"
-        #fileInput
-        (change)="handleFileSelect($event)"
-        multiple
-        class="file-hidden" />
-      <div
-        class="att-drop"
-        (click)="fileInput.click()"
-        (dragover)="$event.preventDefault()"
-        (drop)="handleFileDrop($event)">
-        <div class="att-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
-        </div>
-        <ng-container *ngIf="!selectedFiles || selectedFiles.length === 0">
-          <b>Drag &amp; drop files here</b>
-          <span>or click to browse from your computer</span>
-        </ng-container>
-        <div *ngIf="selectedFiles && selectedFiles.length > 0" class="att-selected">
-          {{ selectedFiles.length }} file(s) selected
-        </div>
-      </div>
-
-      <div *ngIf="selectedFiles && selectedFiles.length > 0" class="att-list">
-        <div class="att-row" *ngFor="let file of selectedFiles; let i = index" (click)="$event.stopPropagation()">
-          <div class="fico">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
+              <div class="ci-field">
+                <label [class.label-active]="nationalId()">
+                  National ID
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="nationalId"
+                  #natIdCtrl="ngModel"
+                  pattern="^[0-9]{14}$"
+                  placeholder="e.g., 2950101xxxxxxx (14 Digits)"
+                  [class.has-value]="nationalId()"
+                  class="ci-input form-control"
+                  [class.invalid]="natIdCtrl.invalid && natIdCtrl.dirty" />
+                <span *ngIf="natIdCtrl.invalid && natIdCtrl.dirty" class="field-err">
+                  National ID must be exactly 14 digits.
+                </span>
+              </div>
+            </div>
           </div>
-          <b>{{ file.name }}</b>
-          <small>{{ (file.size / 1024).toFixed(1) }} KB</small>
-          <button type="button" class="del-btn" (click)="removeFile(i)" title="Remove file">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+
+          <!-- right: claim information beside the member -->
+          <div class="mi-claim-right">
+            <div class="sub-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
+              Claim Information
+            </div>
+            <div class="ci-grid">
+          <div class="ci-field">
+            <label [class.label-active]="insuredId">
+              Insured ID <span class="req">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="insuredId"
+              placeholder="Enter Insured ID"
+              [class.has-value]="insuredId"
+              class="ci-input form-control" />
+          </div>
+
+          <div class="ci-field">
+            <label [hidden]="externalPrescription" [class.label-active]="claimId">
+              Claim ID <span *ngIf="!externalPrescription" class="req">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="claimId"
+              placeholder="Enter Claim ID"
+              [hidden]="externalPrescription"
+              [class.has-value]="claimId"
+              class="ci-input form-control" />
+          </div>
+
+          <!-- External Prescription (in the old Mobile slot) -->
+          <div class="ci-field ci-check-field">
+            <label class="ci-check">
+              <input
+                type="checkbox"
+                [(ngModel)]="externalPrescription"
+                (change)="onExternalPrescriptionChange()" />
+              <span>External Prescription</span>
+            </label>
+          </div>
+
+          <div class="ci-field">
+            <label [class.label-active]="claimDate">
+              Claim Date <span class="req">*</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="claimDate"
+              [min]="minClaimDate"
+              [max]="maxClaimDate"
+              [class.has-value]="claimDate"
+              class="ci-input form-control" />
+          </div>
+
+          <!-- Diagnosis — full single row -->
+          <div class="ci-field ci-full">
+            <label [class.label-active]="diagnosisIds.length > 0">
+              Diagnosis <span class="req">*</span>
+            </label>
+            <ng-select
+              class="ci-select custom-diagnosis-select"
+              [items]="diagnosisOptions"
+              bindLabel="name"
+              bindValue="id"
+              [multiple]="true"
+              [typeahead]="diagnosisSearch$"
+              [(ngModel)]="diagnosisIds"
+              [placeholder]="diagnosisIds.length ? '' : 'Search Diagnosis'"
+              [clearable]="true"
+              [searchable]="true"
+              (clear)="onDiagnosisClear()"
+            >
+              <ng-template ng-option-tmp let-item="item">
+                <div class="opt-row">
+                  <i class="pi pi-search opt-ico"></i>
+                  <div>{{ item.name }}</div>
+                  <span class="opt-id">({{ item.id }})</span>
+                </div>
+              </ng-template>
+
+              <ng-template ng-multiselect-label-tmp let-items="items">
+                <div class="dx-tags">
+                  <div *ngFor="let item of items" class="dx-tag">
+                    <i class="pi pi-tag"></i>
+                    {{ item.name }}
+                  </div>
+                </div>
+              </ng-template>
+            </ng-select>
+          </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVICE ITEMS -->
+      <section class="card">
+        <div class="svc-items-head">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+            Service Items
+            <span class="tcount">{{ prescriptionItems.length }}</span>
+          </h3>
+          <button type="button" id="ciAddBtn" (click)="addPrescriptionItem()" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Service Item
           </button>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Bottom actions -->
-  <div class="bottom-actions">
-    <button type="button" routerLink="/mem" class="btn btn-ghost">Cancel</button>
-    <button type="button" (click)="handleSubmit()" class="btn btn-primary">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
-      Submit
-    </button>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:44px;">#</th>
+                <th style="min-width:240px;">Product</th>
+                <th *ngIf="vendorType?.toLowerCase() === 'ph'">Units</th>
+                <th *ngIf="vendorType?.toLowerCase() === 'ph'">Repeat</th>
+                <th *ngIf="vendorType?.toLowerCase() === 'ph'">Days</th>
+                <th *ngIf="vendorType?.toLowerCase() === 'dt'">Tooth</th>
+                <th *ngIf="vendorType?.toLowerCase() === 'dt'">Position</th>
+                <th>Price</th>
+                <th *ngIf="vendorType?.toLowerCase() != 'dt'">Qty</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of prescriptionItems; let i = index">
+                <td class="muted">{{ i + 1 }}</td>
+                <td>
+                  <ng-select
+                    class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
+                    [items]="productOptions"
+                    bindLabel="name"
+                    bindValue="id"
+                    [typeahead]="productSearch$"
+                    [(ngModel)]="item.productId"
+                    (change)="onProductSelect($event, item)"
+                    [placeholder]="item.productId ? '' : 'Search Product'"
+                    [class.valid-green]="item.productId"
+                    [clearable]="true"
+                    [searchable]="true"
+                    (clear)="productSearch$.next('')"
+                  >
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="opt-row">
+                        <i class="pi pi-search opt-ico"></i>
+                        <div>{{ item.name }}</div>
+                        <span class="opt-id">({{ item.id }})</span>
+                      </div>
+                    </ng-template>
+                  </ng-select>
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() === 'ph'">
+                  <input
+                    type="number"
+                    [(ngModel)]="item.units"
+                    (ngModelChange)="onItemChange(item)"
+                    [class.has-value]="item.units"
+                    class="num-sm" />
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() === 'ph'">
+                  <input
+                    type="number"
+                    [(ngModel)]="item.repeat"
+                    (ngModelChange)="onItemChange(item)"
+                    [class.has-value]="item.repeat"
+                    class="num-sm" />
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() === 'ph'">
+                  <input
+                    type="number"
+                    [(ngModel)]="item.days"
+                    (ngModelChange)="onItemChange(item)"
+                    [class.has-value]="item.days"
+                    class="num-sm" />
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() === 'dt'">
+                  <select [(ngModel)]="item.tooth" class="svc-select">
+                    <option [value]="null" disabled selected>Select Tooth</option>
+                    <option *ngFor="let num of [1,2,3,4,5,6,7,8]" [value]="num">{{ num }}</option>
+                  </select>
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() === 'dt'">
+                  <select [(ngModel)]="item.position" class="svc-select">
+                    <option [value]="null" disabled selected>Select Position</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    [(ngModel)]="item.price"
+                    (ngModelChange)="onItemChange(item)"
+                    [class.has-value]="item.price"
+                    class="num-sm price-in" />
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() != 'dt'">
+                  <input
+                    type="number"
+                    [(ngModel)]="item.qty"
+                    (ngModelChange)="updateSubTotals()"
+                    [class.has-value]="item.qty"
+                    class="num-sm" />
+                </td>
+                <td><b class="line-total">{{ calculateTotal(item) }}</b></td>
+                <td>
+                  <button type="button" class="del-btn" (click)="removePrescriptionItem(i)" title="Remove item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="totals-block">
+          <div class="t-row">
+            <small>Total Before Discount</small>
+            <b>{{ calculateSubTotal() }}</b>
+          </div>
+          <div class="t-row">
+            <small>Copayment Percentage (%)</small>
+            <span class="t-in">
+              <input
+                type="number"
+                [(ngModel)]="coPayment"
+                (ngModelChange)="onCoPaymentChange()"
+                [class.has-value]="coPayment"
+                class="num-sm pct-in" />
+              <span class="pct-sign">%</span>
+            </span>
+          </div>
+          <div class="t-row">
+            <small>Copayment Amount</small>
+            <input
+              type="number"
+              [(ngModel)]="coPaymentAmount"
+              (ngModelChange)="onCoAmountChange()"
+              [class.has-value]="coPaymentAmount"
+              class="num-sm paid-in"
+              placeholder="Amount" />
+          </div>
+          <div class="sum-div"></div>
+          <div class="t-row net">
+            <small><b>Net Amount</b></small>
+            <b>{{ calculateNet() }}</b>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ RIGHT / SUMMARY ASIDE ============ -->
+    <aside class="pull-aside">
+
+      <!-- REQUEST SUMMARY -->
+      <section class="card card-pad">
+        <div class="sum-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+          Request Summary
+        </div>
+
+        <div class="sum-row">
+          <small>Member ID</small>
+          <b>{{ insuredId || '-' }}</b>
+        </div>
+        <div class="sum-row" *ngIf="member()">
+          <small>Member Name</small>
+          <b>{{ member().memberName }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Claim ID</small>
+          <b>{{ externalPrescription ? 'External Prescription' : (claimId || '-') }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Claim Date</small>
+          <b>{{ claimDate || '-' }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Diagnoses</small>
+          <b>{{ diagnosisIds.length }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row">
+          <small>Total Before Discount</small>
+          <b>{{ calculateSubTotal() }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Copayment ({{ coPayment || 0 }}%)</small>
+          <b class="minus">- {{ (coPaymentAmount || 0).toFixed(2) }}</b>
+        </div>
+        <div class="sum-row big">
+          <small>Net Amount</small>
+          <b>{{ calculateNet() }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row">
+          <small>Total Items</small>
+          <b>{{ getTotalItems() }}</b>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="card card-pad">
+        <div class="sum-title">Notes</div>
+        <div class="ci-field pull-note">
+          <textarea
+            [(ngModel)]="notes"
+            placeholder="Enter any additional notes or comments..."
+            rows="4"
+            maxlength="500"
+            [class.has-value]="notes"></textarea>
+          <div class="note-counter">{{ notes.length || 0 }}/500</div>
+        </div>
+      </section>
+
+      <!-- ATTACHMENTS -->
+      <section class="card card-pad">
+        <div class="sum-title">Attachments</div>
+        <div class="ci-field att-field">
+          <input
+            type="file"
+            #fileInput
+            (change)="handleFileSelect($event)"
+            multiple
+            class="file-hidden" />
+          <div
+            class="att-drop"
+            (click)="fileInput.click()"
+            (dragover)="$event.preventDefault()"
+            (drop)="handleFileDrop($event)">
+            <div class="att-ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+            </div>
+            <ng-container *ngIf="!selectedFiles || selectedFiles.length === 0">
+              <b>Drag &amp; drop files here</b>
+              <span>or click to browse from your computer</span>
+            </ng-container>
+            <div *ngIf="selectedFiles && selectedFiles.length > 0" class="att-selected">
+              {{ selectedFiles.length }} file(s) selected
+            </div>
+          </div>
+
+          <div *ngIf="selectedFiles && selectedFiles.length > 0" class="att-list">
+            <div class="att-row" *ngFor="let file of selectedFiles; let i = index" (click)="$event.stopPropagation()">
+              <div class="fico">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
+              </div>
+              <b>{{ file.name }}</b>
+              <small>{{ (file.size / 1024).toFixed(1) }} KB</small>
+              <button type="button" class="del-btn" (click)="removeFile(i)" title="Remove file">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
   </div>
 </div>

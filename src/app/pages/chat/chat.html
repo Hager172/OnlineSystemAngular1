@@ -1,1 +1,117 @@
-c
+<div class="chat-page">
+  <div class="chat-page__header">
+    <span class="chat-page__avatar">{{ chat.supportName.charAt(0) }}</span>
+    <div class="chat-page__head-info">
+      <h2>{{ chat.supportName }}</h2>
+      <span class="chat-page__status" [class.online]="chat.connected() && chat.supportOnline()">
+        @if (!chat.connected()) {
+          Connecting…
+        } @else if (chat.supportOnline()) {
+          Online
+        } @else {
+          Offline
+        }
+      </span>
+    </div>
+  </div>
+
+  <div class="chat-page__messages" #messagesBox>
+    @for (msg of chat.messages(); track trackById($index, msg)) {
+      <div class="chat-page__msg" [class.mine]="msg.mine">
+        <div class="chat-page__bubble">
+          @if (!msg.mine) {
+            <div class="chat-page__sender">{{ chat.supportName }}</div>
+          }
+          @if (msg.attachmentUrl) {
+            @if (isImage(msg)) {
+              <a [href]="msg.attachmentUrl" target="_blank" rel="noopener">
+                <img class="chat-page__img"
+                     [src]="msg.attachmentUrl"
+                     [alt]="msg.attachmentName || 'image'"
+                     loading="lazy">
+              </a>
+            } @else {
+              <a class="chat-page__file"
+                 [href]="msg.attachmentUrl" target="_blank" rel="noopener" download>
+                📎 {{ msg.attachmentName || 'Download file' }}
+              </a>
+            }
+          }
+          @if (msg.message) {
+            <div>{{ msg.message }}</div>
+          }
+          <div class="chat-page__meta">
+            {{ formatTime(msg.createdAtUtc) }}
+            @if (msg.mine) {
+              <span class="chat-page__ticks" [class.read]="msg.isRead">
+                {{ msg.isRead ? '✓✓' : '✓' }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    } @empty {
+      <p class="chat-page__empty">No messages yet — say hello!</p>
+    }
+
+    @if (chat.agentTyping()) {
+      <div class="chat-page__typing">
+        <span class="chat-page__typing-bubble">
+          <span class="chat-page__typing-dot"></span>
+          <span class="chat-page__typing-dot"></span>
+          <span class="chat-page__typing-dot"></span>
+        </span>
+        <span class="chat-page__typing-label">{{ chat.agentTyping() }} is typing…</span>
+      </div>
+    }
+  </div>
+
+  @if (uploading()) {
+    <div class="chat-page__upload">
+      <div class="chat-page__upload-bar" [style.width.%]="uploadProgress()"></div>
+      <span>Uploading… {{ uploadProgress() }}%</span>
+    </div>
+  }
+  @if (uploadError()) {
+    <div class="chat-page__upload-error">{{ uploadError() }}</div>
+  }
+
+  <!-- Staged attachment: sent only when the user presses Send. -->
+  @if (pendingFile(); as pf) {
+    <div class="chat-page__pending">
+      @if (pendingPreviewUrl()) {
+        <img class="chat-page__pending-thumb" [src]="pendingPreviewUrl()" alt="">
+      } @else {
+        <span>📎</span>
+      }
+      <span class="chat-page__pending-name">{{ pf.name }}</span>
+      <button type="button" class="chat-page__pending-remove"
+              (click)="removePending()"
+              [disabled]="uploading()"
+              title="Remove attachment"
+              aria-label="Remove attachment">×</button>
+    </div>
+  }
+
+  <form class="chat-page__compose" (ngSubmit)="send()">
+    <input #fileInput
+           type="file"
+           hidden
+           (change)="onFileSelected($event)"
+           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
+    <button type="button" class="chat-page__attach"
+            (click)="attach()"
+            [disabled]="!chat.connected() || uploading()"
+            title="Attach a file or image">📎</button>
+    <textarea #msgBox
+      rows="1"
+      [(ngModel)]="message"
+      (ngModelChange)="onInput()"
+      (keydown.enter)="onEnter($event)"
+      name="message"
+      autocomplete="off"
+      [placeholder]="pendingFile() ? 'Add a caption…' : 'Type a message…'"
+      [disabled]="!chat.connected()"></textarea>
+    <button type="submit" [disabled]="!canSend">Send</button>
+  </form>
+</div>

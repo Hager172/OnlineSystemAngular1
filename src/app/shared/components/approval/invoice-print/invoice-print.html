@@ -1,172 +1,142 @@
-<div id="printable-area"  class="main-content min-h-screen bg-slate-50 pt-10">
-  <!-- Header (No Print) -->
-  <div class="bg-white border-b shadow-sm print-hidden">
-    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
-      <!-- <button (click)="goBack()" class="btn-ghost">
-        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Edit
-      </button> -->
-      <button (click)="print()" class="btn-primary gap-2">
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-        </svg>
+<!-- Loading / not found -->
+<div *ngIf="!approval()" class="loading-note card card-pad">
+  <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+  Loading invoice...
+  <button type="button" class="btn btn-ghost btn-sm" (click)="goHome()">Go Back</button>
+</div>
+
+<!-- ============ INVOICE VIEW ============ -->
+<div *ngIf="approval()" class="inv-page" id="printable-area">
+
+  <div class="crumb no-print">
+    <a routerLink="/search-results">Search Requests</a> / <b>Invoice #{{ approvalNumber }}</b>
+  </div>
+
+  <div class="pull-head">
+    <div>
+      <h2>
+        Invoice <span class="apid">#{{ approval()?.invoiceNumber || approvalNumber }}</span>
+      </h2>
+      <div class="tiny no-print">Review the approval details and print the invoice for the member's records.</div>
+    </div>
+    <div class="pull-actions no-print">
+      <button type="button" class="btn btn-primary" (click)="print()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
         Print Invoice
       </button>
     </div>
   </div>
 
-  <!-- <div *ngIf="!approval" class="max-w-md mx-auto mt-8 p-4"> -->
-  <!-- <div *ngIf="approval" class="max-w-md mx-auto mt-8 p-4">
-    <div class="card">
-      <div class="card-content pt-6">
-        <p class="text-center">Invoice not found</p>
-        <button (click)="goHome()" class="btn-primary w-full mt-4">Go Back</button>
+  <!-- Invoice details -->
+  <section class="card">
+    <div class="ro-head">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+      Invoice Details
+    </div>
+
+    <div class="ro-grid">
+      <div class="ro">
+        <small>From</small>
+        <b>{{ approval()?.companyName || '-' }}</b>
+      </div>
+      <div class="ro">
+        <small>To</small>
+        <b>{{ approval()?.clientName || '-' }}</b>
+      </div>
+      <div class="ro">
+        <small>Branch</small>
+        <b>{{ approval()?.branch || '-' }}</b>
+      </div>
+      <div class="ro">
+        <small>Client ID</small>
+        <b>{{ approval()?.clientId || '-' }}</b>
+      </div>
+      <div class="ro">
+        <small>Service Date</small>
+        <b>{{ approval()?.serviceDate || '-' }}</b>
+      </div>
+      <div class="ro">
+        <small>Printed</small>
+        <b>{{ currentDate }}</b>
       </div>
     </div>
-  </div> -->
-  <!-- رسالة Invoice not found لو approval مش موجود -->
-<ng-template #notFound>
-  <div class="max-w-md mx-auto mt-8 p-4">
-    <div class="card">
-      <div class="card-content pt-6 text-center">
-        <p>Invoice not found</p>
-        <button (click)="goHome()" class="btn-primary w-full mt-4">Go Back</button>
+
+    <div class="dx-wrap" *ngIf="approval()?.diagnose">
+      <small>Diagnosis</small>
+      <span class="dx-chip">{{ approval()?.diagnose }}</span>
+    </div>
+
+    <div class="appr-note-wrap" *ngIf="approval()?.notes">
+      <small>Notes</small>
+      <p>{{ approval()?.notes }}</p>
+    </div>
+  </section>
+
+  <!-- Invoice items -->
+  <section class="card">
+    <div class="svc-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+      Invoice Items
+      <span class="tcount">{{ items().length }}</span>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th>Name</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th style="text-align:right;">Price</th>
+            <th style="text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items(); let i = index">
+            <td class="muted">{{ i + 1 }}</td>
+            <td><b>{{ item.name }}</b></td>
+            <td>{{ item.quantity }}</td>
+            <td><span class="unit-pill">{{ item.quantityUnit || '-' }}</span></td>
+            <td style="text-align:right;">{{ item.unitPrice.toFixed(2) }}</td>
+            <td style="text-align:right;"><b>{{ (item.quantity * item.unitPrice).toFixed(2) }}</b></td>
+          </tr>
+          <tr *ngIf="!items().length">
+            <td colspan="6" class="empty-cell">No items on this invoice</td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="items().length">
+          <tr class="tfoot">
+            <td colspan="5" style="text-align:right;">Subtotal</td>
+            <td style="text-align:right;">{{ getSubtotal().toFixed(2) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="fin-grid">
+      <div class="fin">
+        <small>Total Value</small>
+        <b>{{ getSubtotal().toFixed(2) }}</b>
+      </div>
+      <div class="fin over" *ngIf="approval()?.limit">
+        <small>Approval Limit</small>
+        <b>{{ approval()?.limit }}</b>
+      </div>
+      <div class="fin over" *ngIf="approval()?.limit && getExceedingAmount() > 0">
+        <small>Over Limit — Not Covered</small>
+        <b>{{ getExceedingAmount().toFixed(2) }}</b>
+      </div>
+      <div class="fin">
+        <small>Copayment · Member Share ({{ approval()?.copaymentPercentage || 0 }}%)</small>
+        <b>- {{ getTotalCopayment().toFixed(2) }}</b>
+      </div>
+      <div class="fin hl">
+        <small>Grand Total</small>
+        <b>{{ getGrandTotal().toFixed(2) }}</b>
       </div>
     </div>
-  </div>
-</ng-template>
 
-  <!-- <div *ngIf="approval"> -->
-  <div *ngIf="approval(); else notFound">
-    <div class="card shadow-sm">
-      <div class="card-content p-6 md:p-8 space-y-4">
-        
-        <!-- <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs text-slate-500 uppercase tracking-wide mb-2">Company</p>
-            <img [src]="approval()?.companyLogo" alt="Company Logo" class="h-16 w-auto object-contain" />
-          </div>
-          <div class="text-right">
-            <p class="text-xs text-slate-500 uppercase tracking-wide mb-2">Vendor</p>
-            <img [src]="approval()?.vendorLogo" alt="Vendor Logo" class="h-16 w-auto object-contain" />
-          </div>
-        </div> -->
-
-        <div class="grid grid-cols-3 gap-x-4 gap-y-3 text-sm">
-          <!-- العمود الأول -->
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">From</p>
-            <p class="font-medium mt-1">{{ approval()?.companyName }}</p>
-          </div>
-          
-          <!-- العمود الثاني -->
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">To</p>
-            <p class="font-medium mt-1">{{ approval()?.clientName }}</p>
-          </div>
-          
-          <!-- العمود الثالث -->
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">Branch</p>
-            <p class="font-medium mt-1">{{ approval()?.branch }}</p>
-          </div>
-
-          <!-- الصف الثاني - 3 أعمدة -->
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">Client ID</p>
-            <p class="font-medium mt-1">{{ approval()?.clientId }}</p>
-          </div>
-          
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">Service Date</p>
-            <p class="font-medium mt-1">{{ approval()?.serviceDate }}</p>
-          </div>
-          
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">Printed</p>
-            <p class="font-medium mt-1">{{ currentDate }}</p>
-          </div>
-
-          <!-- <div class="col-span-3"> -->
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">Diagnose</p>
-            <p class="font-medium mt-1">{{ approval()?.diagnose }}</p>
-          </div>
-
-          <div>
-            <p class="text-slate-500 text-xs uppercase tracking-wide">Invoice Number</p>
-            <p class="font-medium mt-1">{{ approval()?.invoiceNumber }}</p>
-          </div>
-        </div>
-
-        <!-- Notes and Limit Row (8 cols + 4 cols) -->
-        <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-8 bg-slate-50 p-4 rounded-lg">
-            <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Notes</p>
-            <p class="text-sm text-blue-700">{{ approval()?.notes }}</p>
-          </div>
-          <div class="col-span-4 bg-blue-50 p-4 rounded-lg">
-            <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Limit</p>
-            <!-- <p class="text-2xl font-bold text-blue-600">  {{ approval.limit.toFixed(2) }}</p> -->
-            <p class="text-2xl font-bold text-blue-600">  {{ approval()?.limit}}</p>
-          </div>
-        </div>
-
-        <!-- Items Table -->
-        <div>
-          <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
-            Invoice Items
-          </h3>
-          <div class="border rounded-lg overflow-hidden">
-            <table class="w-full">
-              <thead>
-                <tr class="bg-slate-100">
-                  <th class="px-4 py-2 text-left text-xs font-semibold uppercase w-12">#</th>
-                  <th class="px-4 py-2 text-left text-xs font-semibold uppercase">Name</th>
-
-                  <th class="px-4 py-2 text-center text-xs font-semibold uppercase w-24">Qty</th>
-                  <th class="px-4 py-2 text-left text-xs font-semibold uppercase w-28">Qty Unit</th>
-                  <th class="px-4 py-2 text-right text-xs font-semibold uppercase w-32">Price</th>
-                  <th class="px-4 py-2 text-right text-xs font-semibold uppercase w-32">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of items(); let i = index" class="border-t">
-                  <td class="px-4 py-2 text-slate-600">{{ i + 1 }}</td>
-                  <td class="px-4 py-2 font-medium">{{ item.name }}</td>
-                  <td class="px-4 py-2 text-center font-medium">{{ item.quantity }}</td>
-                  <td class="px-4 py-2 font-medium">{{ item.quantityUnit }}</td>
-                  <td class="px-4 py-2 text-right font-medium">  {{ item.unitPrice.toFixed(2) }}</td>
-                  <td class="px-4 py-2 text-right font-semibold">
-                      {{ (item.quantity * item.unitPrice).toFixed(2) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Totals -->
-        <div class="flex justify-end pt-2">
-          <div class="w-full max-w-md space-y-2">
-           
-            
-            <div class="bg-slate-100 -mx-4 px-4 py-3 rounded-lg">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-slate-900">Grand Total:</span>
-                <span class="text-2xl font-bold text-blue-600">  {{ getGrandTotal().toFixed(2) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="text-center pt-4 text-sm text-slate-400">
-          <p>Thank you for your business</p>
-        </div>
-      </div> 
-    </div> 
-  </div>
-</div> 
+    <div class="inv-footer">Thank you for your business</div>
+  </section>
+</div>

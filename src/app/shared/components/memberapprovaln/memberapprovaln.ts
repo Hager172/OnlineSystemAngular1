@@ -51,12 +51,15 @@ approvedApprovals = signal<ApprovalItem[]>([]);
   lookupValue: string = '';
   showResults = signal(false);
   searchType: 'member' | 'approval' | null = null;
-// بدل الـ boolean العادي
-isModalOpen = signal(false);
+  currentApproval = signal<Approval | null>(null);
   currentMemberId: string = '';
   memberApprovals: Approval[] = [];
-  currentApproval = signal<Approval | null>(null);
   selectedApproval: Approval | null = null;
+  /** Keeps the last viewed approval rendered while the panel animates closed. */
+  displayedApproval: Approval | null = null;
+  detailsLoading = signal(false);
+  /** Member profile (name, mobile, ...) for the results strip. */
+  member = signal<any>(null);
   
   // هنا التعديل - خليها 'approved' عشان يبقى هو default
   activeTab: 'pending' | 'approved' = 'pending';  // ✅改了这里
@@ -232,13 +235,78 @@ loadApprovedApprovals(): void {
     this.currentApproval.set(null);
     this.memberApprovals = [];
     this.currentMemberId = '';
-    this.error.set('');
     this.selectedApproval = null;
+    this.displayedApproval = null;
+    this.member.set(null);
+    this.error.set('');
   }
 
-  /** Toggles the inline details panel for an approval row (presentation only). */
+  /** Toggles the inline details panel for an approval row. */
   selectApproval(approval: Approval): void {
-    this.selectedApproval = this.selectedApproval === approval ? null : approval;
+    if (this.selectedApproval === approval) {
+      // collapse with animation — displayedApproval stays so the content
+      // is still visible while the panel slides shut
+      this.selectedApproval = null;
+      return;
+    }
+    this.selectedApproval = approval;
+    this.displayedApproval = approval;
+    // the member-approvals list comes without items → fetch them on first view
+    if (!approval.items?.length) {
+      this.loadApprovalServices(approval);
+    }
+  }
+
+  /** Fetches the services of an approval (same endpoint the pull page uses). */
+  private loadApprovalServices(approval: Approval): void {
+    this.detailsLoading.set(true);
+    this.approvalService.getApprovalDetails(approval.approvalNumber).subscribe({
+      next: (res: any) => {
+        approval.items =
+          res.services?.map((s: any) => ({
+            id: s.serviceId,
+            name: s.itemDesc || s.servicename,
+            quantity: s.apQty,
+            unitPrice: s.price
+          })) || [];
+        approval.itemCount = approval.items.length;
+        if (!approval.notes && res.notes) {
+          approval.notes = res.notes;
+        }
+        if ((!approval.memberTele || approval.memberTele === 'N/A') && res.memberTele) {
+          approval.memberTele = res.memberTele;
+        }
+        this.detailsLoading.set(false);
+      },
+      error: (err) => {
+        console.log('error loading approval services', err);
+        this.detailsLoading.set(false);
+      }
+    });
+  }
+
+  /** Back from the results view → restore the default dashboard cards. */
+  closeResults(): void {
+    this.showResults.set(false);
+    this.searchType = null;
+    this.currentApproval.set(null);
+    this.memberApprovals = [];
+    this.currentMemberId = '';
+    this.selectedApproval = null;
+    this.displayedApproval = null;
+    this.member.set(null);
+    this.lookupValue = '';
+    this.error.set('');
+  }
+
+  /** Scrolls to the worklist card (optionally switching to the pending tab first). */
+  scrollToWorklist(switchToPending = false): void {
+    if (switchToPending) {
+      this.switchTab('pending');
+    }
+    setTimeout(() =>
+      document.querySelector('.queue-card')?.scrollIntoView({ behavior: 'smooth' })
+    );
   }
 
   /** Subtotal of an approval's items (qty × unit price). */
@@ -252,7 +320,6 @@ loadApprovedApprovals(): void {
 
   handleLookup(): void {
           this.error.set('');
-    this.selectedApproval = null;
 
     const value = (this.lookupValue || '').trim();
     if (!value) return;
@@ -277,26 +344,27 @@ this.isLoading.set(true);
   this.approvalService.getMemberApprovals(value).subscribe({
     next: (res: any) => {
       console.log("mem", res);
+      this.isLoading.set(false);
+      const approvals = Array.isArray(res?.data?.approvals) ? res.data.approvals : [];
 
-     if (res.success && res.data) {
-  this.searchType = 'member';
-  this.currentMemberId = res.data.memberId;
-
-  // 🔥 سطر واحد هيدلع الدنيا:
-  this.memberService.setMemberData(res.data);
-
-  this.memberApprovals = res.data.approvals.map((a: any) =>
-    this.mapSingleApproval(a)
-  );
-
-  this.error.set('');
-  this.showResults.set(true);
-  this.isLoading.set(false);
-} else {
-        this.error.set(res.message || 'No approvals found');
+      if (res.success && res.data && approvals.length > 0) {
+        // approvals exist → show them here and hide the dashboard cards
+        this.searchType = 'member';
+        this.currentMemberId = (res.data.memberId ?? value).toString();
+        this.memberService.setMemberData(res.data);
+        this.memberApprovals = approvals.map((a: any) => this.mapSingleApproval(a));
+        this.selectedApproval = null;
+        this.error.set('');
+        this.showResults.set(true);
+        this.loadMemberInfo(this.currentMemberId);
+      } else if (res.success && res.data) {
+        // valid member with NO approvals → straight to Claim Issuing
+        this.goToClaimIssuing(value);
+      } else if ((res.message || '').toLowerCase().includes('no approvals')) {
+        this.goToClaimIssuing(value);
+      } else {
+        this.error.set(res.message || 'The Member ID you entered is not valid or does not exist.');
         this.showResults.set(false);
-        this.isLoading.set(false);
-        this.isModalOpen.set(true);
       }
     },
   error: (err) => {
@@ -304,20 +372,8 @@ this.isLoading.set(true);
   this.showResults.set(false);
 console.log("error elsearch", err);
  if (err.error?.message === 'No approvals found') {
-    this.error.set('No approvals found');
-
-    // 🔥 الـحـل هـنـا: بنعمل ست للأوبجكت فيه الـ memberId الجديد بس
-    // عشان السيرفيس والـ localStorage يتحدثوا قبل ما ننقل للمشهد التاني
-    this.memberService.setMemberData({ memberId: value });
-
-    setTimeout(() => {
-      this.router.navigate(['/add'], {
-        queryParams: {
-          memberId: value
-        }
-      });
-    }, 1000);
-
+    // valid member with NO approvals → straight to Claim Issuing
+    this.goToClaimIssuing(value);
     return;
   }
 
@@ -325,6 +381,62 @@ console.log("error elsearch", err);
 }
   });
 }
+  }
+
+  /** Loads the member profile (name, mobile, photo) for the results strip. */
+  private loadMemberInfo(memberId: string): void {
+    this.member.set(null);
+    const vendorType = this.authService.getVendorType();
+    this.approvalService.getMemberInfo(memberId, vendorType ?? '').subscribe({
+      next: (res) => this.member.set(res),
+      error: (err) => {
+        console.log('error loading member info', err);
+        this.member.set(null);
+      }
+    });
+  }
+
+  /** Mobile shown in the strip — from the approvals, else the member profile. */
+  get memberMobile(): string {
+    const tele = this.memberApprovals[0]?.memberTele;
+    if (tele && tele !== 'N/A') return tele;
+    return this.member()?.mobile || 'N/A';
+  }
+
+  /** Member has no approvals → open the Claim Issuing (add) page directly. */
+  private goToClaimIssuing(memberId: string): void {
+    this.error.set('');
+    this.memberService.setMemberData({ memberId });
+    this.router.navigate(['/add'], {
+      queryParams: { memberId, noApprovals: 1 }
+    });
+  }
+
+  private mapSingleApproval(a: any): Approval {
+    return {
+      approvalNumber: a.approvalNumber?.toString(),
+      memberId: a.memberId,
+      date: a.approvalDate ? new Date(a.approvalDate).toLocaleDateString() : '',
+      expiryDate: a.expiryDate
+        ? new Date(a.expiryDate).toLocaleDateString()
+        : '',
+      notes: a.notes,
+      itemCount: a.itemCount ?? a.items?.length ?? 0,
+      memberTele: a.memberTele || 'N/A',
+      items: a.items?.map((i: any) => ({
+        id: i.id,
+        name: i.description ?? i.name,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice
+      })) || []
+    };
+  }
+
+  /** "Claim Issuing" from the results view → new claim for this member. */
+  goToAddApproval(): void {
+    this.router.navigate(['/add'], {
+      queryParams: { memberId: this.currentMemberId }
+    });
   }
 
   private mapApprovalDetails(a: any): Approval {
@@ -345,26 +457,6 @@ console.log("error elsearch", err);
         name: s.itemDesc || s.servicename,
         quantity: s.apQty,
         unitPrice: s.price
-      })) || []
-    };
-  }
-
-  private mapSingleApproval(a: any): Approval {
-    return {
-      approvalNumber: a.approvalNumber?.toString(),
-      memberId: a.memberId,
-      date: new Date(a.approvalDate).toLocaleDateString(),
-      expiryDate: a.expiryDate
-        ? new Date(a.expiryDate).toLocaleDateString()
-        : '',
-      notes: a.notes,
-      itemCount: a.itemCount,
-      memberTele: a.memberTele || 'N/A',
-      items: a.items?.map((i: any) => ({
-        id: i.id,
-        name: i.description,
-        quantity: i.quantity,
-        unitPrice: i.unitPrice
       })) || []
     };
   }
@@ -468,28 +560,4 @@ get currentItems(): ApprovalItem[] {
     this.currentImageIndex = (this.currentImageIndex - 1 + this.guideImages.length) % this.guideImages.length;
   }
 
-    onNewApproval(): void {
-    this.isModalOpen.set(false);
-    alert('Create new approval functionality - coming soon!');
-  }
-  
-    closeModal(): void {
-    this.isModalOpen.set(false);
-  }
-
-
-
-goToAddApproval() {
-  // 1. جهز الأوبجكت اللي عايز تنقله (ممكن تبعت الأوبجكت اللي راجعلك من الـ API كله)
-  const dataToSave = {
-    memberId: this.currentMemberId,
-    approvals: this.memberApprovals // المصفوفة اللي فيها رقم التليفون
-  };
-
-  // 2. خزن الداتا في السيرفيس
-  this.memberService.setMemberData(dataToSave);
-
-  // 3. روح لصفحة الإضافة
-  this.router.navigate(['/add']);
-}
 }
