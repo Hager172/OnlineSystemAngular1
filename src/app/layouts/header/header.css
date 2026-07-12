@@ -187,36 +187,11 @@
   border-color: var(--teal-500);
 }
 
-/* Embedded chat widget — style trigger as a topbar icon button */
-.chat-slot ::ng-deep .chat-widget__btn {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid var(--pp-border);
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--pp-text-2);
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.chat-slot ::ng-deep .chat-widget__btn:hover {
-  background: var(--teal-50);
-}
-.chat-slot ::ng-deep .chat-widget__badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: var(--pp-red);
-  color: #fff;
-  font-size: 9.5px;
-  font-weight: 700;
-  border-radius: 8px;
-  padding: 1.5px 5px;
-  border: 2px solid #fff;
+/* Embedded chat widget — the launcher is a floating action button
+   (bottom-right, styled in the widget's own CSS like the mockup),
+   so the header slot itself takes no space. */
+.chat-slot {
+  display: contents;
 }
 
 .profile {
