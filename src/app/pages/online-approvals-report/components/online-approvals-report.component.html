@@ -94,7 +94,7 @@
   <ng-container *ngIf="hasLoaded() && !loading() && !error()">
 
     <!-- STAT TILES -->
-    <div class="req-stats">
+    <!-- <div class="req-stats">
       <div class="req-stat">
         <div class="s-ico" style="background:var(--pp-blue-bg);color:var(--pp-blue);">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
@@ -149,20 +149,7 @@
           <div class="lbl">Total Coinsurance</div>
         </div>
       </div>
-    </div>
-
-    <!-- COLUMN CHOOSER CHIPS -->
-    <section class="card no-print">
-      <div class="chips-bar">
-        <span class="chips-label">Columns</span>
-        <button type="button" class="fchip"
-          *ngFor="let col of allColumns"
-          [class.on]="isColumnVisible(col.key)"
-          (click)="toggleColumn(col.key)">
-          {{ col.label }}
-        </button>
-      </div>
-    </section>
+    </div> -->
 
     <!-- TABLE -->
     <section class="card">
@@ -187,43 +174,46 @@
         <table>
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('formId')" class="sortable" (click)="sort('formId')">Form ID {{ getSortIcon('formId') }}</th>
-              <th *ngIf="isColumnVisible('approvalId')" class="sortable" (click)="sort('approvalId')">Approval ID {{ getSortIcon('approvalId') }}</th>
-              <th *ngIf="isColumnVisible('memberId')" class="sortable" (click)="sort('memberId')">Member ID {{ getSortIcon('memberId') }}</th>
-              <th *ngIf="isColumnVisible('empName')" class="sortable" (click)="sort('empName')">Employee {{ getSortIcon('empName') }}</th>
-              <th *ngIf="isColumnVisible('customerName')" class="sortable" (click)="sort('customerName')">Customer {{ getSortIcon('customerName') }}</th>
-              <th *ngIf="isColumnVisible('provName')" class="sortable" (click)="sort('provName')">Provider {{ getSortIcon('provName') }}</th>
-              <th *ngIf="isColumnVisible('branchName')" class="sortable" (click)="sort('branchName')">Branch {{ getSortIcon('branchName') }}</th>
-              <th *ngIf="isColumnVisible('approvalDate')" class="sortable" (click)="sort('approvalDate')">Approval Date {{ getSortIcon('approvalDate') }}</th>
-              <th *ngIf="isColumnVisible('value')" class="sortable num-col" (click)="sort('value')">Value {{ getSortIcon('value') }}</th>
-              <th *ngIf="isColumnVisible('coinsurance')" class="sortable num-col" (click)="sort('coinsurance')">Coinsurance {{ getSortIcon('coinsurance') }}</th>
-              <th *ngIf="isColumnVisible('onlineStatus')" class="sortable" (click)="sort('onlineStatus')">Status {{ getSortIcon('onlineStatus') }}</th>
-              <th *ngIf="isColumnVisible('notes')">Notes</th>
-              <th *ngIf="isColumnVisible('lastUpdateDate')" class="sortable" (click)="sort('lastUpdateDate')">Last Updated {{ getSortIcon('lastUpdateDate') }}</th>
-              <th *ngIf="isColumnVisible('lastUpdateBy')" class="sortable" (click)="sort('lastUpdateBy')">Updated By {{ getSortIcon('lastUpdateBy') }}</th>
-              <th *ngIf="isColumnVisible('onlineLud')" class="sortable" (click)="sort('onlineLud')">Online LUD {{ getSortIcon('onlineLud') }}</th>
+              <th class="sortable" (click)="sort('approvalId')">Approval ID {{ getSortIcon('approvalId') }}</th>
+              <th class="sortable" (click)="sort('empName')">Member {{ getSortIcon('empName') }}</th>
+              <th class="sortable" (click)="sort('provName')">Provider / Branch {{ getSortIcon('provName') }}</th>
+              <th class="sortable" (click)="sort('approvalDate')">Approval Date {{ getSortIcon('approvalDate') }}</th>
+              <th class="sortable num-col" (click)="sort('value')">Value {{ getSortIcon('value') }}</th>
+              <th class="sortable num-col" (click)="sort('coinsurance')">Coinsurance {{ getSortIcon('coinsurance') }}</th>
+              <th>Notes</th>
+              <th class="sortable" (click)="sort('lastUpdateDate')">Last Updated {{ getSortIcon('lastUpdateDate') }}</th>
+              <th class="sortable" (click)="sort('onlineLud')">Online LUD {{ getSortIcon('onlineLud') }}</th>
               <th class="no-print action-col">Action</th>
             </tr>
           </thead>
           <tbody>
             <tr class="rep-row" *ngFor="let row of currentItems()">
-              <td *ngIf="isColumnVisible('formId')">{{ row.formId }}</td>
-              <td *ngIf="isColumnVisible('approvalId')"><b class="apid-cell">{{ row.approvalId }}</b></td>
-              <td *ngIf="isColumnVisible('memberId')">{{ row.memberId }}</td>
-              <td *ngIf="isColumnVisible('empName')"><span class="cell-clip" [title]="row.empName">{{ row.empName }}</span></td>
-              <td *ngIf="isColumnVisible('customerName')"><span class="cell-clip" [title]="row.customerName">{{ row.customerName }}</span></td>
-              <td *ngIf="isColumnVisible('provName')"><span class="cell-clip" [title]="row.provName">{{ row.provName }}</span></td>
-              <td *ngIf="isColumnVisible('branchName')"><span class="cell-clip" [title]="row.branchName">{{ row.branchName }}</span></td>
-              <td *ngIf="isColumnVisible('approvalDate')" class="nowrap">{{ row.approvalDate | date:'mediumDate' }}</td>
-              <td *ngIf="isColumnVisible('value')" class="num-col">{{ row.value != null ? (row.value | number:'1.2-2') : '—' }}</td>
-              <td *ngIf="isColumnVisible('coinsurance')" class="num-col">{{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}</td>
-              <td *ngIf="isColumnVisible('onlineStatus')">
-                <span class="status" [ngClass]="statusPillClass(row.onlineStatus)">{{ row.onlineStatus }}</span>
+              <!-- Approval ID + Form ID -->
+              <td>
+                <b class="apid-cell">{{ row.approvalId }}</b>
+                <small class="sub" *ngIf="row.formId">Form: {{ row.formId }}</small>
               </td>
-              <td *ngIf="isColumnVisible('notes')"><span class="cell-clip notes" [title]="row.notes">{{ row.notes }}</span></td>
-              <td *ngIf="isColumnVisible('lastUpdateDate')" class="nowrap">{{ row.lastUpdateDate | date:'medium' }}</td>
-              <td *ngIf="isColumnVisible('lastUpdateBy')"><span class="cell-clip" [title]="row.lastUpdateBy">{{ row.lastUpdateBy }}</span></td>
-              <td *ngIf="isColumnVisible('onlineLud')" class="nowrap">{{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}</td>
+              <!-- Member: name + id + customer -->
+              <td>
+                <span class="cell-clip" [title]="row.empName">{{ row.empName }}</span>
+                <small class="sub">ID: {{ row.memberId }}</small>
+                <small class="sub cell-clip" *ngIf="row.customerName" [title]="row.customerName">{{ row.customerName }}</small>
+              </td>
+              <!-- Provider + Branch -->
+              <td>
+                <span class="cell-clip" [title]="row.provName">{{ row.provName }}</span>
+                <small class="sub cell-clip" *ngIf="row.branchName" [title]="row.branchName">{{ row.branchName }}</small>
+              </td>
+              <td class="nowrap">{{ row.approvalDate | date:'mediumDate' }}</td>
+              <td class="num-col">{{ row.value != null ? (row.value | number:'1.2-2') : '—' }}</td>
+              <td class="num-col">{{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}</td>
+              <td><span class="cell-clip notes" [title]="row.notes">{{ row.notes }}</span></td>
+              <!-- Last Updated + Updated By -->
+              <td class="nowrap">
+                {{ row.lastUpdateDate | date:'medium' }}
+                <small class="sub" *ngIf="row.lastUpdateBy">by {{ row.lastUpdateBy }}</small>
+              </td>
+              <td class="nowrap">{{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}</td>
               <td class="no-print action-col">
                 <a class="btn btn-primary btn-sm respond-btn"
                   [routerLink]="['/response-approval', row.approvalId]"
@@ -234,7 +224,7 @@
               </td>
             </tr>
             <tr *ngIf="currentItems().length === 0">
-              <td [attr.colspan]="visibleKeys().length + 1" class="empty-cell">
+              <td colspan="10" class="empty-cell">
                 {{ globalFilter() ? 'No records match your search.' : 'No records matched your criteria. Try a different date range.' }}
               </td>
             </tr>
