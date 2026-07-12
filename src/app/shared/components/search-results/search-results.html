@@ -1,230 +1,281 @@
-<div class="p-6 bg-white rounded-lg shadow-sm">
-  
-  <!-- Loading State -->
-  <div *ngIf="isLoading()" class="flex justify-center items-center py-12">
-    <div class="text-gray-500">Loading approvals...</div>
+<div class="sr-page">
+
+  <!-- Breadcrumb -->
+  <div class="crumb">
+    <a routerLink="/mem">Dashboard</a> / <b>Search Requests</b>
   </div>
 
-  <!-- Content -->
-  <div *ngIf="!isLoading()">
-    
-    <!-- Filters Row -->
-<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5 pb-2 border-b border-gray-100">
-  
-  <!-- القسم الأيسر: الفلاتر -->
-  <div class="flex flex-wrap items-end gap-3">
-    <!-- From Date -->
-    <div class="w-[150px]">
-      <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">FROM</label>
-      <input 
-        type="date"
-        [ngModel]="fromDate()"
-        (ngModelChange)="setFromDate($event)"
-        class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors"
-      />
+  <!-- Page head -->
+  <div class="pull-head">
+    <div>
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        Search Requests
+      </h2>
+      <div class="tiny">Search and view all approval requests of your branch.</div>
     </div>
-
-    <!-- To Date -->
-    <div class="w-[150px]">
-      <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">TO</label>
-      <input 
-        type="date"
-        [ngModel]="toDate()"
-        (ngModelChange)="setToDate($event)"
-        [min]="fromDate()"
-        class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-colors"
-      />
-    </div>
-
-    <!-- Clear Button -->
-    <button 
-      (click)="clearDateFilter()"
-      title="Clear Date Filter"
-      class="h-[34px] w-[34px] flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all duration-200"
-    >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-      </svg>
-    </button>
-  </div>
-
-  <!-- القسم الأيمن: Export + Search -->
-  <div class="flex items-end gap-3">
-    <!-- Export Button -->
-    <button 
-      (click)="exportToExcel()"
-      class="h-[34px] px-4 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-sm flex items-center gap-2"
-    >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-      </svg>
-      Export
-    </button>
-
-    <!-- Search Box - شبه DataTable -->
-    <div class="relative">
-      <input 
-        type="search" 
-        [ngModel]="searchQuery()"
-        (ngModelChange)="updateSearchQuery($event)"
-        placeholder="Search..."
-        class="w-[260px] h-[34px] pl-9 pr-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 hover:bg-white transition-all placeholder:text-gray-400"
-      />
-    
+    <div class="pull-actions">
+      <button type="button" class="btn export-btn" (click)="exportToExcel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M8.5 12.5l3 4m0-4-3 4M15 12.5v4"/></svg>
+        Export to Excel
+      </button>
     </div>
   </div>
-</div>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-gray-200 bg-gray-50">
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('statusText')">
-              Status {{ getSortIcon('statusText') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalId')">
-              Approval ID {{ getSortIcon('approvalId') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('memberId')">
-              Member ID {{ getSortIcon('memberId') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('apType')">
-              Request Type {{ getSortIcon('apType') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('requestSource')">
-              Request Source {{ getSortIcon('requestSource') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('approvalDate')">
-              Date {{ getSortIcon('approvalDate') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('vendorId')">
-              Vendor ID {{ getSortIcon('vendorId') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors" (click)="sort('notes')">
-              Notes {{ getSortIcon('notes') }}
-            </th>
-            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-              Actions
-            </th>
-          </tr>
-        </thead>
-   <tbody>
-          <tr *ngFor="let item of currentItems()" class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-            <td class="py-3 px-4">
-              <span [class]="'inline-flex items-center gap-1 text-sm font-medium ' + item.statusColor">
-                <span>{{ item.statusIcon }}</span> {{ item.statusText }}
-              </span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm font-medium text-gray-900">{{ item.approvalId }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm text-gray-700">{{ item.memberId }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm text-gray-700">{{ item.apType }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm text-gray-700">{{ item.requestSource }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm text-gray-700">{{ formatDate(item.approvalDate) }}</span>
-              <span class="text-xs text-gray-400 block">{{ formatTime(item.approvalDate) }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm text-gray-700">{{ item.vendorId }}</span>
-            </td>
-            <td class="py-3 px-4">
-              <span class="text-sm text-gray-500 max-w-xs block truncate" [title]="item.notes">
-                {{ item.notes }}
-              </span>
-            </td>
-            
-            <td class="py-3 px-4">
-              <div class="flex items-center gap-2">
-                <button 
-                  (click)="viewDetails(item)"
-                  title="View Details"
-                  class="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                  </svg>
-                </button>
+  <!-- Loading -->
+  <div *ngIf="isLoading()" class="loading-note card card-pad">
+    <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+    Loading requests...
+  </div>
 
-                <button 
-                  (click)="editApproval(item)"
-                  title="Edit Approval"
-                  class="p-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-600 hover:text-white transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                  </svg>
-                </button>
+  <ng-container *ngIf="!isLoading()">
+    <div class="req-grid">
 
-                <button 
-                  (click)="printApproval(item)"
-                  title="Print Receipt"
-                  class="p-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-600 hover:text-white transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.617 0-1.11-.51-1.07-1.122L6.34 18m11.32 0h-11.32M9 11V9c0-1.571 1.4-2.5 3-2.5s3 .929 3 2.5v2m-6 4h6" />
-                  </svg>
-                </button>
+      <!-- ============ LEFT / MAIN COLUMN ============ -->
+      <div class="req-main">
 
-                <button 
-                  (click)="cancelApproval(item)"
-                  title="Cancel Request"
-                  class="p-1.5 bg-red-50 text-red-600 rounded-md hover:bg-red-600 hover:text-white transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                  </svg>
-                </button>
+        <!-- FILTERS -->
+        <section class="card card-pad">
+          <div class="filters-grid">
+            <div class="ci-field">
+              <label>Date From <span class="req">*</span></label>
+              <input
+                type="datetime-local"
+                class="ci-input"
+                [ngModel]="fromDate()"
+                (ngModelChange)="setFromDate($event)" />
+            </div>
+            <div class="ci-field">
+              <label>Date To <span class="req">*</span></label>
+              <input
+                type="datetime-local"
+                class="ci-input"
+                [ngModel]="toDate()"
+                (ngModelChange)="setToDate($event)"
+                [min]="fromDate()" />
+            </div>
+            <div class="ci-field">
+              <label>Global Search</label>
+              <div class="search-input">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <input
+                  type="search"
+                  [ngModel]="searchQuery()"
+                  (ngModelChange)="updateSearchQuery($event)"
+                  placeholder="Search by Member ID, Member Name, Approval ID, Pres ID..." />
               </div>
-            </td>
-          </tr>
-          
-          <tr *ngIf="currentItems().length === 0">
-            <td colspan="9" class="text-center py-8 text-gray-500">
-              {{ searchQuery() || fromDate() || toDate() ? 'No matching approvals found' : 'No approvals available' }}
-            </td>
-          </tr>
-        </tbody>
-       </table>
-    </div>
+            </div>
+            <button type="button" class="btn btn-ghost" (click)="clearDateFilter()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+              Clear
+            </button>
+          </div>
+        </section>
 
-    <!-- Pagination -->
-    <div *ngIf="totalPages() > 0" class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-      <div class="text-sm text-gray-600">
-        Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to 
-        {{ Math.min(currentPage() * itemsPerPage, filteredApprovals().length) }} of 
-        {{ filteredApprovals().length }} entries
-      </div>
-      <div class="flex items-center gap-2">
-        <button 
-          (click)="changePage(currentPage() - 1)"
-          [disabled]="currentPage() === 1"
-          class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-          ←
-        </button>
-        <button 
-          *ngFor="let page of getPagesArray()"
-          (click)="changePage(page)"
-          [class]="'px-3 py-1 rounded-md transition-colors ' + 
-            (currentPage() === page ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50')">
-          {{ page }}
-        </button>
-        <button 
-          (click)="changePage(currentPage() + 1)"
-          [disabled]="currentPage() === totalPages()"
-          class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-          →
-        </button>
-      </div>
-    </div>
+        <!-- STATUS CHIPS -->
+        <section class="card">
+          <div class="chips-bar">
+            <button type="button" class="fchip" [class.on]="statusFilter() === 'All'" (click)="setStatusFilter('All')">
+              All <span class="c">{{ approvals().length }}</span>
+            </button>
+            <ng-container *ngFor="let s of statusChips">
+              <button type="button" *ngIf="statusCounts()[s]" class="fchip"
+                [class.on]="statusFilter() === s" (click)="setStatusFilter(s)">
+                {{ s }} <span class="c">{{ statusCounts()[s] }}</span>
+              </button>
+            </ng-container>
+          </div>
+        </section>
 
-  </div>
+        <!-- STAT TILES -->
+        <div class="req-stats">
+          <div class="req-stat">
+            <div class="s-ico" style="background:var(--pp-blue-bg);color:var(--pp-blue);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+            </div>
+            <div>
+              <div class="num">{{ approvals().length }}</div>
+              <div class="lbl">Total Requests</div>
+            </div>
+          </div>
+          <div class="req-stat">
+            <div class="s-ico" style="background:var(--pp-orange-bg);color:var(--pp-orange);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            </div>
+            <div>
+              <div class="num">{{ statusCounts()['Pending'] || 0 }}</div>
+              <div class="lbl">Pending</div>
+            </div>
+          </div>
+          <div class="req-stat">
+            <div class="s-ico" style="background:var(--pp-green-bg);color:var(--pp-green);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+            </div>
+            <div>
+              <div class="num">{{ statusCounts()['Approved'] || 0 }}</div>
+              <div class="lbl">Approved</div>
+            </div>
+          </div>
+          <div class="req-stat">
+            <div class="s-ico" style="background:var(--pp-purple-bg);color:var(--pp-purple);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M12 18v-6M9 15h6"/></svg>
+            </div>
+            <div>
+              <div class="num">{{ statusCounts()['New'] || 0 }}</div>
+              <div class="lbl">New</div>
+            </div>
+          </div>
+          <div class="req-stat">
+            <div class="s-ico" style="background:var(--pp-red-bg);color:var(--pp-red);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+            </div>
+            <div>
+              <div class="num">{{ (statusCounts()['Cancelled'] || 0) + (statusCounts()['Rejected'] || 0) + (statusCounts()['Suspended'] || 0) }}</div>
+              <div class="lbl">Cancelled / Rejected</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <section class="card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable" (click)="sort('statusText')">Status {{ getSortIcon('statusText') }}</th>
+                  <th class="sortable" (click)="sort('approvalId')">Approval ID {{ getSortIcon('approvalId') }}</th>
+                  <th class="sortable" (click)="sort('memberId')">Member ID {{ getSortIcon('memberId') }}</th>
+                  <th class="sortable" (click)="sort('memberName')">Member Name {{ getSortIcon('memberName') }}</th>
+                  <th class="sortable" (click)="sort('approvalDate')">Service Date {{ getSortIcon('approvalDate') }}</th>
+                  <th class="sortable" (click)="sort('vendorName')">Provider {{ getSortIcon('vendorName') }}</th>
+                  <th class="sortable" (click)="sort('presId')">Pres ID {{ getSortIcon('presId') }}</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="req-row" *ngFor="let item of currentItems()"
+                    [class.selected]="displayedItem()?.approvalId === item.approvalId"
+                    (click)="selectRow(item)">
+                  <td><span class="status" [ngClass]="statusPillClass(item)">{{ item.statusText }}</span></td>
+                  <td><b class="apid-cell">{{ item.approvalId }}</b></td>
+                  <td>{{ item.memberId }}</td>
+                  <td>
+                    {{ item.memberName || '-' }}
+                    <small class="sub" *ngIf="item.companyName">{{ item.companyName }}</small>
+                  </td>
+                  <td>
+                    {{ formatDate(item.approvalDate) }}
+                    <small class="sub">{{ formatTime(item.approvalDate) }}</small>
+                  </td>
+                  <td>
+                    {{ item.vendorName || item.vendorId }}
+                    <small class="sub" *ngIf="item.branchName">{{ item.branchName }}</small>
+                  </td>
+                  <td>{{ item.presId || '-' }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="mini-btn" title="View Details"
+                        [routerLink]="['/invoice-print', item.approvalId]" (click)="$event.stopPropagation()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                      <button type="button" class="mini-btn" title="Edit Request"
+                        [routerLink]="['/approval-edit-search', item.approvalId]" (click)="$event.stopPropagation()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+                      </button>
+                      <button type="button" class="mini-btn" title="Print Invoice PDF"
+                        (click)="generateInvoicePDF(item); $event.stopPropagation()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+                      </button>
+                      <button type="button" class="mini-btn danger" title="Cancel Request"
+                        (click)="cancelApproval(item); $event.stopPropagation()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="currentItems().length === 0">
+                  <td colspan="8" class="empty-cell">
+                    {{ searchQuery() || statusFilter() !== 'All' ? 'No requests match the selected filters.' : 'No requests available for this period.' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- pager -->
+          <div class="pager" *ngIf="totalPages() > 0">
+            <span class="info">
+              Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to
+              {{ Math.min(currentPage() * itemsPerPage, filteredApprovals().length) }} of
+              {{ filteredApprovals().length }} entries
+            </span>
+            <button type="button" class="page-btn" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1">‹</button>
+            <button type="button" class="page-btn"
+              *ngFor="let page of getPagesArray()"
+              [class.on]="currentPage() === page"
+              (click)="changePage(page)">{{ page }}</button>
+            <button type="button" class="page-btn" (click)="changePage(currentPage() + 1)" [disabled]="currentPage() === totalPages()">›</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ RIGHT / REQUEST DETAILS ============ -->
+      <aside class="card req-details">
+        <ng-container *ngIf="displayedItem() as sel; else noSelection">
+          <div class="rd-head">
+            <div class="rd-photo">
+              <svg width="74" height="80" viewBox="0 0 106 112" fill="none"><circle cx="53" cy="42" r="22" fill="#0e7360" opacity=".85"/><circle cx="53" cy="36" r="13" fill="#f3d8c0"/><path d="M40 34c0-9 6-15 13-15s13 6 13 15c0 2-1 3-1 3s1-11-12-11-12 11-12 11-1-1-1-3z" fill="#3a2e26"/><path d="M18 112c3-26 17-36 35-36s32 10 35 36z" fill="#ffffff"/><path d="M18 112c3-26 17-36 35-36s32 10 35 36z" fill="#0e7360" opacity=".12"/></svg>
+            </div>
+            <div class="rd-who">
+              <b>{{ sel.memberName || '—' }}</b>
+              <div class="rd-line" *ngIf="sel.companyName">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6M3 21h18"/></svg>
+                {{ sel.companyName }}
+              </div>
+              <div class="rd-line">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+                {{ formatDate(sel.approvalDate) }} · {{ formatTime(sel.approvalDate) }}
+              </div>
+              <div class="rd-line"><b class="rd-mid">Member ID: {{ sel.memberId }}</b></div>
+            </div>
+          </div>
+
+          <div class="rd-body">
+            <div class="rd-sum-head">
+              <b>Request Summary</b>
+              <span class="status" [ngClass]="statusPillClass(sel)">{{ sel.statusText }}</span>
+            </div>
+            <div class="sum-row"><small>Approval ID</small><b>{{ sel.approvalId }}</b></div>
+            <div class="sum-row" *ngIf="sel.presId"><small>Pres ID</small><b>{{ sel.presId }}</b></div>
+            <div class="sum-row"><small>Request Type</small><b>{{ sel.apType }}</b></div>
+            <div class="sum-row"><small>Source</small><b>{{ sel.requestSource }}</b></div>
+            <div class="sum-row" *ngIf="sel.vendorName"><small>Provider</small><b>{{ sel.vendorName }}</b></div>
+            <div class="sum-row" *ngIf="sel.branchName"><small>Branch</small><b>{{ sel.branchName }}</b></div>
+            <ng-container *ngIf="sel.notes && sel.notes !== '-'">
+              <div class="sum-div"></div>
+              <div class="rd-notes">
+                <small>Notes</small>
+                <p>{{ sel.notes }}</p>
+              </div>
+            </ng-container>
+          </div>
+
+          <div class="rd-actions">
+            <button type="button" class="btn btn-ghost" [routerLink]="['/invoice-print', sel.approvalId]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              View Details
+            </button>
+            <button type="button" class="btn btn-primary" [routerLink]="['/approval-edit-search', sel.approvalId]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+              Edit Request
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-template #noSelection>
+          <div class="empty-pane">Select a request to see its details.</div>
+        </ng-template>
+      </aside>
+    </div>
+  </ng-container>
 </div>

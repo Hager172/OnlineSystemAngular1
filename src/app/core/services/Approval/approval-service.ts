@@ -135,18 +135,29 @@ export class ApprovalService {
     },
   };
 
-  // getApproval(approvalNumber: string): Approval {
-  //   return this.mockApprovals[approvalNumber];
-  // }
-  // getApproval(approvalNumber: string): Approval {
-  //   return this.mapApprovalDetailsToApproval(this.getApprovalDetails(approvalNumber));
-  // }
   getApproval(approvalNumber: string): Observable<Approval> {
     console.log("approvalnum",approvalNumber);
   return this.getApprovalDetails(approvalNumber).pipe(
     map(res => this.mapApprovalDetailsToApproval(res))
   );
 }
+getApprovalView(approvalNumber: string): Observable<Approval> {
+    console.log("approvalnum",approvalNumber);
+  return this.getApprovalViewDetails(approvalNumber).pipe(
+    map(res => this.mapApprovalDetailsToApproval(res))
+  );
+}
+getApprovalPrint(approvalNumber: string): Observable<Approval> {
+    console.log("approvalnum",approvalNumber);
+  return this.getApprovalPrintDetails(approvalNumber).pipe(
+    map(res => this.mapApprovalDetailsToApproval(res))
+  );
+}
+getApprovalsearchDetails(approvalNumber: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}Approval/${approvalNumber}/searchdetails`);
+}
+
+
   approvalExists(approvalNumber: string): boolean {
     // return !!this.mockApprovals[approvalNumber];
     return !!this.getApprovalDetails(approvalNumber);
@@ -172,9 +183,15 @@ export class ApprovalService {
   }
   getApprovalDetails(id: string): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}Approval/${id}/details`);
-  
-
 }
+ getApprovalViewDetails(id: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}Approval/${id}/view`);
+}
+
+ getApprovalPrintDetails(id: string): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}Approval/${id}/print`);
+}
+
 
 mapApprovalDetailsToApproval(apiRes: any): Approval {
   console.log('Mapping API to Approval:', apiRes);
@@ -182,8 +199,8 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     approvalNumber: apiRes.approvalId?.toString() || '',
     date: apiRes.approvalDate || new Date().toISOString(),
     companyName: apiRes.vendorName || 'Unknown Company',
-    companyLogo: '',
-    vendorLogo: '', 
+    companyLogo: apiRes.clientImage || apiRes.companyLogo || '',
+    vendorLogo: apiRes.vendorImage || apiRes.vendorLogo || '',
     branch: apiRes.v_branch_id || 'Main Branch',
     invoiceNumber: apiRes.approvalId?.toString() || '',
     serviceDate: apiRes.approvalDate || '',
@@ -191,15 +208,17 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     clientId: apiRes.memberId || '',
     diagnose: apiRes.diagnoses?.map((d: any) => d.name).join(', ') || '',
     notes: apiRes.notes || '',
-    limit: apiRes.maxValue || 0,
-    copaymentPercentage: 10,
-    extraCopaymentPercentage: 5,
+    limit: apiRes.maxValue || null,
+    // نسبة التحمل (coinsurance): تؤخذ من أول خدمة، وإن لم توجد فمن رأس الموافقة
+    copaymentPercentage: apiRes.services?.[0]?.coinsurance ?? apiRes.coinsurance ?? 0,
+    extraCopaymentPercentage: 0,
     items: (apiRes.services || []).map((s: any) => ({
       description: s.itemDesc || '',
       quantity: s.apQty || s.qty || 0,
       quantityUnit: s.doseUnits?.toString() || 'Unit',
       unitPrice: s.price || 0,
       name: s.servicename || '',
+      copayment: s.coinsurance ?? 0,
     })),
   };
 }
@@ -210,8 +229,7 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
       `${this.baseUrl}Approval/allapprovaltoday/${clientid}/${vendorId}`
     );
   }
-// api/Approval/allapprovaltoday
-  // جلب الـ approvals غير المكتملة (not complete)
+
   getTodayNotCompletedApprovals(clientid: string,vendorId:string): Observable<any> {
     return this.http.get<any>(
       `${this.baseUrl}Approval/allapprovalnottoday/${clientid}/${vendorId}`
@@ -220,15 +238,43 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
 
 
    createClaim(
-    claim: ClaimDto
+    claim: ClaimDto,
+    files: File[] = []
   ): Observable<CreateClaimResponseDto> {
+
+    // الباك إند بيستقبل IFormFileCollection فلازم نبعت multipart/form-data مش JSON
+    const formData = new FormData();
+    formData.append('MembId', claim.membId);
+    formData.append('ServiceDate', claim.serviceDate.toISOString());
+    formData.append('PresId', claim.presId);
+    if (claim.phone) formData.append('Phone', claim.phone);
+    if (claim.diagnosisString) formData.append('DiagnosisString', claim.diagnosisString);
+    if (claim.diagnosisInsString) formData.append('DiagnosisInsString', claim.diagnosisInsString);
+    if (claim.notes) formData.append('Notes', claim.notes);
+    if (claim.nationalId) formData.append('NationalId', claim.nationalId);
+
+    claim.services.forEach((s, i) => {
+      formData.append(`Services[${i}].ProductId`, String(s.productId));
+      formData.append(`Services[${i}].Qty`, String(s.qty));
+      formData.append(`Services[${i}].Price`, String(s.price));
+      formData.append(`Services[${i}].Units`, String(s.units));
+      formData.append(`Services[${i}].Rep`, String(s.rep));
+      formData.append(`Services[${i}].Duration`, String(s.duration));
+    });
+
+    files.forEach(f => formData.append('Files', f, f.name));
 
     return this.http.post<CreateClaimResponseDto>(
       this.baseUrl + 'Approval/create',
-      claim
+      formData
     );
   }
 
+
+createRequestClaim(claim: ClaimDto, files: File[] = []) {
+  // نفس الإندبوينت بقى بيستقبل form-data فبنمرر على createClaim
+  return this.createClaim(claim, files);
+}
 
 getDiagnosis(term: string) {
   return this.http.get<DiagnosisDto[]>(
@@ -250,14 +296,46 @@ getProducts(term: string, vtype: string) {
 
 
 
-getbranchapprovals(branchid: string): Observable<any> {
-  return this.http.get<any>(
-    `${this.baseUrl}Approval/branch-approvals?office_id=${branchid}`
-  );}
+getbranchapprovals(branchid: string, starts?: string, ends?: string): Observable<any> {
+  let url = `${this.baseUrl}Approval/branch-approvals?office_id=${branchid}`;
+  if (starts) url += `&starts=${encodeURIComponent(starts)}`;
+  if (ends) url += `&ends=${encodeURIComponent(ends)}`;
+  return this.http.get<any>(url);
+}
 
 
 getbrancha3mpprovals(branchid: string): Observable<any> {
   return this.http.get<any>(
-    `${this.baseUrl}Approval/branch-3mapprovals?office_id=${branchid}`
+    `${this.baseUrl}Approval/monthlycliams?office_id=${branchid}`
   );}
+
+  cancelApproval(approvalId: number): Observable<any> {
+  return this.http.put(
+    `${this.baseUrl}Approval/cancelapproval/${approvalId}`,
+    {}
+  );
+}
+editApproval(request: any): Observable<any> {
+  return this.http.post<any>(
+    `${this.baseUrl}Approval/edit`,
+    request
+  );
+}
+getAgentProducts(term: string, vendorId: string) {
+  return this.http.get<ProductLookupDto[]>(
+    `${this.baseUrl}Approval/Agentproducts?term=${term}&vendor_id=${vendorId}`
+  );
+}
+getMemberCareItems(memberId: string) {
+  return this.http.get<any>(
+    `${this.baseUrl}Approval/GetMemberCareItems?member_id=${memberId}`
+  );
+}
+
+getCoinsuranceOfMedItem(memberId: string, careItemId: number) {
+  return this.http.get<any>(
+    `${this.baseUrl}Approval/getcoinsuranceofmeditem`,
+    { params: { memid: memberId, meditem: careItemId } }
+  );
+}
 }

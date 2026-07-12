@@ -1,25 +1,62 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient, HttpEventType, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
-import { BehaviorSubject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth-service';
 
+/**
+ * Provider-side chat against the IQ-Health portal chat API.
+ *
+ * A provider has exactly ONE conversation with the ACMS support team. Real-time
+ * traffic flows over the SignalR hub at environment.chatHubUrl (authenticated
+ * with the normal portal JWT); history/unread state loads over REST (api/chat/...).
+ *
+ * State is exposed as SIGNALS, not observables: this app is zoneless, and only
+ * signal writes (or user events) schedule change detection. SignalR callbacks
+ * writing plain fields/subjects would update memory without re-rendering —
+ * messages would only "appear" on the next click.
+ *
+ * Providers never see the individual agent's name: agent messages are labeled
+ * with a per-client support alias (supportName) instead. ACMS keeps real names.
+ */
+
 export interface ChatMessage {
-  senderId: string;
-  receiverId: string;
-  message: string;
-  /** True when this message was sent by the current agent. */
+  id: number;
+  conversationId: number;
+  senderType: 'Provider' | 'AcmsUser' | string;
+  senderId?: string | null;
+  senderName?: string | null;
+  message?: string | null;
+  createdAtUtc?: string | null;
+  isRead: boolean;
+  /** True when sent by this provider (drives bubble alignment). */
   mine: boolean;
-  timestamp: Date;
+  /** Download/view URL when the message carries a file (absolute, see resolveUrl). */
+  attachmentUrl?: string | null;
+  /** Original file name of the attachment. */
+  attachmentName?: string | null;
+  /** MIME type of the attachment (image/* renders inline). */
+  attachmentContentType?: string | null;
 }
 
-export interface ChatContact {
-  /** The other party's username (the sender, from the agent's point of view). */
-  peer: string;
-  displayName: string;
-  unread: number;
-  lastMessage?: string;
+/** Progress of an in-flight attachment upload (percent 0-100, then done). */
+export interface UploadProgress {
+  percent: number;
+  done: boolean;
+}
+
+export interface ChatConversation {
+  id: number;
+  providerId?: string | null;
+  providerName?: string | null;
+  lastMessageAtUtc?: string | null;
+  lastMessagePreview?: string | null;
+  isClosed: boolean;
+  unreadCount: number;
+  isProviderOnline: boolean;
+  onlineAgentCount: number;
 }
 
 @Injectable({
@@ -28,135 +65,93 @@ export interface ChatContact {
 export class ChatService {
 
   private hub?: signalR.HubConnection;
+  private readonly isBrowser: boolean;
+  private typingClear?: ReturnType<typeof setTimeout>;
 
-  private connectedSubject = new BehaviorSubject<boolean>(false);
-  connected$ = this.connectedSubject.asObservable();
+  /** Hub connection state. */
+  readonly connected = signal(false);
 
-  /** Inbox: one entry per person the agent has chatted with. */
-  private contactsSubject = new BehaviorSubject<ChatContact[]>([]);
-  contacts$ = this.contactsSubject.asObservable();
+  /** The provider's conversation thread, oldest first. */
+  readonly messages = signal<ChatMessage[]>([]);
 
-  /** Messages of the currently open conversation. */
-  private activeThreadSubject = new BehaviorSubject<ChatMessage[]>([]);
-  activeThread$ = this.activeThreadSubject.asObservable();
+  /** Unread agent replies — drives the launcher badge. */
+  readonly unread = signal(0);
 
-  /** Per-peer message threads. */
-  private threads = new Map<string, ChatMessage[]>();
-  private activePeer: string | null = null;
+  /** Support alias currently typing (e.g. "Mashreq Support"), or null. */
+  readonly agentTyping = signal<string | null>(null);
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  /** True while at least one ACMS agent is connected. */
+  readonly supportOnline = signal(false);
 
-  /** The agent's own id — what the backend stores as senderId/receiverId. */
-  get myId(): string {
-    return this.auth.getUsername() ?? this.auth.getVendorId() ?? 'AngularUser';
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  get currentPeer(): string | null {
-    return this.activePeer;
+  /**
+   * What the provider sees instead of the agent's real name, based on the
+   * client the provider is logged into.
+   */
+  get supportName(): string {
+    switch (this.auth.getclientid()) {
+      case '2': return 'Mashreq Support';
+      case '3': return 'Medigold Support';
+      default: return 'Support';
+    }
   }
 
   // ── Connection ─────────────────────────────────────────────────────────
 
   startConnection(): void {
+    if (!this.isBrowser || !this.auth.getToken()) {
+      return; // SSR pass or not logged in yet
+    }
     if (this.hub && this.hub.state !== signalR.HubConnectionState.Disconnected) {
       return;
     }
 
     this.hub = new signalR.HubConnectionBuilder()
       .withUrl(environment.chatHubUrl, {
-        // SignalR WebSocket bypasses HTTP interceptors, so we inject the JWT manually.
+        // WebSockets bypass HTTP interceptors, so the JWT goes in explicitly.
         accessTokenFactory: () => this.auth.getToken() ?? ''
       })
       .withAutomaticReconnect()
       .build();
 
-    // Hub broadcasts via Clients.All, so the agent receives both inbound
-    // messages and the echo of its own sends here.
-    this.hub.on(
-      'ReceiveMessage',
-      (senderId: string, receiverId: string, message: string) =>
-        this.handleIncoming(senderId, receiverId, message)
-    );
+    this.hub.on('ReceiveMessage', (m: any) => this.onMessage(m));
+    this.hub.on('ConversationUpdated', (c: any) => this.onConversation(c));
+    this.hub.on('TypingIndicator', (t: any) => this.onTyping(t));
+    this.hub.on('PresenceChanged', (p: any) => this.onPresence(p));
+    this.hub.on('MessagesRead', (r: any) => this.onMessagesRead(r));
 
-    this.hub.onreconnected(() => this.connectedSubject.next(true));
-    this.hub.onclose(() => this.connectedSubject.next(false));
+    this.hub.onreconnected(() => {
+      this.connected.set(true);
+      this.refresh();
+    });
+    this.hub.onclose(() => this.connected.set(false));
 
     this.hub
       .start()
       .then(() => {
-        this.connectedSubject.next(true);
-        this.loadConversations();
+        this.connected.set(true);
+        this.refresh();
       })
-      .catch(err => console.error('SignalR connection error', err));
+      .catch(err => console.error('Chat hub connection failed', err));
   }
 
   stopConnection(): void {
     this.hub?.stop();
   }
 
-  // ── Inbox ──────────────────────────────────────────────────────────────
+  // ── Actions ────────────────────────────────────────────────────────────
 
-  /** Loads the contact list (conversations grouped by sender) from the DB. */
-  loadConversations(): void {
-    this.http.get<any>(environment.chatBridgeUrl + 'conversations').subscribe({
-      next: res => {
-        for (const item of this.asArray(res)) {
-          const peer = this.peerOf(item);
-          if (!peer || peer === this.myId) {
-            continue;
-          }
-          const displayName = item?.displayName ?? item?.name ?? peer;
-          this.upsertContact(
-            peer,
-            displayName,
-            item?.lastMessage ?? item?.message ?? undefined,
-            Number(item?.unread ?? item?.unreadCount ?? 0)
-          );
-        }
-      },
-      error: err => console.warn('Failed to load conversations', err)
-    });
-  }
-
-  /** Opens a conversation: loads its history, marks it read, makes it active. */
-  openConversation(peer: string): void {
-    this.activePeer = peer;
-    this.clearUnread(peer);
-    this.emitActive();
-
-    this.http
-      .get<any>(environment.chatBridgeUrl + 'history', {
-        params: new HttpParams().set('peer', peer)
-      })
-      .subscribe({
-        next: res => {
-          const history = this.asArray(res).map(m => this.toMessage(m));
-          this.threads.set(peer, history);
-          if (this.activePeer === peer) {
-            this.emitActive();
-          }
-        },
-        error: err => console.warn('Failed to load history for ' + peer, err)
-      });
-  }
-
-  /** Returns to the inbox list (no conversation open). */
-  closeConversation(): void {
-    this.activePeer = null;
-    this.emitActive();
-  }
-
-  /** Sends to the currently open conversation. */
-  send(message: string): void {
-    if (this.activePeer) {
-      this.sendTo(this.activePeer, message);
-    }
-  }
-
-  /** Sends to a specific peer via the hub. */
-  sendTo(receiverId: string, message: string): void {
-    const text = message.trim();
-    if (!text) {
+  /** Sends a message. The stored copy arrives back via ReceiveMessage. */
+  send(text: string): void {
+    const message = text.trim();
+    if (!message) {
       return;
     }
     if (!this.hub || this.hub.state !== signalR.HubConnectionState.Connected) {
@@ -164,115 +159,202 @@ export class ChatService {
       return;
     }
 
-    const clientId = this.auth.getclientid() ?? '';
-    // The hub echoes back via Clients.All, so we let handleIncoming append it.
     this.hub
-      .invoke('SendMessage', this.myId, receiverId, text, clientId)
+      .invoke('SendMessage', message, null)
       .catch(err => console.error('SendMessage failed', err));
   }
 
-  // ── Internals ──────────────────────────────────────────────────────────
-
-  private handleIncoming(senderId: string, receiverId: string, message: string): void {
-    const mine = senderId === this.myId;
-    const peer = mine ? receiverId : senderId;
-    if (!peer) {
-      return;
+  /**
+   * Uploads a file/image as a chat attachment. The backend stores the file,
+   * creates the chat message and broadcasts it via ReceiveMessage — so, like
+   * send(), the message shows up through the normal hub flow.
+   * Emits upload progress; errors surface through the returned observable.
+   */
+  sendAttachment(file: File, caption = ''): Observable<UploadProgress> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    if (caption.trim()) {
+      form.append('message', caption.trim());
     }
 
-    const msg: ChatMessage = { senderId, receiverId, message, mine, timestamp: new Date() };
+    return new Observable<UploadProgress>(subscriber => {
+      const sub = this.http
+        .post(environment.apiUrl + 'chat/attachments', form, {
+          reportProgress: true,
+          observe: 'events'
+        })
+        .subscribe({
+          next: event => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+              subscriber.next({
+                percent: Math.round((event.loaded / event.total) * 100),
+                done: false
+              });
+            } else if (event.type === HttpEventType.Response) {
+              subscriber.next({ percent: 100, done: true });
+              subscriber.complete();
+            }
+          },
+          error: err => subscriber.error(err)
+        });
+      return () => sub.unsubscribe();
+    });
+  }
 
-    const thread = this.threads.get(peer) ?? [];
-    thread.push(msg);
-    this.threads.set(peer, thread);
+  /** True when the attachment should render as an inline image. */
+  isImage(m: ChatMessage): boolean {
+    return !!m.attachmentUrl
+      && (m.attachmentContentType ?? '').toLowerCase().startsWith('image/');
+  }
 
-    // Unread only for inbound messages not in the open conversation.
-    const incUnread = !mine && peer !== this.activePeer ? 1 : 0;
-    this.upsertContact(peer, peer, message, incUnread, /*increment*/ true);
-
-    if (peer === this.activePeer) {
-      this.emitActive();
+  /** Typing indicator towards the agents. */
+  setTyping(isTyping: boolean): void {
+    if (this.hub?.state === signalR.HubConnectionState.Connected) {
+      this.hub.invoke('Typing', isTyping, null, null).catch(() => { /* non-critical */ });
     }
   }
 
   /**
-   * Inserts or updates a contact and moves it to the top.
-   * When `increment` is true, `unread` is added to the running count;
-   * otherwise it replaces it (used when seeding from the server).
+   * Marks all agent replies as read (call when the chat UI is visible).
+   * Idempotent: when nothing is unread it writes nothing and calls nothing —
+   * safe to call from effects that read messages() without causing a loop.
    */
-  private upsertContact(
-    peer: string,
-    displayName: string,
-    lastMessage: string | undefined,
-    unread: number,
-    increment = false
-  ): void {
-    const list = this.contactsSubject.value;
-    const existing = list.find(c => c.peer === peer);
+  markRead(): void {
+    const hadUnreadBadge = this.unread() !== 0;
+    if (hadUnreadBadge) {
+      this.unread.set(0);
+    }
 
-    const contact: ChatContact = existing
-      ? {
-          ...existing,
-          lastMessage: lastMessage ?? existing.lastMessage,
-          unread: increment ? existing.unread + unread : unread
+    const messages = this.messages();
+    const hasUnreadIncoming = messages.some(m => !m.mine && !m.isRead);
+    if (hasUnreadIncoming) {
+      this.messages.set(
+        messages.map(m => (m.mine || m.isRead ? m : { ...m, isRead: true }))
+      );
+    }
+
+    if ((hadUnreadBadge || hasUnreadIncoming)
+        && this.hub?.state === signalR.HubConnectionState.Connected) {
+      this.hub.invoke('MarkConversationRead', null).catch(() => { /* non-critical */ });
+    }
+  }
+
+  /** Reloads the thread (most recent `take` messages, oldest first). */
+  loadHistory(take = 50): void {
+    this.http
+      .get<any[]>(environment.apiUrl + 'chat/history', {
+        params: new HttpParams().set('skip', 0).set('take', take)
+      })
+      .subscribe({
+        next: rows => this.messages.set((rows ?? []).map(r => this.toMessage(r))),
+        error: err => console.warn('Failed to load chat history', err)
+      });
+  }
+
+  // ── Internals ──────────────────────────────────────────────────────────
+
+  private refresh(): void {
+    this.loadHistory();
+    this.loadConversationState();
+  }
+
+  /** Unread badge + support presence from the conversation list endpoint. */
+  private loadConversationState(): void {
+    this.http.get<ChatConversation[]>(environment.apiUrl + 'chat/conversations').subscribe({
+      next: conversations => {
+        const mine = (conversations ?? [])[0];
+        if (mine) {
+          this.unread.set(mine.unreadCount ?? 0);
+          this.supportOnline.set((mine.onlineAgentCount ?? 0) > 0);
         }
-      : { peer, displayName, lastMessage, unread };
-
-    this.contactsSubject.next([contact, ...list.filter(c => c.peer !== peer)]);
+      },
+      error: err => console.warn('Failed to load chat state', err)
+    });
   }
 
-  private clearUnread(peer: string): void {
-    this.contactsSubject.next(
-      this.contactsSubject.value.map(c =>
-        c.peer === peer ? { ...c, unread: 0 } : c
-      )
-    );
+  private onMessage(raw: any): void {
+    const message = this.toMessage(raw);
+    this.messages.update(list => [...list, message]);
+
+    if (!message.mine) {
+      this.unread.update(u => u + 1);
+      this.agentTyping.set(null);
+    }
   }
 
-  private emitActive(): void {
-    this.activeThreadSubject.next(
-      this.activePeer ? this.threads.get(this.activePeer) ?? [] : []
-    );
+  private onConversation(c: any): void {
+    if (typeof c?.onlineAgentCount === 'number') {
+      this.supportOnline.set(c.onlineAgentCount > 0);
+    }
   }
 
-  /** Normalizes a history row (tolerant of varying backend field names). */
-  private toMessage(m: any): ChatMessage {
-    const senderId = m?.senderId ?? m?.SenderId ?? m?.sender ?? m?.from ?? '';
-    const receiverId = m?.receiverId ?? m?.ReceiverId ?? m?.receiver ?? m?.to ?? '';
-    const message = m?.message ?? m?.Message ?? m?.text ?? m?.body ?? '';
-    const ts = m?.timestamp ?? m?.sentAt ?? m?.createdAt ?? m?.date;
+  private onTyping(t: any): void {
+    if (t?.senderType !== 'AcmsUser') {
+      return;
+    }
+    clearTimeout(this.typingClear);
+    if (t.isTyping) {
+      // Providers see the support alias, never the agent's real name.
+      this.agentTyping.set(this.supportName);
+      // Safety net: never let a lost "stopped typing" event stick forever.
+      this.typingClear = setTimeout(() => this.agentTyping.set(null), 4000);
+    } else {
+      this.agentTyping.set(null);
+    }
+  }
+
+  private onPresence(p: any): void {
+    if (p?.participantType !== 'AcmsUser') {
+      return;
+    }
+    if (p.isOnline) {
+      this.supportOnline.set(true);
+    } else {
+      // An agent left; re-check whether anyone is still online.
+      this.loadConversationState();
+    }
+  }
+
+  /** Agent read our messages -> flip the ticks on everything we sent. */
+  private onMessagesRead(r: any): void {
+    if (r?.readerType !== 'AcmsUser') {
+      return;
+    }
+    const messages = this.messages();
+    if (messages.some(m => m.mine && !m.isRead)) {
+      this.messages.set(
+        messages.map(m => (m.mine && !m.isRead ? { ...m, isRead: true } : m))
+      );
+    }
+  }
+
+  /** Attachment URLs come back site-relative (/uploads/chat/...). */
+  private resolveUrl(url?: string | null): string | null {
+    if (!url) {
+      return null;
+    }
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+    const origin = new URL(environment.apiUrl).origin;
+    return url.startsWith('/') ? origin + url : origin + '/' + url;
+  }
+
+  private toMessage(r: any): ChatMessage {
+    const senderType = r?.senderType ?? '';
     return {
-      senderId,
-      receiverId,
-      message,
-      mine: senderId === this.myId,
-      timestamp: ts ? new Date(ts) : new Date()
+      id: r?.id ?? 0,
+      conversationId: r?.conversationId ?? 0,
+      senderType,
+      senderId: r?.senderId,
+      senderName: r?.senderName,
+      message: r?.message,
+      createdAtUtc: r?.createdAtUtc,
+      isRead: !!r?.isRead,
+      mine: senderType === 'Provider',
+      attachmentUrl: this.resolveUrl(r?.attachmentUrl ?? r?.fileUrl),
+      attachmentName: r?.attachmentName ?? r?.fileName,
+      attachmentContentType: r?.attachmentContentType ?? r?.contentType
     };
-  }
-
-  /** Extracts a peer username from a conversation row of unknown shape. */
-  private peerOf(item: any): string {
-    if (typeof item === 'string') {
-      return item;
-    }
-    return (
-      item?.peer ??
-      item?.otherParty ??
-      item?.userName ??
-      item?.username ??
-      item?.name ??
-      ''
-    );
-  }
-
-  /** Unwraps ServiceResponse<T> ({ data }) or a bare array. */
-  private asArray(res: any): any[] {
-    if (Array.isArray(res)) {
-      return res;
-    }
-    if (Array.isArray(res?.data)) {
-      return res.data;
-    }
-    return [];
   }
 }

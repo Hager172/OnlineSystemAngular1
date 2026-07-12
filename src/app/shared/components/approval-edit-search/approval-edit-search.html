@@ -1,0 +1,298 @@
+<!-- Loading -->
+<div *ngIf="!approval()" class="loading-note card card-pad">
+  <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+  Loading request...
+</div>
+
+<!-- ============ EDIT REQUEST PAGE ============ -->
+<div *ngIf="approval()" class="er-page">
+
+  <div class="crumb">
+    <a (click)="goBack()">Search Requests</a> / <b>Edit Request #{{ approvalNumber }}</b>
+  </div>
+
+  <div class="pull-head">
+    <div>
+      <h2>
+        Edit Request <span class="apid">#{{ approvalNumber }}</span>
+      </h2>
+      <div class="tiny">Adjust the prices and quantities, then submit the changes.</div>
+    </div>
+    <div class="pull-actions">
+      <button type="button" class="btn btn-ghost" (click)="goBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button type="button" class="btn btn-primary btn-submit" (click)="onSubmit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        Submit Changes
+      </button>
+    </div>
+  </div>
+
+  <div class="pull-grid">
+    <!-- MAIN COLUMN -->
+    <div class="pull-main">
+
+      <!-- Member & approval information -->
+      <section class="card">
+        <div class="ro-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
+          Member &amp; Approval Information
+          <span class="ro-lock">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Read only
+          </span>
+        </div>
+
+        <div class="mi-flex">
+          <div class="mi-photo">
+            <img src="assets/images/member-photo.png" alt="Member Photo" />
+          </div>
+          <div class="mi-name">
+            <b>{{ approval()?.clientName }}</b>
+            <span class="en" *ngIf="approval()?.companyName">{{ approval()?.companyName }}</span>
+            <span class="pill active">Active</span>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Member ID</small>
+              <b>{{ approval()?.clientId }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.vendorName">
+              <small>Provider</small>
+              <b>{{ approval()?.vendorName }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.branch">
+              <small>Branch</small>
+              <b>{{ approval()?.branch }}</b>
+            </div>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Approval #</small>
+              <b>{{ approvalNumber }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.date">
+              <small>Approval Date</small>
+              <b>{{ approval()?.date | date:'dd/MM/yyyy' }}</b>
+            </div>
+            <div class="mi-field">
+              <small>Copayment</small>
+              <b>{{ approval()?.copaymentPercentage || 0 }}%</b>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Service items (editable) -->
+      <section class="card">
+        <div class="svc-items-head">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+            Service Items
+            <span class="tcount">{{ items.length }}</span>
+            <span class="svc-note">Adjust the edit quantity — limited to the approved quantity.</span>
+          </h3>
+          <button type="button" class="btn btn-primary btn-sm" (click)="addPrescriptionItem()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Service Item
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:44px;">#</th>
+                <th style="min-width:240px;">Service</th>
+                <th>Approved</th>
+                <th>Edit Qty</th>
+                <th>Days</th>
+                <th>Unit Price</th>
+                <th style="text-align:right;">Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of items; let i = index" [class.qty-zero]="!item.editqty">
+                <td class="muted">{{ i + 1 }}</td>
+                <td>
+                  <ng-container *ngIf="!item.isNew">
+                    <b>{{ item.name }}</b>
+                    <small class="sub" *ngIf="item.description && item.description !== item.name">{{ item.description }}</small>
+                  </ng-container>
+                  <ng-container *ngIf="item.isNew">
+                    <ng-select
+                      class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
+                      [items]="productOptions"
+                      bindLabel="name"
+                      bindValue="id"
+                      [typeahead]="productSearch$"
+                      [(ngModel)]="item.id"
+                      (change)="onProductSelect($event, item)"
+                      (search)="onProductSearch($event)"
+                      (clear)="onProductClear()"
+                      [placeholder]="'Search Product...'"
+                      [class.valid-green]="item.serviceId"
+                      [clearable]="true"
+                      [searchable]="true"
+                    >
+                      <ng-template ng-option-tmp let-item="item">
+                        <div class="opt-row">
+                          <i class="pi pi-search opt-ico"></i>
+                          <div>{{ item.name }}</div>
+                          <span class="opt-id">({{ item.price }} EGP)</span>
+                        </div>
+                      </ng-template>
+                    </ng-select>
+                  </ng-container>
+                </td>
+                <td class="muted">{{ item.isNew ? '-' : item.quantity }}</td>
+                <td>
+                  <input
+                    type="number"
+                    class="num-sm"
+                    [(ngModel)]="item.editqty"
+                    min="0"
+                    (ngModelChange)="item.isNew ? updateSubTotals() : limitQuantity(item)" />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    class="num-sm"
+                    [(ngModel)]="item.days"
+                    min="0" />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    class="num-sm price-in"
+                    [(ngModel)]="item.unitPrice"
+                    min="0"
+                    step="0.5"
+                    (ngModelChange)="updateSubTotals()" />
+                </td>
+                <td style="text-align:right;"><b>{{ ((item.editqty || 0) * (item.unitPrice || 0)).toFixed(2) }}</b></td>
+                <td>
+                  <button type="button" class="del-btn" *ngIf="item.isNew"
+                    (click)="removePrescriptionItem(i)" title="Remove item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!items.length">
+                <td colspan="8" class="empty-cell">No services on this request</td>
+              </tr>
+            </tbody>
+            <tfoot *ngIf="items.length">
+              <tr class="tfoot">
+                <td colspan="6" style="text-align:right;">Subtotal</td>
+                <td style="text-align:right;">{{ getSubtotal().toFixed(2) }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="fin-grid">
+          <div class="fin">
+            <small>Total Value</small>
+            <b>{{ getSubtotal().toFixed(2) }}</b>
+          </div>
+          <div class="fin over" *ngIf="approval()?.limit">
+            <small>Approval Limit</small>
+            <b>{{ approval()?.limit }}</b>
+          </div>
+          <div class="fin" *ngIf="approval()?.limit">
+            <small>Covered Amount</small>
+            <b>{{ getWithinLimit().toFixed(2) }}</b>
+          </div>
+          <div class="fin">
+            <small>Copayment · Member Share ({{ approval()?.copaymentPercentage || 0 }}%)</small>
+            <b>- {{ getTotalCopayment().toFixed(2) }}</b>
+          </div>
+          <div class="fin over" *ngIf="approval()?.limit && getExceedingAmount() > 0">
+            <small>Over Limit — Not Covered</small>
+            <b>{{ getExceedingAmount().toFixed(2) }}</b>
+          </div>
+          <div class="fin hl">
+            <small>Net Value</small>
+            <b>{{ getTotal().toFixed(2) }}</b>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SUMMARY ASIDE -->
+    <aside class="pull-aside">
+      <section class="card card-pad">
+        <div class="sum-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+          Request Summary
+        </div>
+
+        <div class="sum-row">
+          <small>Approval ID</small>
+          <b>#{{ approvalNumber }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.clientName">
+          <small>Member Name</small>
+          <b>{{ approval()?.clientName }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.clientId">
+          <small>Member ID</small>
+          <b>{{ approval()?.clientId }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.branch">
+          <small>Branch</small>
+          <b>{{ approval()?.branch }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row">
+          <small>Total Value</small>
+          <b>{{ getSubtotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.limit">
+          <small class="over-lbl">Approval Limit</small>
+          <b class="over-lbl">{{ approval()?.limit }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.limit">
+          <small>Covered Amount</small>
+          <b>{{ getWithinLimit().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Copayment ({{ approval()?.copaymentPercentage || 0 }}%)</small>
+          <b class="minus">- {{ getTotalCopayment().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.limit && getExceedingAmount() > 0">
+          <small class="over-lbl">Over Limit — Member Pays</small>
+          <b class="over-lbl">{{ getExceedingAmount().toFixed(2) }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row big">
+          <small>Net Amount</small>
+          <b>{{ getTotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Total Items</small>
+          <b>{{ getTotalItems() }}</b>
+        </div>
+      </section>
+
+      <!-- Notes (editable, submitted with the request) -->
+      <section class="card card-pad pull-note">
+        <div class="sum-title">Notes</div>
+        <textarea
+          rows="4"
+          [ngModel]="approval()?.notes"
+          (ngModelChange)="approval() ? approval()!.notes = $event : null"
+          placeholder="Enter any additional notes..."></textarea>
+      </section>
+    </aside>
+  </div>
+</div>

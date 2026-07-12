@@ -1,0 +1,561 @@
+<div class="ci-page">
+
+  <div class="crumb">
+    <a routerLink="/mem">Dashboard</a> / <b>Issue Approval</b>
+  </div>
+
+  <div class="pull-head">
+    <div>
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 15l2 2 4-4"/></svg>
+        Issue Approval
+      </h2>
+      <div class="tiny">Check the member first, then enter the request information and add services.</div>
+    </div>
+    <div class="pull-actions">
+      <button type="button" class="btn btn-ghost" (click)="cancel()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        Cancel
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="saveDraft()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Save Draft
+      </button>
+      <button type="button" class="btn btn-primary btn-submit" (click)="submitRequest()" [disabled]="submitting || !state.member()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        {{ submitting ? 'Submitting...' : 'Submit Request' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="pull-grid">
+    <!-- ============ LEFT / MAIN COLUMN ============ -->
+    <div class="pull-main">
+
+      <!-- MEMBER INFORMATION (step 1 — gate) -->
+      <section class="card">
+        <div class="ro-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
+          Member Information
+        </div>
+
+        <div class="mi-claim">
+          <!-- left: member check + identity -->
+          <div class="mi-left">
+
+            <!-- Member ID check -->
+            <div class="mi-inputs member-check">
+              <div class="ci-field">
+                <label [class.label-active]="searchTerm">
+                  Member ID <span class="req">*</span>
+                </label>
+                <div class="member-check-row">
+                  <input
+                    type="text"
+                    [(ngModel)]="searchTerm"
+                    (keyup.enter)="checkMember()"
+                    placeholder="Enter Member ID"
+                    [disabled]="!!state.member()"
+                    [class.has-value]="searchTerm"
+                    [class.invalid]="memberChecked && !state.member()"
+                    class="ci-input form-control" />
+                  <button type="button" class="btn btn-primary btn-check" (click)="checkMember()"
+                    *ngIf="!state.member()" [disabled]="loadingMember">
+                    <svg *ngIf="!loadingMember" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <svg *ngIf="loadingMember" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+                    {{ loadingMember ? 'Checking...' : 'Check' }}
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-check" (click)="changeMember()" *ngIf="state.member()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                    Change
+                  </button>
+                </div>
+                <span *ngIf="memberError" class="field-err">{{ memberError }}</span>
+              </div>
+            </div>
+
+            <!-- member identity (after a valid check) -->
+            <div class="mi-id" *ngIf="state.member() as m">
+              <div class="mi-photo">
+                <img
+                  [src]="memberPhoto"
+                  alt="Member Photo"
+                  (error)="memberPhoto = 'assets/images/member-photo.png'" />
+              </div>
+              <div class="mi-name">
+                <b>{{ m.memberName }}</b>
+                <span class="en">{{ m.customerName }}</span>
+                <span class="pill" [class.active]="m.status !== 'Inactive'">{{ m.status || 'Member' }}</span>
+              </div>
+            </div>
+
+            <div class="mi-inputs" *ngIf="state.member() as m">
+              <div class="ci-field">
+                <label [class.label-active]="m.mobile">Mobile</label>
+                <input type="tel" [ngModel]="m.mobile" readonly
+                  [class.has-value]="m.mobile" class="ci-input form-control ci-readonly" />
+              </div>
+              <div class="ci-field">
+                <label [class.label-active]="m.nationalId">National ID</label>
+                <input type="text" [ngModel]="m.nationalId" readonly
+                  [class.has-value]="m.nationalId" class="ci-input form-control ci-readonly" />
+              </div>
+              <div class="ci-field" *ngIf="calculateAge(m.birthDate) !== null">
+                <label class="label-active">Age</label>
+                <input type="text" [ngModel]="calculateAge(m.birthDate) + ' Y'" readonly
+                  class="ci-input form-control ci-readonly has-value" />
+              </div>
+            </div>
+          </div>
+
+          <!-- right: request information beside the member -->
+          <div class="mi-claim-right" *ngIf="state.member()">
+            <div class="sub-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
+              Request Information
+            </div>
+            <div class="ci-grid">
+
+              <!-- Type -->
+              <div class="ci-field ci-full">
+                <label class="label-active">Type <span class="req">*</span></label>
+                <div class="type-selector" [class.selector-invalid]="submitted && !state.selectedType()">
+                  <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Surgical'" (click)="selectType('Surgical')">
+                    Surgery
+                  </button>
+                  <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Pharmacy'" (click)="selectType('Pharmacy')">
+                    Medicine
+                  </button>
+                  <button type="button" class="type-btn" [class.active]="state.selectedType() === 'Public'" (click)="selectType('Public')">
+                    Other
+                  </button>
+                </div>
+                <span *ngIf="submitted && !state.selectedType()" class="field-err">
+                  Select a request type.
+                </span>
+              </div>
+
+              <!-- Vendor -->
+              <div class="ci-field">
+                <label [class.label-active]="state.selectedVendor()">
+                  Vendor <span class="req">*</span>
+                </label>
+                <ng-select
+                  class="ci-select custom-diagnosis-select"
+                  [class.select-invalid]="submitted && !state.selectedVendor()"
+                  [items]="vendorOptions"
+                  bindLabel="text"
+                  [typeahead]="vendorSearch$"
+                  [minTermLength]="1"
+                  (search)="onVendorSearch($event.term)"
+                  (change)="onVendorSelect($event)"
+                  (clear)="onVendorClear()"
+                  [placeholder]="state.selectedType() ? 'Type to search vendor...' : 'Select type first'"
+                  [clearable]="true"
+                  [searchable]="true"
+                  appendTo="body"
+                ></ng-select>
+                <span *ngIf="submitted && !state.selectedVendor()" class="field-err">
+                  Vendor is required.
+                </span>
+              </div>
+
+              <!-- Branch -->
+              <div class="ci-field">
+                <label [class.label-active]="state.selectedBranch()">Branch</label>
+                <ng-select
+                  class="ci-select custom-diagnosis-select"
+                  [items]="branchOptions"
+                  bindLabel="branchName"
+                  bindValue="branchId"
+                  [ngModel]="state.selectedBranch()"
+                  (ngModelChange)="state.selectedBranch.set($event)"
+                  [disabled]="!state.selectedVendor()"
+                  placeholder="Select Vendor first"
+                  [clearable]="true"
+                  [searchable]="true"
+                  appendTo="body"
+                ></ng-select>
+              </div>
+
+              <!-- Approval Date -->
+              <div class="ci-field">
+                <label [class.label-active]="state.approvalDate()">
+                  Approval Date <span class="req">*</span>
+                </label>
+                <input
+                  type="date"
+                  [ngModel]="state.approvalDate()"
+                  (ngModelChange)="state.approvalDate.set($event)"
+                  [min]="minDate"
+                  [class.has-value]="state.approvalDate()"
+                  [class.invalid]="submitted && (!state.approvalDate() || state.approvalDate() < minDate)"
+                  class="ci-input form-control" />
+                <span *ngIf="submitted && !state.approvalDate()" class="field-err">
+                  Approval Date is required.
+                </span>
+                <span *ngIf="submitted && state.approvalDate() && state.approvalDate() < minDate" class="field-err">
+                  Approval Date cannot be before today.
+                </span>
+              </div>
+
+              <!-- Max Limit -->
+              <div class="ci-field">
+                <label [class.label-active]="state.maxLimit()">Max Limit</label>
+                <input
+                  type="number"
+                  [ngModel]="state.maxLimit()"
+                  (ngModelChange)="state.maxLimit.set($event)"
+                  placeholder="Max"
+                  [class.has-value]="state.maxLimit()"
+                  class="ci-input form-control" />
+              </div>
+
+              <!-- Diagnosis — full single row -->
+              <div class="ci-field ci-full">
+                <label [class.label-active]="state.diagnosisIds().length > 0">
+                  Diagnosis <span class="req">*</span>
+                </label>
+                <ng-select
+                  class="ci-select custom-diagnosis-select"
+                  [class.select-invalid]="submitted && state.diagnosisIds().length === 0"
+                  [items]="diagnosisOptions"
+                  bindLabel="name"
+                  bindValue="id"
+                  [multiple]="true"
+                  [typeahead]="diagnosisSearch$"
+                  [ngModel]="state.diagnosisIds()"
+                  (ngModelChange)="state.diagnosisIds.set($event)"
+                  [placeholder]="state.diagnosisIds().length ? '' : 'Search Diagnosis'"
+                  [clearable]="true"
+                  [searchable]="true"
+                  appendTo="body"
+                  (search)="onDiagnosisSearch($event)"
+                  (clear)="onDiagnosisClear()"
+                >
+                  <ng-template ng-option-tmp let-item="item">
+                    <div class="opt-row">
+                      <i class="pi pi-search opt-ico"></i>
+                      <div>{{ item.name }}</div>
+                      <span class="opt-id">({{ item.id }})</span>
+                    </div>
+                  </ng-template>
+
+                  <ng-template ng-multiselect-label-tmp let-items="items">
+                    <div class="dx-tags">
+                      <div *ngFor="let item of items" class="dx-tag">
+                        <i class="pi pi-tag"></i>
+                        {{ item.name }}
+                      </div>
+                    </div>
+                  </ng-template>
+                </ng-select>
+                <span *ngIf="submitted && state.diagnosisIds().length === 0" class="field-err">
+                  Select at least one Diagnosis.
+                </span>
+              </div>
+
+              <!-- Notes + Private Notes -->
+              <div class="ci-field pull-note">
+                <label [class.label-active]="state.notes()">Notes</label>
+                <textarea
+                  [ngModel]="state.notes()"
+                  (ngModelChange)="state.notes.set($event)"
+                  placeholder="Enter any additional notes..."
+                  rows="3"
+                  maxlength="500"
+                  [class.has-value]="state.notes()"></textarea>
+              </div>
+              <div class="ci-field pull-note">
+                <label [class.label-active]="state.privateNotes()">Private Notes</label>
+                <textarea
+                  [ngModel]="state.privateNotes()"
+                  (ngModelChange)="state.privateNotes.set($event)"
+                  placeholder="Private notes..."
+                  rows="3"
+                  maxlength="500"
+                  [class.has-value]="state.privateNotes()"></textarea>
+              </div>
+
+              <!-- Claim + Exception (Exception sits under the Claim input) -->
+              <div class="ci-field">
+                <label [class.label-active]="state.claimAmount()">Claim</label>
+                <input
+                  type="text"
+                  [ngModel]="state.claimAmount()"
+                  (ngModelChange)="state.claimAmount.set($event)"
+                  placeholder="Claim"
+                  [class.has-value]="state.claimAmount()"
+                  class="ci-input form-control" />
+                <label class="ci-check exception-check">
+                  <input
+                    type="checkbox"
+                    [ngModel]="state.isException()"
+                    (ngModelChange)="state.isException.set($event)" />
+                  <span>Exception</span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVICE ITEMS -->
+      <section class="card" *ngIf="state.member()">
+        <div class="svc-items-head">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+            Service Items <span class="req">*</span>
+            <span class="tcount">{{ state.serviceRows().length }}</span>
+          </h3>
+          <button type="button" (click)="addServiceRow()" class="btn btn-primary btn-sm" [disabled]="!state.selectedVendor()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Service Item
+          </button>
+        </div>
+
+        <div class="empty-note" *ngIf="!state.selectedVendor()">
+          Select a vendor first to add services.
+        </div>
+
+        <div class="svc-rows" *ngIf="state.selectedVendor()">
+
+          <div class="svc-row" *ngFor="let row of state.serviceRows(); let i = index; trackBy: trackByRowId"
+            [class.svc-row-err]="rowServiceInvalid(row) || rowQtyInvalid(row) || rowCareItemInvalid(row)">
+
+            <!-- line 1: the service takes the whole row -->
+            <div class="svc-row-top">
+              <span class="svc-idx">{{ i + 1 }}</span>
+              <ng-select
+                class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select svc-select-full"
+                [class.select-invalid]="rowServiceInvalid(row)"
+                [items]="serviceOptions"
+                bindLabel="serviceName"
+                bindValue="serviceId"
+                [typeahead]="serviceSearch$"
+                [minTermLength]="isMedicineType ? 3 : 1"
+                [ngModel]="row.serviceId"
+                (ngModelChange)="onServiceSelectById(row, $event)"
+                (search)="serviceSearch$.next($event.term)"
+                [placeholder]="isMedicineType ? 'Search medicine (min 3 letters)...' : 'Search service...'"
+                [class.valid-green]="row.serviceId"
+                [clearable]="true"
+                [searchable]="true"
+                appendTo="body"
+              >
+                <ng-template ng-option-tmp let-item="item">
+                  <div class="opt-row">
+                    <i class="pi pi-search opt-ico"></i>
+                    <div>{{ item.serviceName }}</div>
+                    <span class="opt-id">({{ item.price }} EGP)</span>
+                  </div>
+                </ng-template>
+              </ng-select>
+              <button type="button" class="del-btn" (click)="removeServiceRow(row.rowId)" title="Remove item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+            <span *ngIf="rowServiceInvalid(row)" class="field-err">Select a service for this row (or remove it).</span>
+
+            <!-- line 2: the inputs -->
+            <div class="svc-row-grid">
+              <div class="svc-cell" *ngIf="isMedicineType">
+                <small>Units</small>
+                <input type="number" min="0" class="num-sm"
+                  [ngModel]="row.units" (ngModelChange)="onRowFieldChange(row, 'units', $event)"
+                  [class.has-value]="row.units" />
+              </div>
+              <div class="svc-cell" *ngIf="isMedicineType">
+                <small>Repeat</small>
+                <input type="number" min="0" class="num-sm"
+                  [ngModel]="row.repeat" (ngModelChange)="onRowFieldChange(row, 'repeat', $event)"
+                  [class.has-value]="row.repeat" />
+              </div>
+              <div class="svc-cell" *ngIf="isMedicineType">
+                <small>Days</small>
+                <input type="number" min="0" class="num-sm"
+                  [ngModel]="row.duration" (ngModelChange)="onRowFieldChange(row, 'duration', $event)"
+                  [class.has-value]="row.duration" />
+              </div>
+              <div class="svc-cell">
+                <small>Qty <span class="req">*</span></small>
+                <input type="number" min="0" class="num-sm"
+                  [ngModel]="row.qty" (ngModelChange)="onRowFieldChange(row, 'qty', $event)"
+                  [class.has-value]="row.qty"
+                  [class.invalid]="rowQtyInvalid(row)" />
+                <!-- medicine unit data (Strip / Box …) under the Qty -->
+                <span class="unit-pill" *ngIf="isMedicineType && unitLabel(row)">{{ unitLabel(row) }}</span>
+              </div>
+              <div class="svc-cell">
+                <small>Price</small>
+                <input type="number" class="num-sm price-in"
+                  [ngModel]="row.itemPrice" (ngModelChange)="onRowFieldChange(row, 'itemPrice', $event)"
+                  [class.has-value]="row.itemPrice" />
+              </div>
+              <div class="svc-cell">
+                <small>Total</small>
+                <b class="line-total">{{ state.getRowValue(row).toFixed(2) }}</b>
+              </div>
+              <div class="svc-cell">
+                <small>CO%</small>
+                <input type="number" min="0" max="100" class="num-sm"
+                  [ngModel]="row.coPercent" (ngModelChange)="onRowFieldChange(row, 'coPercent', $event)"
+                  [class.has-value]="row.coPercent" />
+              </div>
+              <div class="svc-cell svc-cell-wide">
+                <small>Care Item <span class="req">*</span></small>
+                <ng-select
+                  class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
+                  [class.select-invalid]="rowCareItemInvalid(row)"
+                  [items]="careItemOptions"
+                  bindLabel="name"
+                  bindValue="id"
+                  [ngModel]="row.careItemId"
+                  (ngModelChange)="onCareItemSelect(row, $event)"
+                  placeholder="Care item"
+                  [clearable]="true"
+                  appendTo="body"
+                ></ng-select>
+              </div>
+              <div class="svc-cell svc-cell-wide">
+                <small>Notes</small>
+                <input type="text" class="num-sm note-in"
+                  [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)"
+                  [class.has-value]="row.notes" />
+              </div>
+              <div class="svc-cell svc-cell-chk" *ngIf="isMedicineType">
+                <small>Chronic</small>
+                <input type="checkbox"
+                  [ngModel]="row.isChronic" (ngModelChange)="onRowFieldChange(row, 'isChronic', $event)" />
+              </div>
+              <div class="svc-cell" *ngIf="isMedicineType">
+                <small>Rep. Count</small>
+                <input type="number" class="num-sm"
+                  [ngModel]="row.repeatCount" (ngModelChange)="onRowFieldChange(row, 'repeatCount', $event)"
+                  [class.has-value]="row.repeatCount" />
+              </div>
+            </div>
+
+            <span *ngIf="rowQtyInvalid(row)" class="field-err">Quantity must be greater than 0.</span>
+            <span *ngIf="rowCareItemInvalid(row)" class="field-err">Care Item (med item) is required.</span>
+          </div>
+
+          <div class="empty-note" *ngIf="state.serviceRows().length === 0">
+            No services added yet. Click "Add Service Item" to start.
+          </div>
+        </div>
+
+        <span *ngIf="submitted && !hasSelectedService()" class="field-err svc-err">
+          Select at least one service item to submit the request.
+        </span>
+
+        <!-- Totals -->
+        <div class="totals-block" *ngIf="state.selectedVendor()">
+          <div class="t-row net">
+            <small><b>Subtotal</b></small>
+            <b>{{ state.getServicesSubtotal().toFixed(2) }}</b>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ RIGHT / SUMMARY ASIDE ============ -->
+    <aside class="pull-aside" *ngIf="state.member()">
+
+      <!-- REQUEST SUMMARY -->
+      <section class="card card-pad">
+        <div class="sum-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+          Request Summary
+        </div>
+
+        <div class="sum-row">
+          <small>Member ID</small>
+          <b>{{ state.member()?.memberId || '-' }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Member Name</small>
+          <b>{{ state.member()?.memberName || '-' }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Type</small>
+          <b>{{ state.selectedType() || 'Not Selected' }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Provider</small>
+          <b>{{ vendorLabel() }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Approval Date</small>
+          <b>{{ state.approvalDate() || '-' }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Diagnoses</small>
+          <b>{{ state.diagnosisIds().length }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Max Limit</small>
+          <b>{{ state.maxLimit() || '—' }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row big">
+          <small>Total Value</small>
+          <b>{{ state.getServicesSubtotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Total Items</small>
+          <b>{{ state.serviceRows().length }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Attachments</small>
+          <b>{{ state.selectedFiles().length }} file(s) ({{ totalSizeMb() }} MB)</b>
+        </div>
+      </section>
+
+      <!-- ATTACHMENTS (under the Request Summary) -->
+      <section class="card card-pad">
+        <div class="sum-title">Attachments</div>
+        <div class="ci-field att-field">
+          <input
+            type="file"
+            #fileInput
+            (change)="handleFileSelect($event)"
+            multiple
+            class="file-hidden" />
+          <div
+            class="att-drop"
+            (click)="fileInput.click()"
+            (dragover)="$event.preventDefault()"
+            (drop)="handleFileDrop($event)">
+            <div class="att-ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+            </div>
+            <ng-container *ngIf="state.selectedFiles().length === 0">
+              <b>Drag &amp; drop files here</b>
+              <span>or click to browse from your computer</span>
+            </ng-container>
+            <div *ngIf="state.selectedFiles().length > 0" class="att-selected">
+              {{ state.selectedFiles().length }} file(s) selected ({{ totalSizeMb() }} MB)
+            </div>
+          </div>
+
+          <div *ngIf="state.selectedFiles().length > 0" class="att-list">
+            <div class="att-row" *ngFor="let file of state.selectedFiles(); let i = index" (click)="$event.stopPropagation()">
+              <div class="fico">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></svg>
+              </div>
+              <b>{{ file.name }}</b>
+              <small>{{ fileSizeMb(file) }} MB</small>
+              <button type="button" class="del-btn" (click)="removeFile(i)" title="Remove file">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>

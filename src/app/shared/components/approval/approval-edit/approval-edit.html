@@ -1,186 +1,246 @@
-<div class="min-h-screen bg-slate-50 pt-10">
-  <!-- Header -->
-  <div class="bg-white border-b shadow-sm">
-    <div class="max-w-7xl mx-auto px-4"> 
-      <button (click)="goBack()" class="btn-ghost m-2">
-        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Input
+<!-- Loading -->
+<div *ngIf="!approval()" class="loading-note card card-pad">
+  <svg class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+  Loading approval...
+</div>
+
+<!-- ============ PULL APPROVAL PAGE ============ -->
+<div *ngIf="approval()" class="pull-page">
+
+  <div class="crumb no-print">
+    <a (click)="goBack()">Dashboard</a> / <b>Pull Approval #{{ approvalNumber }}</b>
+  </div>
+
+  <div class="pull-head">
+    <div>
+      <h2>
+        Pull Approval <span class="apid">#{{ approvalNumber }}</span>
+      </h2>
+      <div class="tiny">Adjust the quantity to pull (down to 0 — it cannot go below 0), then submit the request.</div>
+    </div>
+    <div class="pull-actions no-print">
+      <button type="button" class="btn btn-ghost" (click)="goBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button type="button" class="btn btn-primary btn-submit" (click)="onSubmit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        Submit Request
       </button>
     </div>
   </div>
 
-  <div *ngIf="!approval()" class="max-w-md mx-auto mt-8 p-4">
-    <div class="card">
-      <div class="card-content pt-6">
-        <p class="text-center">Approval not found</p>
-        <button (click)="goBack()" class="btn-primary w-full mt-4">Go Back</button>
-      </div>
+  <div class="pull-grid">
+    <!-- MAIN COLUMN -->
+    <div class="pull-main">
+
+      <!-- Member information -->
+      <section class="card">
+        <div class="ro-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
+          Member &amp; Approval Information
+          <span class="ro-lock">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Read only
+          </span>
+        </div>
+
+        <div class="mi-flex">
+          <div class="mi-photo">
+            <img src="assets/images/member-photo.png" alt="Member Photo" />
+          </div>
+          <div class="mi-name">
+            <b>{{ approval()?.clientName }}</b>
+            <span class="en" *ngIf="approval()?.companyName">{{ approval()?.companyName }}</span>
+            <span class="pill active">Active</span>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Client ID</small>
+              <b>{{ approval()?.clientId }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.memberId">
+              <small>Member ID</small>
+              <b>{{ approval()?.memberId }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.clientPhone">
+              <small>Phone</small>
+              <b>{{ approval()?.clientPhone }}</b>
+            </div>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Approval #</small>
+              <b>{{ approvalNumber }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.date">
+              <small>Approval Date</small>
+              <b>{{ approval()?.date }}</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.expiryDate">
+              <small>Expiry</small>
+              <b>{{ approval()?.expiryDate }}</b>
+            </div>
+          </div>
+          <div class="mi-col">
+            <div class="mi-field">
+              <small>Copayment</small>
+              <b>{{ approval()?.copaymentPercentage }}%</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.extraCopaymentPercentage">
+              <small>Extra Copayment</small>
+              <b>{{ approval()?.extraCopaymentPercentage }}%</b>
+            </div>
+            <div class="mi-field" *ngIf="approval()?.branch">
+              <small>Branch</small>
+              <b>{{ approval()?.branch }}</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="dx-wrap" *ngIf="approval()?.diagnose">
+          <small>Diagnosis</small>
+          <span class="dx-chip">{{ approval()?.diagnose }}</span>
+        </div>
+
+        <div class="fin-grid">
+          <div class="fin">
+            <small>Total Value</small>
+            <b>{{ getSubtotal().toFixed(2) }}</b>
+          </div>
+          <div class="fin over">
+            <small>Approval Limit</small>
+            <b>{{ approval()?.limit }}</b>
+          </div>
+          <div class="fin">
+            <small>Covered Amount</small>
+            <b>{{ getWithinLimit().toFixed(2) }}</b>
+          </div>
+          <div class="fin pay">
+            <small>Member Pays · Copayment ({{ approval()?.copaymentPercentage }}%)</small>
+            <b>{{ getTotalCopayment().toFixed(2) }}</b>
+          </div>
+          <div class="fin over" *ngIf="getExceedingAmount() > 0">
+            <small>Over Limit — Not Covered</small>
+            <b>{{ getExceedingAmount().toFixed(2) }}</b>
+          </div>
+          <div class="fin hl">
+            <small>Net Value</small>
+            <b>{{ getTotal().toFixed(2) }}</b>
+          </div>
+        </div>
+
+        <div class="appr-note-wrap" *ngIf="approval()?.notes">
+          <small>Approval Note</small>
+          <p>{{ approval()?.notes }}</p>
+        </div>
+      </section>
+
+      <!-- Services -->
+      <section class="card">
+        <div class="svc-bar">
+          Services
+          <span class="tcount">{{ items.length }}</span>
+          <span class="svc-note">Adjust the quantity to pull — limited to the approved quantity.</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:44px;">#</th>
+                <th>Service</th>
+                <th>Unit</th>
+                <th>Unit Price</th>
+                <th>Approved</th>
+                <th>Pull Qty</th>
+                <th style="text-align:right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of items; let i = index" [class.qty-zero]="!item.quantity">
+                <td class="muted">{{ i + 1 }}</td>
+                <td><b>{{ item.name }}</b></td>
+                <td><span class="unit-pill">{{ item.quantityUnit || '-' }}</span></td>
+                <td>{{ item.unitPrice }}</td>
+                <td class="muted">{{ item.originalQuantity }}</td>
+                <td>
+                  <input
+                    type="number"
+                    class="qty-input no-print-border"
+                    [(ngModel)]="item.quantity"
+                    [max]="item.originalQuantity ?? 0"
+                    min="0"
+                    (ngModelChange)="limitQuantity(item)" />
+                </td>
+                <td style="text-align:right;"><b>{{ ((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2) }}</b></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="tfoot">
+                <td colspan="6" style="text-align:right;">Subtotal</td>
+                <td style="text-align:right;">{{ getSubtotal().toFixed(2) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
     </div>
+
+    <!-- SUMMARY ASIDE -->
+    <aside>
+      <section class="card card-pad">
+        <div class="sum-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+          Request Summary
+        </div>
+
+        <div class="sum-row">
+          <small>Approval ID</small>
+          <b>#{{ approvalNumber }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.memberId">
+          <small>Member ID</small>
+          <b>{{ approval()?.memberId }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.clientName">
+          <small>Member Name</small>
+          <b>{{ approval()?.clientName }}</b>
+        </div>
+        <div class="sum-row" *ngIf="approval()?.date">
+          <small>Approval Date</small>
+          <b>{{ approval()?.date }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row">
+          <small>Subtotal</small>
+          <b>{{ getSubtotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row" *ngIf="getExceedingAmount() > 0">
+          <small>Amount exceeding limit</small>
+          <b class="over">{{ getExceedingAmount().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row pay">
+          <small>Member pays — Copayment ({{ approval()?.copaymentPercentage }}%)</small>
+          <b>{{ getRegularCopayment().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row pay" *ngIf="getExtraCopayment() > 0">
+          <small>Member pays — Extra copayment ({{ approval()?.extraCopaymentPercentage }}%)</small>
+          <b>{{ getExtraCopayment().toFixed(2) }}</b>
+        </div>
+
+        <div class="sum-div"></div>
+
+        <div class="sum-row big">
+          <small>Total</small>
+          <b>{{ getTotal().toFixed(2) }}</b>
+        </div>
+        <div class="sum-row">
+          <small>Total Items</small>
+          <b>{{ getTotalItems() }}</b>
+        </div>
+      </section>
+    </aside>
   </div>
-
-  <div *ngIf="approval()">
-    <div class="card">
-      <div class="card-content p-6 md:p-8 space-y-8">
-        
-        <!-- Logos -->
-        <!-- <div>
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <p class="text-xs text-slate-500 uppercase mb-2">Company</p>
-              <img [src]="approval()?.companyLogo" alt="Company Logo" class="h-16 w-auto object-contain" />
-            </div>
-            <div class="text-right">
-              <p class="text-xs text-slate-500 uppercase mb-2">Vendor</p>
-              <img [src]="approval()?.vendorLogo" alt="Vendor Logo" class="h-16 w-auto object-contain" />
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Customer Data - في صف واحد -->
-        <div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p class="text-slate-500 text-xs uppercase">Client Name</p>
-              <p class="font-medium mt-1 text-lg">{{ approval()?.clientName }}</p>
-            </div>
-            <div>
-              <p class="text-slate-500 text-xs uppercase">Client ID</p>
-              <p class="font-medium mt-1 text-lg">{{ approval()?.clientId }}</p>
-            </div>
-            <!-- <div>
-              <p class="text-slate-500 text-xs uppercase">Phone</p>
-              <p class="font-medium mt-1 text-lg">{{ approval()?.clientPhone }}</p>
-            </div> -->
-          </div>
-        </div>
-
-        <!-- Limit and Notes - في صفين -->
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="bg-blue-50 p-4 rounded-lg">
-            <p class="text-xs text-slate-500 uppercase mb-2">Limit</p>
-            <!-- <p class="text-3xl font-bold text-blue-600"> {{ approval.limit.toFixed(2) }}</p> -->
-            <p class="text-3xl font-bold text-blue-600"> {{ approval()?.limit}}</p>
-          </div>
-          <div class="bg-slate-50 p-4 rounded-lg">
-            <p class="text-xs text-slate-500 uppercase mb-2">Notes</p>
-            <p class="text-sm text-blue-700">{{ approval()?.notes }}</p>
-          </div>
-        </div>
-
-        <!-- Items Table -->
-        <div>
-          <!-- <h4 class="text-lg font-semibold mb-4">Approval Items</h4> -->
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead>
-                <tr class="bg-slate-50">
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">#</th>
-                   <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Name</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Description</th>
-                  <th class="px-4 py-3 text-center text-xs font-semibold uppercase">Quantity</th>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase">Unit</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Unit Price</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of items; let i = index" class="hover:bg-slate-50">
-                  <td class="px-4 py-3 text-slate-600">{{ i + 1 }}</td>
-
-               <td class="px-4 py-3">
-  <input
-    type="text"
-    [(ngModel)]="item.name"
-    readonly
-    style="width: 400px;"
-    class="input w-full"
-  />
-</td>
-
-<td class="px-4 py-3">
-  <input
-    type="text"
-    [(ngModel)]="item.description"
-    readonly
-    class="input w-full"
-  />
-</td>
-
-<td class="px-4 py-3">
-<input
-  type="number"
-  [(ngModel)]="item.quantity"
-  [max]="item.originalQuantity ?? 0"
-  min="0"
-  (ngModelChange)="limitQuantity(item)"
-  class="input w-24 text-center"
-/>
-</td>
-
-<td class="px-4 py-3">
-  <input
-    type="text"
-    [(ngModel)]="item.quantityUnit"
-    readonly
-    class="input w-28"
-  />
-</td>
-
-<td class="px-4 py-3 text-right">
-  <input
-    type="number"
-    [(ngModel)]="item.unitPrice"
-    readonly
-    class="input w-32 text-right"
-  />
-</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Totals -->
-        <div>
-          <div class="max-w-md ml-auto space-y-3">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600">Subtotal:</span>
-              <span class="font-semibold">{{ getSubtotal().toFixed(2) }}</span>
-            </div>
-            
-            <div *ngIf="getExceedingAmount() > 0" class="flex justify-between text-sm bg-amber-50  py-2">
-              <span class="text-amber-800">Amount Exceeding Limit:</span>
-              <span class="font-semibold text-amber-900"> {{ getExceedingAmount().toFixed(2) }}</span>
-            </div>
-            
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600">Copayment ({{ approval()?.copaymentPercentage }}%):</span>
-              <span class="font-semibold text-red-600">- {{ getRegularCopayment().toFixed(2) }}</span>
-            </div>
-            
-            <div *ngIf="getExtraCopayment() > 0" class="flex justify-between text-sm">
-              <span class="text-slate-600">Extra Copayment ({{ approval()?.extraCopaymentPercentage }}%):</span>
-              <span class="font-semibold text-red-600">- {{ getExtraCopayment().toFixed(2) }}</span>
-            </div>
-            
-            <div class="bg-slate-100 -mx-4 px-4 py-4 rounded-lg">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-slate-900">Total:</span>
-                <span class="text-3xl font-bold text-blue-600"> {{ getTotal().toFixed(2) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end pt-4">
-          <button (click)="onSubmit()" class="btn-primary px-8 py-3 text-lg">
-            Submit & Generate Invoice
-          </button>
-        </div>
-
-      </div>
-    </div> 
-  </div> 
-</div> 
+</div>

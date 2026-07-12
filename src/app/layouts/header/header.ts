@@ -21,6 +21,13 @@ export class Header implements OnInit {
   clients: any[] = [];
   selectedClient: any = null;
   isClientDropdownOpen = false;
+  roleLabel = 'User';
+
+  private readonly roleLabels: Record<string, string> = {
+    HEADOFFICE: 'Head Office',
+    CLINETAGENT: 'Client Agent',
+    SITEAGENT: 'Site Agent',
+  };
 
   /** Maps a clientId to its company logo. Replace these files with the
    *  official assets at the same paths to change the displayed logos. */
@@ -31,6 +38,11 @@ export class Header implements OnInit {
 
   constructor(private auth: AuthService, private elRef: ElementRef){
 
+  }
+
+  get roleInitials(): string {
+    const parts = this.roleLabel.trim().split(/\s+/);
+    return parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'U';
   }
 
   getClientLogo(clientId: any): string | null {
@@ -48,7 +60,10 @@ export class Header implements OnInit {
   toggleClientDropdown(): void {
     this.isClientDropdownOpen = !this.isClientDropdownOpen;
   }
-
+logout(): void {
+  this.auth.logout();
+  
+}
   // selectClient(client: any): void {
   //   this.isClientDropdownOpen = false;
   //   if (this.isSelected(client)) {
@@ -81,6 +96,11 @@ selectClient(client: any): void {
   
 
 ngOnInit(): void {
+  this.auth.role$.subscribe(role => {
+    const key = (role || '').toUpperCase();
+    this.roleLabel = this.roleLabels[key] || role || 'User';
+  });
+
   this.auth.clients$.subscribe(clients => {
 console.log("clients",clients);
 
@@ -185,20 +205,20 @@ onClientChange(userId: any, clientId: any) {
       const newBranchId = res.data.branchId; 
       const newVendorId = res.data.vendorId; 
       const newRole = res.data.roles[0]; 
-
+const newVType = res.data.VType;
       localStorage.setItem('token', newToken);
       localStorage.setItem('currentClient', clientId);
       this.auth.currentClientSubject.next(clientId);
 
-      this.auth.updateSessionData(newVendorId, newBranchId, newRole);
+      this.auth.updateSessionData(newVendorId, newBranchId, newRole, newVType);
 
       this.auth.me().subscribe({
         next: (resMe) => {
           const branchFromMe = resMe.branchId;
           const vendorFromMe = resMe.vendorId;
           const roleFromMe = resMe.roles[0];
-
-          this.auth.updateSessionData(vendorFromMe, branchFromMe, roleFromMe);
+const vTypeFromMe = resMe.data.VType || '';
+          this.auth.updateSessionData(vendorFromMe, branchFromMe, roleFromMe, vTypeFromMe);
 
           const updatedPages = resMe.data?.pages || resMe.pages || [];
           this.auth.setPages(updatedPages);

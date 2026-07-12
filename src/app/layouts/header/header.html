@@ -1,58 +1,65 @@
-<header>
-  <div class="wrapper">
-    <a class="logo" href="#" aria-label="AC">
-      <img class="logo-img" src="assets/logos/ac-logo.svg" alt="AC">
-    </a>
+<header class="topbar">
+  <a class="logo" [routerLink]="['/mem']" aria-label="AC">
+    <img class="logo-img" src="assets/logos/ac-logo.svg" alt="AC">
+  </a>
 
-    
-    <div class="right-group">
-      <app-chat-widget></app-chat-widget>
+  <!-- CLIENT SWITCHER : changes the whole page data -->
+  <div class="client-selector" [class.open]="isClientDropdownOpen">
+    <button type="button" class="client-pill"
+      (click)="toggleClientDropdown(); $event.stopPropagation()" title="Switch client">
 
-      <div class="client-selector" [class.open]="isClientDropdownOpen">
-        <button type="button" class="client-selector__trigger"
-          (click)="toggleClientDropdown(); $event.stopPropagation()">
-
-          @if (selectedClientObj) {
-            @if (getClientLogo(selectedClientObj.clientId); as logo) {
-              <img class="client-selector__logo" [src]="logo" [alt]="selectedClientObj.clientName">
-            }
-            <span class="client-selector__name">{{ selectedClientObj.clientName }}</span>
-          } @else {
-            <span class="client-selector__name client-selector__placeholder">Select client</span>
-          }
-
-          <i class="fa fa-chevron-down client-selector__caret"></i>
-        </button>
-
-        @if (isClientDropdownOpen) {
-          <ul class="client-selector__menu">
-            @for (client of clients; track client.clientId) {
-              <li class="client-selector__item" [class.active]="isSelected(client)"
-                (click)="selectClient(client)">
-
-                @if (getClientLogo(client.clientId); as logo) {
-                  <img class="client-selector__logo" [src]="logo" [alt]="client.clientName">
-                }
-                <span class="client-selector__name">{{ client.clientName }}</span>
-              </li>
-            }
-          </ul>
+      @if (selectedClientObj) {
+        @if (getClientLogo(selectedClientObj.clientId); as logo) {
+          <img class="client-logo" [src]="logo" [alt]="selectedClientObj.clientName">
         }
-      </div>
-        <nav class="main-nav">
-        <ul>
-            <li><a [routerLink]="['/mem']"><i class="fa fa-home nav-icon"></i>Home</a></li>
-        
-        </ul>
-        </nav>
-        
-        <div class="menu-toggle">
-        <div class="hamburger"></div>
-        </div>
-        
-    </div>
-  </div>
-  <app-languageswitcher class="lang-btn"></app-languageswitcher>
-    <!-- <router-outlet></router-outlet> -->
+        <span class="cmeta"><small>Client</small><b>{{ selectedClientObj.clientName }}</b></span>
+      } @else {
+        <span class="cmeta"><small>Client</small><b class="placeholder">Select client</b></span>
+      }
 
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+
+    @if (isClientDropdownOpen) {
+      <ul class="client-menu">
+        @for (client of clients; track client.clientId) {
+          <li class="client-item" [class.active]="isSelected(client)"
+            (click)="selectClient(client)">
+
+            @if (getClientLogo(client.clientId); as logo) {
+              <img class="client-logo" [src]="logo" [alt]="client.clientName">
+            }
+            <span class="client-name">{{ client.clientName }}</span>
+            @if (isSelected(client)) {
+              <i class="fas fa-check check"></i>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <!-- Center search -->
+  <div class="topsearch">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" placeholder="Search anything...">
+  </div>
+
+  <div class="top-right">
+    <app-languageswitcher class="lang-slot"></app-languageswitcher>
+    <app-chat-widget class="chat-slot"></app-chat-widget>
+
+    <div class="profile">
+      <div class="avatar">{{ roleInitials }}</div>
+      <div class="who">
+        <small>Welcome,</small>
+        <b>{{ roleLabel }}</b>
+      </div>
+    </div>
+
+    <button class="logout-btn" (click)="logout()" title="Logout">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
+    </button>
+  </div>
 </header>

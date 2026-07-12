@@ -1,14 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { Approval } from '../../../interfaces/approval/approval';
 import { ApprovalItem } from '../../../interfaces/approval/approvalitem';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ApprovalService } from '../../../../core/services/Approval/approval-service';
 import { CommonModule  } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-invoice-print',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './invoice-print.html',
   styleUrl: './invoice-print.css',
 })
@@ -26,12 +26,13 @@ export class InvoicePrint implements OnInit {
 
   ngOnInit(): void {
     this.approvalNumber = this.route.snapshot.paramMap.get('approvalNumber') || '';
-    this.approvalService.getApproval(this.approvalNumber).subscribe({
+    this.approvalService.getApprovalView(this.approvalNumber).subscribe({
     next: (data) => {
+      console.log('data:', data);
     this.approval.set(data);
     const editedItems = this.approvalService.getEditedItems(this.approvalNumber);
     this.items.set(editedItems || data.items);
-    console.log('data:', data);
+    
   },
   error: (err) => {
     console.error(err);
