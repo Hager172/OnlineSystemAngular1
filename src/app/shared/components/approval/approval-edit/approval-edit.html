@@ -116,9 +116,9 @@
             <small>Covered Amount</small>
             <b>{{ getWithinLimit().toFixed(2) }}</b>
           </div>
-          <div class="fin">
-            <small>Copayment · Member Share ({{ approval()?.copaymentPercentage }}%)</small>
-            <b>- {{ getTotalCopayment().toFixed(2) }}</b>
+          <div class="fin pay">
+            <small>Member Pays · Copayment ({{ approval()?.copaymentPercentage }}%)</small>
+            <b>{{ getTotalCopayment().toFixed(2) }}</b>
           </div>
           <div class="fin over" *ngIf="getExceedingAmount() > 0">
             <small>Over Limit — Not Covered</small>
@@ -221,13 +221,13 @@
           <small>Amount exceeding limit</small>
           <b class="over">{{ getExceedingAmount().toFixed(2) }}</b>
         </div>
-        <div class="sum-row">
-          <small>Copayment ({{ approval()?.copaymentPercentage }}%)</small>
-          <b class="minus">- {{ getRegularCopayment().toFixed(2) }}</b>
+        <div class="sum-row pay">
+          <small>Member pays — Copayment ({{ approval()?.copaymentPercentage }}%)</small>
+          <b>{{ getRegularCopayment().toFixed(2) }}</b>
         </div>
-        <div class="sum-row" *ngIf="getExtraCopayment() > 0">
-          <small>Extra copayment ({{ approval()?.extraCopaymentPercentage }}%)</small>
-          <b class="minus">- {{ getExtraCopayment().toFixed(2) }}</b>
+        <div class="sum-row pay" *ngIf="getExtraCopayment() > 0">
+          <small>Member pays — Extra copayment ({{ approval()?.extraCopaymentPercentage }}%)</small>
+          <b>{{ getExtraCopayment().toFixed(2) }}</b>
         </div>
 
         <div class="sum-div"></div>

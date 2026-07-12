@@ -41,8 +41,11 @@ export interface ServiceOption {
   serviceId: string;
   serviceName: string;
   price: number;
-  doseUnitNo?: number; 
-  subUnitNo?: number;  
+  doseUnitNo?: number;
+  subUnitNo?: number;
+  /** Unit-of-sale label for medicines (e.g. Strip, Box). */
+  unitSale?: string;
+  doseForm?: string;
 }
 
 export interface CareItemOption {
@@ -68,4 +71,7 @@ export interface ServiceRow {
 
   doseUnitNo?: number;
   subUnitNo?: number;
+  /** Unit-of-sale label for medicines (e.g. Strip, Box). */
+  unitSale?: string;
+  doseForm?: string;
 }

@@ -67,6 +67,17 @@
   border-color: var(--teal-500);
   color: var(--teal-600);
 }
+/* compact Respond link-button inside the table's Action column */
+.action-col {
+  white-space: nowrap;
+  width: 1%;
+}
+.respond-btn {
+  padding: 7px 13px;
+  font-size: 12px;
+  border-radius: 9px;
+  text-decoration: none;
+}
 .export-btn {
   background: #0f7a44;
   color: #fff;
