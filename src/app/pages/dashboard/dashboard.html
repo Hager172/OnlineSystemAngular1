@@ -1,0 +1,264 @@
+<div class="dash-page">
+
+  <!-- ============ Head ============ -->
+  <div class="dash-head">
+    <div>
+      <h2>Users Analytics Dashboard</h2>
+      <div class="tiny">Online approvals activity</div>
+    </div>
+    <button type="button" class="btn btn-ghost" (click)="load()">
+      <i class="fas fa-rotate" [class.spin]="kpiLoading()"></i> Refresh
+    </button>
+  </div>
+
+  <!-- ============ KPI row ============ -->
+  <div class="card card-pad loading-note" *ngIf="kpiLoading()">
+    <i class="fas fa-circle-notch spin"></i> Loading dashboard…
+  </div>
+
+  <div class="card card-pad error-note" *ngIf="!kpiLoading() && kpiError()">
+    <i class="fas fa-triangle-exclamation"></i>
+    <span>Couldn't load the dashboard data.</span>
+    <button type="button" class="btn btn-primary" (click)="loadKpi()">Try again</button>
+  </div>
+
+  <div class="kpi-grid" *ngIf="!kpiLoading() && !kpiError() && data() as d">
+
+    <div class="card card-pad stat">
+      <div class="stat-label">Registered users</div>
+      <div class="stat-value">{{ d.registered | number }}</div>
+      <div class="tiny">of {{ d.allUsers | number }} total accounts</div>
+    </div>
+
+    <div class="card card-pad stat">
+      <div class="stat-label">Visitors today</div>
+      <div class="stat-value">{{ d.visitorsToday | number }}</div>
+      <div class="tiny">unique users · last 24 hours</div>
+    </div>
+
+    <div class="card card-pad stat">
+      <div class="stat-label">Approvals</div>
+      <div class="stat-value">{{ approvalsTotal() | number }}</div>
+      <div class="status-bar" *ngIf="approvalsTotal() > 0">
+        <div class="status-seg"
+             *ngFor="let s of approvalSegments()"
+             [style.width.%]="s.pct"
+             [style.background]="s.color"
+             [class.is-empty]="s.value === 0"></div>
+      </div>
+      <div class="chip-row wrap">
+        <span class="chip" *ngFor="let s of approvalSegments()">
+          <span class="dot" [style.background]="s.color"></span>
+          {{ s.label }} <b>{{ s.value | number }}</b>
+        </span>
+      </div>
+    </div>
+
+    <div class="card card-pad stat">
+      <div class="stat-label">Avg response time</div>
+      <div class="stat-value">{{ d.avgResponseMinutes | number }} <span class="unit">min</span></div>
+      <svg class="spark" viewBox="0 0 130 36" preserveAspectRatio="none" aria-hidden="true">
+        <polyline [attr.points]="sparkPoints()" fill="none" stroke="#9db4ae" stroke-width="2"
+                  stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+        <circle *ngIf="sparkEnd() as p" [attr.cx]="p.x" [attr.cy]="p.y" r="3.5"
+                fill="var(--teal-600)" stroke="#fff" stroke-width="2" />
+      </svg>
+      <div class="tiny">by hour of day · last 30 days</div>
+    </div>
+  </div>
+
+  <!-- ============ Trend + Response Reasons row ============ -->
+  <div class="charts-grid">
+
+    <!-- Direct & Pending Approvals -->
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Direct &amp; Pending Approvals</div>
+          <div class="tiny">Daily for short ranges, monthly beyond two months</div>
+        </div>
+        <div class="head-tools">
+          <div class="range-ctl">
+            <input type="date" [value]="trendStart()" [max]="trendEnd()"
+                   (change)="setRange('trend', 'start', $event)" aria-label="Trend start date">
+            <span class="sep">–</span>
+            <input type="date" [value]="trendEnd()" [min]="trendStart()"
+                   (change)="setRange('trend', 'end', $event)" aria-label="Trend end date">
+          </div>
+          <div class="chip-row">
+            <span class="chip"><span class="dot" [style.background]="pendingColor"></span>Pending</span>
+            <span class="chip"><span class="dot" [style.background]="directColor"></span>Direct</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-note" *ngIf="trendLoading()">
+        <i class="fas fa-circle-notch spin"></i> Loading…
+      </div>
+      <div class="chart-note error" *ngIf="!trendLoading() && trendError()">
+        Couldn't load this chart. <a (click)="loadTrend()">Retry</a>
+      </div>
+      <div class="empty-note" *ngIf="!trendLoading() && !trendError() && !labels().length">
+        No approval activity in this range.
+      </div>
+
+      <div class="chart-body"
+           *ngIf="!trendLoading() && !trendError() && labels().length && trend() as t"
+           (mousemove)="onChartMove($event)"
+           (mouseleave)="onChartLeave()">
+        <svg [attr.viewBox]="'0 0 ' + vb.w + ' ' + vb.h" role="img"
+             aria-label="Pending and direct approvals over the selected date range">
+
+          <g *ngFor="let tick of yTicks()">
+            <line class="grid" [attr.x1]="pad.l" [attr.x2]="vb.w - pad.r" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+            <text class="tick" [attr.x]="pad.l - 8" [attr.y]="tick.y + 3.5" text-anchor="end">
+              {{ tick.v | number: '1.0-0' }}
+            </text>
+          </g>
+
+          <text class="tick" *ngFor="let l of xLabels()" [attr.x]="l.x" [attr.y]="vb.h - 10" text-anchor="middle">
+            {{ l.text }}
+          </text>
+
+          <line class="crosshair" *ngIf="hoveredPoint() !== null"
+                [attr.x1]="xFor(hoveredPoint()!)" [attr.x2]="xFor(hoveredPoint()!)"
+                [attr.y1]="pad.t" [attr.y2]="vb.h - pad.b" />
+
+          <path class="line" [attr.d]="pendingPath()" [style.stroke]="pendingColor" />
+          <path class="line" [attr.d]="directPath()" [style.stroke]="directColor" />
+
+          <ng-container *ngIf="hoveredPoint() !== null">
+            <circle class="marker" [attr.cx]="xFor(hoveredPoint()!)"
+                    [attr.cy]="yFor(t.pendingApprovals[hoveredPoint()!] ?? 0)" r="4.5"
+                    [style.fill]="pendingColor" />
+            <circle class="marker" [attr.cx]="xFor(hoveredPoint()!)"
+                    [attr.cy]="yFor(t.directApprovals[hoveredPoint()!] ?? 0)" r="4.5"
+                    [style.fill]="directColor" />
+          </ng-container>
+
+          <g *ngFor="let l of endLabels()">
+            <circle [attr.cx]="l.x" [attr.cy]="l.y" r="3" [attr.fill]="l.color" />
+            <text class="end-label" [attr.x]="l.x + 7" [attr.y]="l.y + 3.5">
+              {{ l.text }} · {{ l.value | number }}
+            </text>
+          </g>
+        </svg>
+
+        <div class="viz-tip" *ngIf="chartTip() as tip" [style.left.px]="tip.x" [style.top.px]="tip.y">
+          <ng-container *ngIf="hoveredPoint() !== null">
+            <div class="tip-title">{{ labels()[hoveredPoint()!] }}</div>
+            <div class="tip-row">
+              <span class="dot" [style.background]="pendingColor"></span>
+              Pending <b>{{ (t.pendingApprovals[hoveredPoint()!] ?? 0) | number }}</b>
+            </div>
+            <div class="tip-row">
+              <span class="dot" [style.background]="directColor"></span>
+              Direct <b>{{ (t.directApprovals[hoveredPoint()!] ?? 0) | number }}</b>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Response Reasons -->
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Response Reasons</div>
+          <div class="tiny">Top {{ 10 }} reasons on reviewed items</div>
+        </div>
+        <div class="head-tools">
+          <div class="range-ctl">
+            <input type="date" [value]="reasonsStart()" [max]="reasonsEnd()"
+                   (change)="setRange('reasons', 'start', $event)" aria-label="Reasons start date">
+            <span class="sep">–</span>
+            <input type="date" [value]="reasonsEnd()" [min]="reasonsStart()"
+                   (change)="setRange('reasons', 'end', $event)" aria-label="Reasons end date">
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-note" *ngIf="reasonsLoading()">
+        <i class="fas fa-circle-notch spin"></i> Loading…
+      </div>
+      <div class="chart-note error" *ngIf="!reasonsLoading() && reasonsError()">
+        Couldn't load this chart. <a (click)="loadReasons()">Retry</a>
+      </div>
+      <div class="empty-note" *ngIf="!reasonsLoading() && !reasonsError() && !reasonBars().length">
+        No reviewed items in this range.
+      </div>
+
+      <div class="reasons-list" *ngIf="!reasonsLoading() && !reasonsError() && reasonBars().length">
+        <div class="reason-row" *ngFor="let r of reasonBars()">
+          <div class="reason-name" [title]="r.reason">{{ r.reason }}</div>
+          <div class="reason-track">
+            <div class="reason-bar"
+                 [style.width.%]="r.pct"
+                 [style.background]="r.isOther ? otherColor : reasonColor"></div>
+          </div>
+          <div class="reason-count">{{ r.count | number }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Agents Performance ============ -->
+  <div class="card chart-card">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title">Agents Performance</div>
+        <div class="tiny">Doctors department · {{ agentRows().length }} agents · responses by handling time</div>
+      </div>
+      <div class="head-tools">
+        <div class="range-ctl">
+          <input type="date" [value]="agentsStart()" [max]="agentsEnd()"
+                 (change)="setRange('agents', 'start', $event)" aria-label="Agents start date">
+          <span class="sep">–</span>
+          <input type="date" [value]="agentsEnd()" [min]="agentsStart()"
+                 (change)="setRange('agents', 'end', $event)" aria-label="Agents end date">
+        </div>
+        <div class="chip-row">
+          <span class="chip" *ngFor="let b of buckets">
+            <span class="dot" [style.background]="b.color"></span>{{ b.label }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-note" *ngIf="agentsLoading()">
+      <i class="fas fa-circle-notch spin"></i> Loading…
+    </div>
+    <div class="chart-note error" *ngIf="!agentsLoading() && agentsError()">
+      Couldn't load this chart. <a (click)="loadAgents()">Retry</a>
+    </div>
+    <div class="empty-note" *ngIf="!agentsLoading() && !agentsError() && !agentRows().length">
+      No doctor activity in this range.
+    </div>
+
+    <div class="agents-wrap" *ngIf="!agentsLoading() && !agentsError() && agentRows().length">
+      <div class="agents-scroll">
+        <div class="agent-row" *ngFor="let row of agentRows()">
+          <div class="agent-name" [title]="row.name">{{ row.name }}</div>
+          <div class="agent-track">
+            <div class="agent-bar" [style.width.%]="barWidth(row)">
+              <div class="seg"
+                   *ngFor="let b of buckets; let bi = index"
+                   [style.width.%]="segWidth(row, b.key)"
+                   [style.background]="b.color"
+                   [class.is-empty]="row[b.key] === 0"
+                   (mousemove)="onSegHover($event, row, bi)"
+                   (mouseleave)="onSegLeave()"></div>
+            </div>
+          </div>
+          <div class="agent-total">{{ row.total | number }}</div>
+        </div>
+      </div>
+
+      <div class="viz-tip" *ngIf="agentTip() as tip" [style.left.px]="tip.x" [style.top.px]="tip.y">
+        <div class="tip-title">{{ tip.agent }}</div>
+        <div class="tip-row">{{ tip.bucket }} <b>{{ tip.value | number }}</b></div>
+      </div>
+    </div>
+  </div>
+
+</div>
