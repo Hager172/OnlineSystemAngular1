@@ -18,6 +18,7 @@ import { RequestAttachments } from './shared/components/request-attachments/requ
 import { Chat } from './pages/chat/chat';
 import { Approvals3m } from './shared/components/approvals3m/approvals3m';
 import { ApprovalEditSearch } from './shared/components/approval-edit-search/approval-edit-search';
+import { ResponseApproval } from './shared/components/response-approval/response-approval';
 import { OnlineApprovalsReportComponent } from './pages/online-approvals-report/components/online-approvals-report.component';
 import { RequestServices } from './shared/components/request-services/request-services';
 
@@ -35,6 +36,7 @@ export const routes: Routes = [
       {path: 'appinput', component:ApprovalInput},
       {path: 'approval-edit/:approvalNumber', component: ApprovalEdit},
       {path: 'approval-edit-search/:approvalNumber', component: ApprovalEditSearch},
+      {path: 'response-approval/:approvalNumber', component: ResponseApproval},
       {path: 'invoice-print/:approvalNumber', component: InvoicePrint},
       //{path:'memberapp', component:MemberApproval},
       {path: 'mem' , component:Memberapprovaln},

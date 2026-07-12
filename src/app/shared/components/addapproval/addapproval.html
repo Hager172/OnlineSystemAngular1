@@ -111,91 +111,120 @@
               Claim Information
             </div>
             <div class="ci-grid">
-          <div class="ci-field">
-            <label [class.label-active]="insuredId">
-              Insured ID <span class="req">*</span>
-            </label>
-            <input
-              type="text"
-              [(ngModel)]="insuredId"
-              placeholder="Enter Insured ID"
-              [class.has-value]="insuredId"
-              class="ci-input form-control" />
-          </div>
+              <div class="ci-field">
+                <label [class.label-active]="insuredId">
+                  Insured ID <span class="req">*</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="insuredId"
+                  placeholder="Enter Insured ID"
+                  readonly
+                  [class.has-value]="insuredId"
+                  [class.invalid]="submitted && !insuredId.trim()"
+                  class="ci-input form-control ci-readonly" />
+                <span *ngIf="submitted && !insuredId.trim()" class="field-err">
+                  Insured ID is required.
+                </span>
+              </div>
 
-          <div class="ci-field">
-            <label [hidden]="externalPrescription" [class.label-active]="claimId">
-              Claim ID <span *ngIf="!externalPrescription" class="req">*</span>
-            </label>
-            <input
-              type="text"
-              [(ngModel)]="claimId"
-              placeholder="Enter Claim ID"
-              [hidden]="externalPrescription"
-              [class.has-value]="claimId"
-              class="ci-input form-control" />
-          </div>
+              <div class="ci-field">
+                <label [hidden]="externalPrescription" [class.label-active]="claimId">
+                  Claim ID <span *ngIf="!externalPrescription" class="req">*</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="claimId"
+                  placeholder="Enter Claim ID"
+                  [hidden]="externalPrescription"
+                  [class.has-value]="claimId"
+                  [class.invalid]="submitted && !externalPrescription && !claimId.trim()"
+                  class="ci-input form-control" />
+                <span *ngIf="submitted && !externalPrescription && !claimId.trim()" class="field-err">
+                  Claim ID is required, or choose External Prescription.
+                </span>
+              </div>
 
-          <!-- External Prescription (in the old Mobile slot) -->
-          <div class="ci-field ci-check-field">
-            <label class="ci-check">
-              <input
-                type="checkbox"
-                [(ngModel)]="externalPrescription"
-                (change)="onExternalPrescriptionChange()" />
-              <span>External Prescription</span>
-            </label>
-          </div>
+              <!-- External Prescription (in the old Mobile slot) -->
+              <div class="ci-field ci-check-field">
+                <label class="ci-check">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="externalPrescription"
+                    (change)="onExternalPrescriptionChange()" />
+                  <span>External Prescription</span>
+                </label>
+              </div>
 
-          <div class="ci-field">
-            <label [class.label-active]="claimDate">
-              Claim Date <span class="req">*</span>
-            </label>
-            <input
-              type="date"
-              [(ngModel)]="claimDate"
-              [min]="minClaimDate"
-              [max]="maxClaimDate"
-              [class.has-value]="claimDate"
-              class="ci-input form-control" />
-          </div>
+              <div class="ci-field">
+                <label [class.label-active]="claimDate">
+                  Claim Date <span class="req">*</span>
+                </label>
+                <input
+                  type="date"
+                  [(ngModel)]="claimDate"
+                  [min]="minClaimDate"
+                  [max]="maxClaimDate"
+                  [class.has-value]="claimDate"
+                  [class.invalid]="submitted && !claimDate"
+                  class="ci-input form-control" />
+                <span *ngIf="submitted && !claimDate" class="field-err">
+                  Claim Date is required.
+                </span>
+              </div>
 
-          <!-- Diagnosis — full single row -->
-          <div class="ci-field ci-full">
-            <label [class.label-active]="diagnosisIds.length > 0">
-              Diagnosis <span class="req">*</span>
-            </label>
-            <ng-select
-              class="ci-select custom-diagnosis-select"
-              [items]="diagnosisOptions"
-              bindLabel="name"
-              bindValue="id"
-              [multiple]="true"
-              [typeahead]="diagnosisSearch$"
-              [(ngModel)]="diagnosisIds"
-              [placeholder]="diagnosisIds.length ? '' : 'Search Diagnosis'"
-              [clearable]="true"
-              [searchable]="true"
-              (clear)="onDiagnosisClear()"
-            >
-              <ng-template ng-option-tmp let-item="item">
-                <div class="opt-row">
-                  <i class="pi pi-search opt-ico"></i>
-                  <div>{{ item.name }}</div>
-                  <span class="opt-id">({{ item.id }})</span>
-                </div>
-              </ng-template>
+              <!-- Diagnosis — full single row -->
+              <div class="ci-field ci-full">
+                <label [class.label-active]="diagnosisIds.length > 0">
+                  Diagnosis <span class="req">*</span>
+                </label>
+                <ng-select
+                  class="ci-select custom-diagnosis-select"
+                  [items]="diagnosisOptions"
+                  bindLabel="name"
+                  bindValue="id"
+                  [multiple]="true"
+                  [typeahead]="diagnosisSearch$"
+                  [(ngModel)]="diagnosisIds"
+                  [placeholder]="diagnosisIds.length ? '' : 'Search Diagnosis'"
+                  [clearable]="true"
+                  [searchable]="true"
+                  appendTo="body"
+                  (clear)="onDiagnosisClear()"
+                >
+                  <ng-template ng-option-tmp let-item="item">
+                    <div class="opt-row">
+                      <i class="pi pi-search opt-ico"></i>
+                      <div>{{ item.name }}</div>
+                      <span class="opt-id">({{ item.id }})</span>
+                    </div>
+                  </ng-template>
 
-              <ng-template ng-multiselect-label-tmp let-items="items">
-                <div class="dx-tags">
-                  <div *ngFor="let item of items" class="dx-tag">
-                    <i class="pi pi-tag"></i>
-                    {{ item.name }}
-                  </div>
-                </div>
-              </ng-template>
-            </ng-select>
-          </div>
+                  <ng-template ng-multiselect-label-tmp let-items="items">
+                    <div class="dx-tags">
+                      <div *ngFor="let item of items" class="dx-tag">
+                        <i class="pi pi-tag"></i>
+                        {{ item.name }}
+                      </div>
+                    </div>
+                  </ng-template>
+                </ng-select>
+                <span *ngIf="submitted && diagnosisIds.length === 0" class="field-err">
+                  Select at least one Diagnosis.
+                </span>
+              </div>
+
+              <!-- Notes — full row under Diagnosis, level with National ID -->
+              <div class="ci-field ci-full pull-note">
+                <label [class.label-active]="notes">Notes</label>
+                <textarea
+                  [(ngModel)]="notes"
+                  placeholder="Enter any additional notes or comments..."
+                  rows="3"
+                  maxlength="500"
+                  [class.has-value]="notes"></textarea>
+                <div class="note-counter">{{ notes.length || 0 }}/500</div>
+              </div>
             </div>
           </div>
         </div>
@@ -248,6 +277,7 @@
                     [class.valid-green]="item.productId"
                     [clearable]="true"
                     [searchable]="true"
+                    appendTo="body"
                     (clear)="productSearch$.next('')"
                   >
                     <ng-template ng-option-tmp let-item="item">
@@ -260,12 +290,15 @@
                   </ng-select>
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
-                  <input
-                    type="number"
-                    [(ngModel)]="item.units"
-                    (ngModelChange)="onItemChange(item)"
-                    [class.has-value]="item.units"
-                    class="num-sm" />
+                  <div class="unit-cell">
+                    <input
+                      type="number"
+                      [(ngModel)]="item.units"
+                      (ngModelChange)="onItemChange(item)"
+                      [class.has-value]="item.units"
+                      class="num-sm" />
+                    <span class="unit-pill" *ngIf="getUnitLabel(item)">{{ getUnitLabel(item) }}</span>
+                  </div>
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
                   <input
@@ -312,7 +345,10 @@
                     [(ngModel)]="item.qty"
                     (ngModelChange)="updateSubTotals()"
                     [class.has-value]="item.qty"
-                    class="num-sm" />
+                    [readonly]="vendorType?.toLowerCase() === 'ph' && !!item.product"
+                    [title]="vendorType?.toLowerCase() === 'ph' && item.product ? 'Auto-calculated from units × repeat × days' : ''"
+                    class="num-sm"
+                    [class.qty-auto]="vendorType?.toLowerCase() === 'ph' && !!item.product" />
                 </td>
                 <td><b class="line-total">{{ calculateTotal(item) }}</b></td>
                 <td>
@@ -324,6 +360,10 @@
             </tbody>
           </table>
         </div>
+
+        <span *ngIf="submitted && !hasSelectedService()" class="field-err svc-err">
+          Select at least one service item to submit the request.
+        </span>
 
         <!-- Totals -->
         <div class="totals-block">
@@ -399,9 +439,9 @@
           <small>Total Before Discount</small>
           <b>{{ calculateSubTotal() }}</b>
         </div>
-        <div class="sum-row">
-          <small>Copayment ({{ coPayment || 0 }}%)</small>
-          <b class="minus">- {{ (coPaymentAmount || 0).toFixed(2) }}</b>
+        <div class="sum-row pay">
+          <small>Member pays — Copayment ({{ coPayment || 0 }}%)</small>
+          <b>{{ (coPaymentAmount || 0).toFixed(2) }}</b>
         </div>
         <div class="sum-row big">
           <small>Net Amount</small>
@@ -413,20 +453,6 @@
         <div class="sum-row">
           <small>Total Items</small>
           <b>{{ getTotalItems() }}</b>
-        </div>
-      </section>
-
-      <!-- NOTES -->
-      <section class="card card-pad">
-        <div class="sum-title">Notes</div>
-        <div class="ci-field pull-note">
-          <textarea
-            [(ngModel)]="notes"
-            placeholder="Enter any additional notes or comments..."
-            rows="4"
-            maxlength="500"
-            [class.has-value]="notes"></textarea>
-          <div class="note-counter">{{ notes.length || 0 }}/500</div>
         </div>
       </section>
 

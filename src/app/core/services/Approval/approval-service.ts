@@ -238,21 +238,42 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
 
 
    createClaim(
-    claim: ClaimDto
+    claim: ClaimDto,
+    files: File[] = []
   ): Observable<CreateClaimResponseDto> {
+
+    // الباك إند بيستقبل IFormFileCollection فلازم نبعت multipart/form-data مش JSON
+    const formData = new FormData();
+    formData.append('MembId', claim.membId);
+    formData.append('ServiceDate', claim.serviceDate.toISOString());
+    formData.append('PresId', claim.presId);
+    if (claim.phone) formData.append('Phone', claim.phone);
+    if (claim.diagnosisString) formData.append('DiagnosisString', claim.diagnosisString);
+    if (claim.diagnosisInsString) formData.append('DiagnosisInsString', claim.diagnosisInsString);
+    if (claim.notes) formData.append('Notes', claim.notes);
+    if (claim.nationalId) formData.append('NationalId', claim.nationalId);
+
+    claim.services.forEach((s, i) => {
+      formData.append(`Services[${i}].ProductId`, String(s.productId));
+      formData.append(`Services[${i}].Qty`, String(s.qty));
+      formData.append(`Services[${i}].Price`, String(s.price));
+      formData.append(`Services[${i}].Units`, String(s.units));
+      formData.append(`Services[${i}].Rep`, String(s.rep));
+      formData.append(`Services[${i}].Duration`, String(s.duration));
+    });
+
+    files.forEach(f => formData.append('Files', f, f.name));
 
     return this.http.post<CreateClaimResponseDto>(
       this.baseUrl + 'Approval/create',
-      claim
+      formData
     );
   }
 
 
-createRequestClaim(claim: ClaimDto) {
-  return this.http.post<CreateClaimResponseDto>(
-    `${this.baseUrl}Approval/create`,
-    claim
-  );
+createRequestClaim(claim: ClaimDto, files: File[] = []) {
+  // نفس الإندبوينت بقى بيستقبل form-data فبنمرر على createClaim
+  return this.createClaim(claim, files);
 }
 
 getDiagnosis(term: string) {

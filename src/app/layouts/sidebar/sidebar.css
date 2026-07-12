@@ -31,10 +31,16 @@
   justify-content: center;
   padding: 20px 0 14px;
 }
-.sidebar.collapsed .brand > div:last-child,
-.sidebar.collapsed .grow,
-.sidebar.collapsed .collapse-btn .clabel {
+.sidebar.collapsed .brand-meta,
+.sidebar.collapsed .grow {
   display: none;
+}
+.sidebar.collapsed .brand {
+  flex-direction: column;
+  gap: 8px;
+}
+.sidebar.collapsed .collapse-btn {
+  margin-left: 0;
 }
 .sidebar.collapsed .nav-sec {
   visibility: hidden;
@@ -146,19 +152,19 @@
   padding: 14px 12px 5px;
 }
 
-/* ---------------- Collapse button ---------------- */
+/* ---------------- Collapse button (icon-only, top of sidebar) ---------------- */
 .collapse-btn {
-  margin: 12px;
-  padding: 10px;
-  border-radius: 10px;
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
-  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   cursor: pointer;
 }
 .collapse-btn:hover {
@@ -215,8 +221,7 @@
   }
   /* collapsed state is desktop-only; restore full items in the drawer */
   .sidebar.collapsed .grow,
-  .sidebar.collapsed .brand > div:last-child,
-  .sidebar.collapsed .collapse-btn .clabel {
+  .sidebar.collapsed .brand-meta {
     display: initial;
   }
   .sidebar.collapsed .nav-item {
@@ -224,6 +229,7 @@
     padding: 10.5px 12px;
   }
   .sidebar.collapsed .brand {
+    flex-direction: row;
     justify-content: flex-start;
     padding: 20px 18px 18px;
   }

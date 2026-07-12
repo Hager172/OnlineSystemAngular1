@@ -110,10 +110,10 @@ console.log('Vendor Type:', vendorType);
     this.approvalService.getMemberInfo(this.insuredId, vendorType??'').subscribe({
       next: (res) => {
         console.log('Member Info:', res);
-        this.member.set(res); 
+        this.member.set(res);
 
         if (res.mobile) {
-          this.mobile.set(res.mobile); 
+          this.mobile.set(res.mobile);
         }
 
         if (res.memberNationalId && res.memberNationalId !== '0' && res.memberNationalId !== 0) {
@@ -173,7 +173,58 @@ console.log('Vendor Type:', vendorType);
   // =========================
   // SUBMIT
   // =========================
+
+  /** Set to true after the first submit attempt so inline errors show up. */
+  submitted = false;
+
+  /** True when at least one service line has a product chosen. */
+  hasSelectedService(): boolean {
+    return this.prescriptionItems.some(x => !!x.productId);
+  }
+
+  /** Client-side required-fields check. Returns the list of error messages (empty = valid). */
+  private validateForm(): string[] {
+    const errors: string[] = [];
+
+    if (!this.insuredId || !this.insuredId.trim()) {
+      errors.push('Insured ID is required.');
+    }
+
+    if (!this.externalPrescription && (!this.claimId || !this.claimId.trim())) {
+      errors.push('Claim ID is required, or choose External Prescription.');
+    }
+
+    if (!this.claimDate) {
+      errors.push('Claim Date is required.');
+    }
+
+    if (this.diagnosisIds.length === 0) {
+      errors.push('Select at least one Diagnosis.');
+    }
+
+    if (!this.hasSelectedService()) {
+      errors.push('Select at least one service item.');
+    }
+
+    return errors;
+  }
+
   handleSubmit(): void {
+    this.submitted = true;
+
+    const validationErrors = this.validateForm();
+    if (validationErrors.length > 0) {
+      Swal.fire({
+        title: 'Validation Error',
+        html: `<ul style="text-align:left;list-style-position:inside;margin:0;padding:0;">${validationErrors
+          .map(e => `<li>${e}</li>`)
+          .join('')}</ul>`,
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
+      return;
+    }
+
     const currentNationalId = this.nationalId();
 
     // فاليديشن: لو المستخدم كاتب داتا في الـ National ID، لازم تبق 14 رقم بالظبط
@@ -186,7 +237,7 @@ console.log('Vendor Type:', vendorType);
           icon: 'error',
           confirmButtonColor: '#d33'
         });
-        return; 
+        return;
       }
     }
 
@@ -214,7 +265,7 @@ console.log('Vendor Type:', vendorType);
 
     console.log('Claim DTO:', claimDto);
 
-    this.approvalService.createClaim(claimDto).subscribe({
+    this.approvalService.createClaim(claimDto, this.selectedFiles).subscribe({
       next: (res: CreateClaimResponseDto) => {
         if (res.success) {
           Swal.fire({
@@ -247,6 +298,7 @@ console.log('Vendor Type:', vendorType);
   handleCancel(): void {
     if (!confirm('Are you sure you want to cancel?')) return;
 
+    this.submitted = false;
     this.insuredId = '';
     this.nationalId.set('');
     this.claimId = '';
@@ -316,11 +368,35 @@ console.log('Vendor Type:', vendorType);
     }
   }
 
+  /** Maximum allowed size per attachment (MB). */
+  private readonly maxFileSizeMb = 5;
+
   private processFiles(fileList: FileList): void {
+    const rejected: string[] = [];
     for (let i = 0; i < fileList.length; i++) {
-      this.selectedFiles.push(fileList[i]);
+      const file = fileList[i];
+      if (file.size > this.maxFileSizeMb * 1024 * 1024) {
+        rejected.push(file.name);
+        continue;
+      }
+      this.selectedFiles.push(file);
+    }
+    if (rejected.length > 0) {
+      Swal.fire({
+        title: 'File too large',
+        html: `Maximum file size is <b>${this.maxFileSizeMb} MB</b>.<br>Skipped: ${rejected.join(', ')}`,
+        icon: 'warning',
+        confirmButtonColor: '#0e7360'
+      });
     }
     console.log('Selected Files:', this.selectedFiles);
+  }
+
+  /** Unit-of-measure label (Strip / Box / …) shown beside the Units input. */
+  getUnitLabel(item: PrescriptionItem): string {
+    const p = item.product;
+    if (!p) return '';
+    return p.unitName || p.subUnitName || p.doseUnitName || '';
   }
 
   removeFile(index: number): void {
@@ -328,6 +404,7 @@ console.log('Vendor Type:', vendorType);
   }
 
   resetForm(): void {
+    this.submitted = false;
     this.claimId = '';
     this.claimDate = this.maxClaimDate;
     this.notes = '';

@@ -91,4 +91,8 @@ export interface ProductLookupDto {
   price: number;
   doseUnitNo: number;
   subUnitNo: number;
+  /** Unit-of-measure names when the API provides them (e.g. Strip, Box, Tablet). */
+  unitName?: string;
+  doseUnitName?: string;
+  subUnitName?: string;
 }

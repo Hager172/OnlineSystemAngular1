@@ -134,6 +134,9 @@
 .sum-row b.minus {
   color: var(--pp-red);
 }
+.sum-row.pay b {
+  color: var(--pp-blue);
+}
 .sum-row.big b {
   font-size: 16px;
   color: var(--pp-green);
@@ -224,12 +227,23 @@
 .crumb b {
   color: var(--pp-text);
 }
+/* Sticky header — Back + Submit Request stay visible while scrolling */
 .pull-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 63px; /* just below the sticky topbar */
+  z-index: 20;
+  background: var(--pp-bg);
+  padding: 10px 0;
   margin-top: -10px;
+}
+@media (max-width: 900px) {
+  .pull-head {
+    top: 57px;
+  }
 }
 .pull-head h2 {
   font-size: 20px;
@@ -268,7 +282,8 @@
   display: flex;
   gap: 24px;
   padding: 16px 20px 20px;
-  align-items: flex-start;
+  /* stretch both columns to equal height so their bottom lines match */
+  align-items: stretch;
 }
 .mi-left {
   display: flex;
@@ -276,18 +291,24 @@
   gap: 16px;
   align-items: stretch;
   flex-shrink: 0;
-  width: 300px;
+  width: 320px;
 }
 .mi-id {
   display: flex;
   gap: 18px;
-  align-items: flex-start;
+  align-items: center;
 }
-/* member inputs (Mobile / National ID) under the photo + name */
+.mi-id .mi-name {
+  padding-top: 0;
+}
+/* member inputs (Mobile / National ID) directly under the photo + name */
 .mi-inputs {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+}
+.mi-inputs .ci-field label {
+  min-height: 18px;
 }
 @media (max-width: 900px) {
   .mi-left {
@@ -308,15 +329,33 @@
   font-weight: 700;
   margin-bottom: 12px;
 }
-/* two rows only: 4 fields on one row + full-width diagnosis row */
+/* one row: Insured ID | Claim ID | External Prescription | Claim Date,
+   then full-width Diagnosis row and full-width Notes row */
 .mi-claim-right .ci-grid {
   padding: 0;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 18px;
+  row-gap: 14px;
 }
 @media (max-width: 1280px) {
   .mi-claim-right .ci-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+@media (max-width: 640px) {
+  .mi-claim-right .ci-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* checkbox field sits level with the inputs of its row */
+.ci-check-field {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 10px;
+}
+.ci-check-field .ci-check {
+  margin-top: 0;
 }
 @media (max-width: 900px) {
   .mi-claim {
@@ -412,6 +451,7 @@
   font-weight: 600;
   color: var(--pp-text-2);
   margin-bottom: 6px;
+  min-height: 18px; /* equal label height keeps inputs on the same line */
 }
 /* field spanning the whole grid width (single row) */
 .ci-grid .ci-full {
@@ -448,6 +488,21 @@
   font-size: 11px;
   color: var(--pp-red);
   margin-top: 4px;
+}
+/* read-only field (value comes from the member search and can't change) */
+.ci-input.ci-readonly {
+  background: #f2f6f4;
+  color: var(--pp-text-3);
+  cursor: not-allowed;
+}
+.ci-input.ci-readonly:focus {
+  border-color: var(--pp-border-2);
+  box-shadow: none;
+}
+/* "select at least one service" message under the items table */
+.svc-err {
+  font-size: 12px;
+  margin: 8px 2px 0;
 }
 .ci-check {
   display: flex !important;
@@ -562,6 +617,30 @@ td {
 }
 .price-in {
   width: 88px;
+}
+
+/* Units input + unit-of-measure label (Strip / Box / ...) */
+.unit-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.unit-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--pp-blue-bg);
+  color: var(--pp-blue);
+  border-radius: 7px;
+  padding: 3.5px 9px;
+  white-space: nowrap;
+}
+
+/* Qty derived from the pharmacy equation — read only */
+.num-sm.qty-auto {
+  background: #f2f6f4;
+  border-style: dashed;
+  color: var(--pp-text-2);
+  cursor: default;
 }
 
 .svc-select {
@@ -768,6 +847,7 @@ td {
   justify-content: flex-end;
   gap: 10px;
 }
+
 
 /* ---------------- ng-select (teal skin) ---------------- */
 .ci-select {

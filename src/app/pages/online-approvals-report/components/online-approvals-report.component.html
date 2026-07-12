@@ -202,6 +202,7 @@
               <th *ngIf="isColumnVisible('lastUpdateDate')" class="sortable" (click)="sort('lastUpdateDate')">Last Updated {{ getSortIcon('lastUpdateDate') }}</th>
               <th *ngIf="isColumnVisible('lastUpdateBy')" class="sortable" (click)="sort('lastUpdateBy')">Updated By {{ getSortIcon('lastUpdateBy') }}</th>
               <th *ngIf="isColumnVisible('onlineLud')" class="sortable" (click)="sort('onlineLud')">Online LUD {{ getSortIcon('onlineLud') }}</th>
+              <th class="no-print action-col">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -223,9 +224,17 @@
               <td *ngIf="isColumnVisible('lastUpdateDate')" class="nowrap">{{ row.lastUpdateDate | date:'medium' }}</td>
               <td *ngIf="isColumnVisible('lastUpdateBy')"><span class="cell-clip" [title]="row.lastUpdateBy">{{ row.lastUpdateBy }}</span></td>
               <td *ngIf="isColumnVisible('onlineLud')" class="nowrap">{{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}</td>
+              <td class="no-print action-col">
+                <a class="btn btn-primary btn-sm respond-btn"
+                  [routerLink]="['/response-approval', row.approvalId]"
+                  title="Respond to this approval">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 21 3l-8.5 18-2.5-7.5z"/></svg>
+                  Respond
+                </a>
+              </td>
             </tr>
             <tr *ngIf="currentItems().length === 0">
-              <td [attr.colspan]="visibleKeys().length" class="empty-cell">
+              <td [attr.colspan]="visibleKeys().length + 1" class="empty-cell">
                 {{ globalFilter() ? 'No records match your search.' : 'No records matched your criteria. Try a different date range.' }}
               </td>
             </tr>

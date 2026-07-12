@@ -43,6 +43,37 @@ html, body {
   height: 100%;
 }
 
+/* ===== ng-select dropdown panels (appended to <body>) ===== */
+.ng-dropdown-panel {
+  border-radius: 10px !important;
+  border: 1px solid var(--pp-border) !important;
+  box-shadow: 0 12px 32px rgba(10, 60, 50, 0.16) !important;
+  margin-top: 4px !important;
+  z-index: 1060 !important;
+  background: #fff;
+}
+.ng-dropdown-panel .ng-dropdown-panel-items {
+  max-height: 320px !important;
+}
+.ng-dropdown-panel .ng-option {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #f0f5f3 !important;
+  background-color: #ffffff !important;
+  font-size: 13px !important;
+  white-space: normal !important;
+}
+.ng-dropdown-panel .ng-option:hover {
+  background-color: var(--teal-50) !important;
+}
+.ng-dropdown-panel .ng-option.ng-option-marked {
+  background-color: var(--teal-50) !important;
+  color: var(--teal-700) !important;
+}
+.ng-dropdown-panel .ng-option.ng-option-selected {
+  background-color: var(--teal-50) !important;
+  color: var(--teal-700) !important;
+}
+
 /* ===== Print: hide the app shell, keep only the routed page ===== */
 @media print {
   app-sidebar,

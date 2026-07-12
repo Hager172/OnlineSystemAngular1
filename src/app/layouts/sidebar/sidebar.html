@@ -24,15 +24,24 @@
   [class.collapsed]="isCollapsed"
   [attr.dir]="isRtl ? 'rtl' : 'ltr'">
 
-  <!-- Brand -->
+  <!-- Brand + collapse toggle -->
   <div class="brand">
     <div class="brand-logo">
       <img src="assets/logos/ac-logo.svg" alt="Logo">
     </div>
-    <div>
+    <div class="brand-meta">
       <div class="brand-name">{{ isRtl ? 'البوابة' : 'Provider Portal' }}</div>
       <div class="brand-sub">{{ isRtl ? 'النظام الإلكتروني' : 'Online System' }}</div>
     </div>
+    <button
+      type="button"
+      class="collapse-btn"
+      (click)="toggleCollapsed()"
+      [attr.aria-pressed]="isCollapsed"
+      [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      [title]="isCollapsed ? 'Expand' : 'Collapse'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg>
+    </button>
   </div>
 
   <!-- Navigation -->
@@ -95,15 +104,4 @@
     </a>
   </nav>
 
-  <!-- Desktop collapse toggle -->
-  <button
-    type="button"
-    class="collapse-btn"
-    (click)="toggleCollapsed()"
-    [attr.aria-pressed]="isCollapsed"
-    [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-    [title]="isCollapsed ? 'Expand' : 'Collapse'">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg>
-    <span class="clabel">{{ isRtl ? 'طيّ القائمة' : 'Collapse' }}</span>
-  </button>
 </aside>
