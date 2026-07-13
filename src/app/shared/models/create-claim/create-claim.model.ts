@@ -85,6 +85,15 @@ export interface PrescriptionItem {
   qty: number;
 
   product?: ProductLookupDto;
+
+  /**
+   * Set on a line that replaces the services of a fully-covered package.
+   * `productId` then holds the package id and `price` the package price.
+   */
+  isPackage?: boolean;
+  packageName?: string;
+  /** Names of the service lines this package line replaced, joined for display. */
+  packageServices?: string;
 }
 
 export interface ProductLookupDto {

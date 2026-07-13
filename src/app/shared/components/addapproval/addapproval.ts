@@ -181,8 +181,8 @@ console.log('Vendor Type:', vendorType);
 }
 
 /**
- * Warns once per package when the selected services fully cover a package:
- * the approval is priced at the package price, not the sum of item prices.
+ * Warns once per package when the selected services fully cover a package, then
+ * replaces those service lines with a single line for the package itself.
  */
 private checkServicePackages(): void {
   if (!this.servicePackages.length) return;
@@ -211,12 +211,64 @@ private checkServicePackages(): void {
   Swal.fire({
     title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
     html:
-      `You selected all services of the following package(s). This approval will be priced ` +
-      `at the <b>package price</b>, not the sum of the individual service prices:` +
+      `You selected all services of the following package(s). They will be replaced by a single ` +
+      `line priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
       `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
     icon: 'info',
     confirmButtonColor: '#0e7360',
-  });
+  }).then(() => this.collapseIntoPackageLines(fresh));
+}
+
+/**
+ * Replaces every service line belonging to one of `packages` with a single line
+ * for the package: package name, package price, qty 1, submitted as the package id.
+ * The package line takes the position of the first service it replaces.
+ */
+private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
+  // packages that already have a line — their remaining services are just dropped
+  const added = new Set<number>(
+    this.prescriptionItems.filter(i => i.isPackage).map(i => Number(i.productId))
+  );
+
+  // the services each package line replaces, kept so the line can still name them
+  const replacedNames = new Map<number, string[]>();
+  for (const item of this.prescriptionItems) {
+    const serviceId = Number(item.productId ?? 0);
+    const pkg = packages.find(p => p.serviceIds.includes(serviceId));
+    if (!pkg) continue;
+    const names = replacedNames.get(pkg.packageId) ?? [];
+    names.push(item.product?.name || `#${serviceId}`);
+    replacedNames.set(pkg.packageId, names);
+  }
+
+  const items: PrescriptionItem[] = [];
+
+  for (const item of this.prescriptionItems) {
+    const serviceId = Number(item.productId ?? 0);
+    const pkg = packages.find(p => p.serviceIds.includes(serviceId));
+
+    if (!pkg) {
+      items.push(item);
+      continue;
+    }
+    if (added.has(pkg.packageId)) continue;
+
+    added.add(pkg.packageId);
+    items.push({
+      productId: pkg.packageId,
+      units: null,
+      repeat: null,
+      days: null,
+      price: pkg.packagePrice,
+      qty: 1,
+      isPackage: true,
+      packageName: pkg.packageName || `Package #${pkg.packageId}`,
+      packageServices: (replacedNames.get(pkg.packageId) ?? []).join(' • '),
+    });
+  }
+
+  this.prescriptionItems = items;
+  this.updateSubTotals();
 }
 
   onExternalPrescriptionChange(): void {

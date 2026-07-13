@@ -249,7 +249,7 @@
             <thead>
               <tr>
                 <th style="width:44px;">#</th>
-                <th style="min-width:240px;">Product</th>
+                <th style="width:260px; min-width:260px;">Product</th>
                 <th *ngIf="vendorType?.toLowerCase() === 'ph'">Units</th>
                 <th *ngIf="vendorType?.toLowerCase() === 'ph'">Repeat</th>
                 <th *ngIf="vendorType?.toLowerCase() === 'ph'">Days</th>
@@ -265,32 +265,43 @@
               <tr *ngFor="let item of prescriptionItems; let i = index">
                 <td class="muted">{{ i + 1 }}</td>
                 <td>
-                  <ng-select
-                    class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
-                    [items]="productOptions"
-                    bindLabel="name"
-                    bindValue="id"
-                    [typeahead]="productSearch$"
-                    [(ngModel)]="item.productId"
-                    (change)="onProductSelect($event, item)"
-                    [placeholder]="item.productId ? '' : 'Search Product'"
-                    [class.valid-green]="item.productId"
-                    [clearable]="true"
-                    [searchable]="true"
-                    appendTo="body"
-                    (clear)="productSearch$.next('')"
-                  >
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="opt-row">
-                        <i class="pi pi-search opt-ico"></i>
-                        <div>{{ item.name }}</div>
-                        <span class="opt-id">({{ item.id }})</span>
-                      </div>
-                    </ng-template>
-                  </ng-select>
+                  <div *ngIf="item.isPackage; else productSelect" class="pkg-cell">
+                    <span class="pkg-badge">Package</span>
+                    <span class="pkg-name">{{ item.packageName }}</span>
+                    <span class="pkg-services" *ngIf="item.packageServices" [title]="item.packageServices">
+                      {{ item.packageServices }}
+                    </span>
+                  </div>
+
+                  <ng-template #productSelect>
+                    <ng-select
+                      class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
+                      [items]="productOptions"
+                      bindLabel="name"
+                      bindValue="id"
+                      [typeahead]="productSearch$"
+                      [(ngModel)]="item.productId"
+                      (change)="onProductSelect($event, item)"
+                      [placeholder]="item.productId ? '' : 'Search Product'"
+                      [class.valid-green]="item.productId"
+                      [clearable]="true"
+                      [searchable]="true"
+                      appendTo="body"
+                      (clear)="productSearch$.next('')"
+                    >
+                      <ng-template ng-option-tmp let-item="item">
+                        <div class="opt-row">
+                          <i class="pi pi-search opt-ico"></i>
+                          <div>{{ item.name }}</div>
+                          <span class="opt-id">({{ item.id }})</span>
+                        </div>
+                      </ng-template>
+                    </ng-select>
+                  </ng-template>
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
-                  <div class="unit-cell">
+                  <span *ngIf="item.isPackage" class="muted">—</span>
+                  <div class="unit-cell" *ngIf="!item.isPackage">
                     <input
                       type="number"
                       [(ngModel)]="item.units"
@@ -301,7 +312,9 @@
                   </div>
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
+                  <span *ngIf="item.isPackage" class="muted">—</span>
                   <input
+                    *ngIf="!item.isPackage"
                     type="number"
                     [(ngModel)]="item.repeat"
                     (ngModelChange)="onItemChange(item)"
@@ -309,7 +322,9 @@
                     class="num-sm" />
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
+                  <span *ngIf="item.isPackage" class="muted">—</span>
                   <input
+                    *ngIf="!item.isPackage"
                     type="number"
                     [(ngModel)]="item.days"
                     (ngModelChange)="onItemChange(item)"
@@ -337,7 +352,10 @@
                     [(ngModel)]="item.price"
                     (ngModelChange)="onItemChange(item)"
                     [class.has-value]="item.price"
-                    class="num-sm price-in" />
+                    [readonly]="item.isPackage"
+                    [title]="item.isPackage ? 'Package price' : ''"
+                    class="num-sm price-in"
+                    [class.qty-auto]="item.isPackage" />
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() != 'dt'">
                   <input
@@ -345,10 +363,10 @@
                     [(ngModel)]="item.qty"
                     (ngModelChange)="updateSubTotals()"
                     [class.has-value]="item.qty"
-                    [readonly]="vendorType?.toLowerCase() === 'ph' && !!item.product"
-                    [title]="vendorType?.toLowerCase() === 'ph' && item.product ? 'Auto-calculated from units × repeat × days' : ''"
+                    [readonly]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)"
+                    [title]="item.isPackage ? 'A package is always priced once' : (vendorType?.toLowerCase() === 'ph' && item.product ? 'Auto-calculated from units × repeat × days' : '')"
                     class="num-sm"
-                    [class.qty-auto]="vendorType?.toLowerCase() === 'ph' && !!item.product" />
+                    [class.qty-auto]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)" />
                 </td>
                 <td><b class="line-total">{{ calculateTotal(item) }}</b></td>
                 <td>

@@ -74,4 +74,12 @@ export interface ServiceRow {
   /** Unit-of-sale label for medicines (e.g. Strip, Box). */
   unitSale?: string;
   doseForm?: string;
+
+  /**
+   * Set on a row that replaces the services of a fully-covered package.
+   * `serviceId` then holds the package id and `itemPrice` the package price.
+   */
+  isPackage?: boolean;
+  /** Names of the service rows this package row replaced, joined for display. */
+  packageServices?: string;
 }
