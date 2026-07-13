@@ -14,6 +14,10 @@ import {
 } from '../../models/create-claim/create-claim.model';
 
 import { DiagnosisDto } from '../../models/create-claim/DiagnosisDto';
+import {
+  ServicePackageDto,
+  findCoveredPackages,
+} from '../../models/create-claim/service-package.model';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { Subject } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -68,6 +72,10 @@ vendorType: string | null = null;
   // =========================
   diagnosisOptions: DiagnosisDto[] = [];
   productOptions: ProductLookupDto[] = [];
+
+  /** Active contract-service packages, and the package ids already alerted for. */
+  servicePackages: ServicePackageDto[] = [];
+  private alertedPackageIds = new Set<number>();
 
   prescriptionItems: PrescriptionItem[] = [
     {
@@ -152,6 +160,52 @@ console.log('Vendor Type:', vendorType);
         this.productOptions = res;
       });
     });
+
+    // Contract-service packages active today, used to warn when a full package
+    // is selected (package price applies instead of the per-service prices).
+    this.approvalService.getServicePackages().subscribe({
+      next: res => (this.servicePackages = res ?? []),
+      error: () => (this.servicePackages = []),
+    });
+}
+
+/**
+ * Warns once per package when the selected services fully cover a package:
+ * the approval is priced at the package price, not the sum of item prices.
+ */
+private checkServicePackages(): void {
+  if (!this.servicePackages.length) return;
+
+  const selectedIds = this.prescriptionItems.map(i => i.productId);
+  const covered = findCoveredPackages(selectedIds, this.servicePackages);
+
+  // drop remembered packages that are no longer fully selected, so re-selecting warns again
+  const coveredIds = new Set(covered.map(p => p.packageId));
+  for (const id of [...this.alertedPackageIds]) {
+    if (!coveredIds.has(id)) this.alertedPackageIds.delete(id);
+  }
+
+  const fresh = covered.filter(p => !this.alertedPackageIds.has(p.packageId));
+  if (!fresh.length) return;
+
+  fresh.forEach(p => this.alertedPackageIds.add(p.packageId));
+
+  const list = fresh
+    .map(
+      p =>
+        `<li><b>${p.packageName || 'Package #' + p.packageId}</b> — package price <b>${p.packagePrice.toLocaleString()}</b></li>`
+    )
+    .join('');
+
+  Swal.fire({
+    title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
+    html:
+      `You selected all services of the following package(s). This approval will be priced ` +
+      `at the <b>package price</b>, not the sum of the individual service prices:` +
+      `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
+    icon: 'info',
+    confirmButtonColor: '#0e7360',
+  });
 }
 
   onExternalPrescriptionChange(): void {
@@ -168,6 +222,7 @@ console.log('Vendor Type:', vendorType);
 
   removePrescriptionItem(index: number): void {
     this.prescriptionItems.splice(index, 1);
+    this.checkServicePackages();
   }
 
   // =========================
@@ -476,8 +531,10 @@ onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
     }
 
     item.product = product;
+    item.productId = product.id;
     item.price = product.price / (product.subUnitNo ?? 1);
     this.calculateQty(item);
+    this.checkServicePackages();
 }
 
   onDiagnosisClear(): void {

@@ -6,6 +6,7 @@ import { map, Observable } from 'rxjs';
 import { IApiResponse, IApproval } from '../../../shared/models/approvaltodaydto';
 import { ClaimDto, CreateClaimResponseDto, ProductLookupDto } from '../../../shared/models/create-claim/create-claim.model';
 import { DiagnosisDto } from '../../../shared/models/create-claim/DiagnosisDto';
+import { ServicePackageDto } from '../../../shared/models/create-claim/service-package.model';
 
 @Injectable({
   providedIn: 'root'
@@ -291,6 +292,14 @@ getProducts(term: string, vtype: string) {
   return this.http.get<ProductLookupDto[]>(
     `${this.baseUrl}Approval/products?term=${term}&vtype=${vtype}`
   );
+}
+
+/** Contract-service packages active today (or on a given yyyy-MM-dd date). */
+getServicePackages(onDate?: string): Observable<ServicePackageDto[]> {
+  const url = onDate
+    ? `${this.baseUrl}Approval/service-packages?onDate=${onDate}`
+    : `${this.baseUrl}Approval/service-packages`;
+  return this.http.get<ServicePackageDto[]>(url);
 }
 
 

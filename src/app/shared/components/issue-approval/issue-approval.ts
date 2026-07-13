@@ -18,6 +18,10 @@ import {
   CareItemOption,
   ServiceRow,
 } from '../../models/member-search';
+import {
+  ServicePackageDto,
+  findCoveredPackages,
+} from '../../models/create-claim/service-package.model';
 
 /**
  * Agent "Issue Approval" page — addapproval look & feel, but keeps the
@@ -60,6 +64,10 @@ export class IssueApproval {
   serviceOptions: ServiceOption[] = [];
   careItemOptions: CareItemOption[] = [];
 
+  /** Active contract-service packages, and the package ids already alerted for. */
+  servicePackages: ServicePackageDto[] = [];
+  private alertedPackageIds = new Set<number>();
+
   // =========================
   // SUBMIT STATE
   // =========================
@@ -97,6 +105,19 @@ export class IssueApproval {
       this.state.selectedVendor();
       this.serviceOptions = [];
       this.state.serviceRows.set([]);
+    });
+
+    // Warn when the selected services fully cover a contract-service package:
+    // the approval is priced at the package price, not the sum of item prices.
+    effect(() => {
+      const rows = this.state.serviceRows();
+      this.checkServicePackages(rows);
+    });
+
+    // Contract-service packages active today.
+    this.approvalService.getServicePackages().subscribe({
+      next: (res) => (this.servicePackages = res ?? []),
+      error: () => (this.servicePackages = []),
     });
 
     this.vendorSearch$
@@ -494,6 +515,45 @@ export class IssueApproval {
     }
 
     return errors;
+  }
+
+  /**
+   * Warns once per package when the selected service rows fully cover a package:
+   * the approval is priced at the package price, not the sum of item prices.
+   */
+  private checkServicePackages(rows: ServiceRow[]): void {
+    if (!this.servicePackages.length) return;
+
+    const selectedIds = rows.map((r) => Number(r.serviceId ?? 0));
+    const covered = findCoveredPackages(selectedIds, this.servicePackages);
+
+    // forget packages that are no longer fully selected, so re-selecting warns again
+    const coveredIds = new Set(covered.map((p) => p.packageId));
+    for (const id of [...this.alertedPackageIds]) {
+      if (!coveredIds.has(id)) this.alertedPackageIds.delete(id);
+    }
+
+    const fresh = covered.filter((p) => !this.alertedPackageIds.has(p.packageId));
+    if (!fresh.length) return;
+
+    fresh.forEach((p) => this.alertedPackageIds.add(p.packageId));
+
+    const list = fresh
+      .map(
+        (p) =>
+          `<li><b>${p.packageName || 'Package #' + p.packageId}</b> — package price <b>${p.packagePrice.toLocaleString()}</b></li>`
+      )
+      .join('');
+
+    Swal.fire({
+      title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
+      html:
+        `You selected all services of the following package(s). This approval will be priced ` +
+        `at the <b>package price</b>, not the sum of the individual service prices:` +
+        `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
+      icon: 'info',
+      confirmButtonColor: '#0e7360',
+    });
   }
 
   submitRequest(): void {
