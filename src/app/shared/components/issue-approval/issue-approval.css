@@ -1153,3 +1153,142 @@ td {
 .exception-check {
   margin-top: 10px !important;
 }
+
+/* Total shown on the service-name line */
+.svc-total {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 6px;
+}
+.svc-total small {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--pp-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.svc-total .line-total {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Care Item + Notes side by side */
+.svc-sub-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 12px;
+}
+.svc-sub-row .svc-cell {
+  min-width: 0;
+}
+.svc-sub-row .note-in,
+.svc-sub-row .ci-select-inline {
+  width: 100%;
+}
+@media (max-width: 700px) {
+  .svc-sub-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Notes + Private Notes + Claim in one row (3 columns) */
+.notes-claim-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .notes-claim-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* service line: inputs share the row with the select */
+.svc-row-top {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.svc-row-top .svc-select-full {
+  flex: 1 1 240px;
+  min-width: 240px;
+}
+.svc-row-top .svc-cell .num-sm {
+  width: 72px;
+}
+.svc-row-top .svc-idx,
+.svc-row-top .del-btn {
+  margin-bottom: 7px;
+}
+.svc-row-top .svc-total {
+  margin-bottom: 4px;
+}
+
+/* CO% / Chronic / Rep. Count / Care Item / Notes — single row */
+.svc-sub-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+}
+.svc-sub-row .svc-cell-grow {
+  flex: 1 1 180px;
+  min-width: 180px;
+}
+@media (max-width: 700px) {
+  .svc-sub-row .svc-cell-grow {
+    flex-basis: 100%;
+  }
+}
+
+/* one-line service row: care item + notes grow beside the numeric inputs */
+.svc-row-top .svc-select-full {
+  flex: 2 1 200px;
+  min-width: 200px;
+}
+.svc-row-top .svc-cell-grow {
+  flex: 1 1 140px;
+  min-width: 140px;
+}
+.svc-row-top .svc-cell-grow .note-in,
+.svc-row-top .svc-cell-grow .ci-select-inline {
+  width: 100%;
+}
+
+/* Care Item + Notes wrap together and stay side by side */
+.svc-row-top .svc-pair {
+  flex: 2 1 320px;
+  min-width: 320px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+}
+.svc-row-top .svc-pair .svc-cell-grow {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* hard-force Care Item + Notes side by side (grid, immune to content min-widths) */
+.svc-row-top .svc-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: end;
+}
+.svc-row-top .svc-pair .svc-cell {
+  min-width: 0;
+  width: 100%;
+}
+.svc-row-top .svc-pair .ci-select-inline {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+}
+.svc-row-top .svc-pair .note-in {
+  min-width: 0;
+  width: 100%;
+}

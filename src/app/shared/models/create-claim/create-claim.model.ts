@@ -60,6 +60,8 @@ export interface OnlineServiceItemDto {
 export interface ClaimResultDto {
 
   result: string;
+
+  claimId?: string;
 }
 
 export interface CreateClaimResponseDto {

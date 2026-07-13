@@ -180,13 +180,15 @@ export class IssueApproval {
           return;
         }
         this.memberPhoto = res.cardImageUrl || 'assets/images/member-photo.png';
+        // الرقم القومي لو صفر يبقى فاضي
+        const natId = res.memberNationalId;
         this.state.member.set({
           memberId: res.memberId || value,
           memberName: res.memberName,
           customerName: res.customerName,
           mobile: res.mobile,
           cardImageUrl: res.cardImageUrl,
-          nationalId: res.memberNationalId,
+          nationalId: natId && natId !== '0' && natId !== 0 ? natId.toString() : '',
           birthDate: res.birthDate,
           status: res.memberStatus === 'A' ? 'Active' : (res.memberStatus ? 'Inactive' : undefined),
         });
@@ -223,10 +225,13 @@ export class IssueApproval {
   // =========================
   selectType(type: 'Surgical' | 'Pharmacy' | 'Public'): void {
     this.state.selectedType.set(type);
+    // تغيير النوع يمسح الفيندور والفرع والخدمات
     this.state.selectedVendor.set(null);
     this.state.selectedBranch.set(null);
     this.vendorOptions = [];
     this.branchOptions = [];
+    this.serviceOptions = [];
+    this.state.serviceRows.set([]);
   }
 
   get isMedicineType(): boolean {
@@ -245,7 +250,26 @@ export class IssueApproval {
   }
 
   onVendorSelect(vendor: any): void {
-    this.state.selectedVendor.set(vendor);
+    this.state.selectedVendor.set(vendor ?? null);
+
+    // تغيير الفيندور يمسح الفرع والخدمات
+    this.state.selectedBranch.set(null);
+    this.branchOptions = [];
+    this.serviceOptions = [];
+    this.state.serviceRows.set([]);
+
+    if (vendor?.id) {
+      this.vendorService.getVendorBranches(vendor.id).subscribe({
+        next: (res: any) => {
+          const data = res?.data ?? res ?? [];
+          this.branchOptions = data.map((b: any) => ({
+            branchId: b.id?.toString(),
+            branchName: b.name,
+          }));
+        },
+        error: () => (this.branchOptions = []),
+      });
+    }
   }
 
   onVendorClear(): void {
@@ -426,6 +450,19 @@ export class IssueApproval {
     return this.submitted && !!row.serviceId && !row.careItemId;
   }
 
+  // Units / Repeat / Days are required for medicine rows
+  rowUnitsInvalid(row: ServiceRow): boolean {
+    return this.submitted && this.isMedicineType && !!row.serviceId && !((row.units || 0) > 0);
+  }
+
+  rowRepeatInvalid(row: ServiceRow): boolean {
+    return this.submitted && this.isMedicineType && !!row.serviceId && !((row.repeat || 0) > 0);
+  }
+
+  rowDurationInvalid(row: ServiceRow): boolean {
+    return this.submitted && this.isMedicineType && !!row.serviceId && !((row.duration || 0) > 0);
+  }
+
   // =========================
   // ATTACHMENTS
   // =========================
@@ -488,6 +525,11 @@ export class IssueApproval {
       if (rows.some((r) => !!r.serviceId && !((r.qty || 0) > 0))) {
         errors.push('Every service must have a quantity greater than 0.');
       }
+      if (this.isMedicineType &&
+          rows.some((r) => !!r.serviceId &&
+            (!((r.units || 0) > 0) || !((r.repeat || 0) > 0) || !((r.duration || 0) > 0)))) {
+        errors.push('Every medicine must have Units, Repeat and Days greater than 0.');
+      }
       if (rows.some((r) => !!r.serviceId && !r.careItemId)) {
         errors.push('Every service must have a Care Item (med item) selected.');
       }
@@ -533,10 +575,62 @@ export class IssueApproval {
 
     this.submitting = true;
 
-    this.approvalService.createRequestClaim(claim, this.state.selectedFiles()).subscribe({
+    // الملفات بتتبعت مع الـ submit (زي AddAttachments في النظام القديم) مش مع الإنشاء
+    this.approvalService.createRequestClaim(claim, []).subscribe({
       next: (res) => {
-        this.submitting = false;
         if (res.success) {
+          const approvalId = res.result?.claimId;
+
+          if (approvalId) {
+            // بعد إنشاء الموافقة بنشغّل فاليديشن الـ SubmitApproval المنقول من النظام القديم
+            // ومعاه التشخيصات والمرفقات (زي diagnosis / attach في EditApproval القديم)
+            this.approvalService.submitApproval(approvalId, {
+              diagnosis: this.state.diagnosisIds().map(String),
+              files: this.state.selectedFiles(),
+            }).subscribe({
+              next: (sub) => {
+                this.submitting = false;
+                if (sub.status) {
+                  Swal.fire({
+                    title: 'Success!',
+                    text: sub.msg === 'Done'
+                      ? (res.message || 'Request created successfully.')
+                      : sub.msg,
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                  });
+                } else {
+                  Swal.fire({
+                    title: 'Warning!',
+                    text: sub.msg || 'Could not submit the approval.',
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6',
+                  });
+                }
+                this.state.reset();
+                this.searchTerm = '';
+                this.memberChecked = false;
+                this.submitted = false;
+              },
+              error: (err) => {
+                this.submitting = false;
+                console.error('submitApproval failed', err);
+                Swal.fire({
+                  title: 'Warning!',
+                  text: err.error?.msg || 'Request was created but the submit validation failed.',
+                  icon: 'warning',
+                  confirmButtonColor: '#3085d6',
+                });
+                this.state.reset();
+                this.searchTerm = '';
+                this.memberChecked = false;
+                this.submitted = false;
+              },
+            });
+            return;
+          }
+
+          this.submitting = false;
           Swal.fire({
             title: 'Success!',
             text: res.message || 'Request created successfully.',
@@ -548,6 +642,7 @@ export class IssueApproval {
           this.memberChecked = false;
           this.submitted = false;
         } else {
+          this.submitting = false;
           Swal.fire({
             title: 'Warning!',
             text: res.message || 'Could not process the request.',

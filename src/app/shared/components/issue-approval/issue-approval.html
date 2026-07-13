@@ -100,11 +100,6 @@
                 <input type="text" [ngModel]="m.nationalId" readonly
                   [class.has-value]="m.nationalId" class="ci-input form-control ci-readonly" />
               </div>
-              <div class="ci-field" *ngIf="calculateAge(m.birthDate) !== null">
-                <label class="label-active">Age</label>
-                <input type="text" [ngModel]="calculateAge(m.birthDate) + ' Y'" readonly
-                  class="ci-input form-control ci-readonly has-value" />
-              </div>
             </div>
           </div>
 
@@ -147,6 +142,8 @@
                   bindLabel="text"
                   [typeahead]="vendorSearch$"
                   [minTermLength]="1"
+                  [ngModel]="state.selectedVendor()"
+                  [disabled]="!state.selectedType()"
                   (search)="onVendorSearch($event.term)"
                   (change)="onVendorSelect($event)"
                   (clear)="onVendorClear()"
@@ -255,45 +252,46 @@
                 </span>
               </div>
 
-              <!-- Notes + Private Notes -->
-              <div class="ci-field pull-note">
-                <label [class.label-active]="state.notes()">Notes</label>
-                <textarea
-                  [ngModel]="state.notes()"
-                  (ngModelChange)="state.notes.set($event)"
-                  placeholder="Enter any additional notes..."
-                  rows="3"
-                  maxlength="500"
-                  [class.has-value]="state.notes()"></textarea>
-              </div>
-              <div class="ci-field pull-note">
-                <label [class.label-active]="state.privateNotes()">Private Notes</label>
-                <textarea
-                  [ngModel]="state.privateNotes()"
-                  (ngModelChange)="state.privateNotes.set($event)"
-                  placeholder="Private notes..."
-                  rows="3"
-                  maxlength="500"
-                  [class.has-value]="state.privateNotes()"></textarea>
-              </div>
-
-              <!-- Claim + Exception (Exception sits under the Claim input) -->
-              <div class="ci-field">
-                <label [class.label-active]="state.claimAmount()">Claim</label>
-                <input
-                  type="text"
-                  [ngModel]="state.claimAmount()"
-                  (ngModelChange)="state.claimAmount.set($event)"
-                  placeholder="Claim"
-                  [class.has-value]="state.claimAmount()"
-                  class="ci-input form-control" />
-                <label class="ci-check exception-check">
+              <!-- Notes + Private Notes + Claim — one row, three columns -->
+              <div class="ci-full notes-claim-row">
+                <div class="ci-field pull-note">
+                  <label [class.label-active]="state.notes()">Notes</label>
+                  <textarea
+                    [ngModel]="state.notes()"
+                    (ngModelChange)="state.notes.set($event)"
+                    placeholder="Enter any additional notes..."
+                    rows="3"
+                    maxlength="500"
+                    [class.has-value]="state.notes()"></textarea>
+                </div>
+                <div class="ci-field pull-note">
+                  <label [class.label-active]="state.privateNotes()">Private Notes</label>
+                  <textarea
+                    [ngModel]="state.privateNotes()"
+                    (ngModelChange)="state.privateNotes.set($event)"
+                    placeholder="Private notes..."
+                    rows="3"
+                    maxlength="500"
+                    [class.has-value]="state.privateNotes()"></textarea>
+                </div>
+                <!-- Claim + Exception (Exception sits under the Claim input) -->
+                <div class="ci-field">
+                  <label [class.label-active]="state.claimAmount()">Claim</label>
                   <input
-                    type="checkbox"
-                    [ngModel]="state.isException()"
-                    (ngModelChange)="state.isException.set($event)" />
-                  <span>Exception</span>
-                </label>
+                    type="text"
+                    [ngModel]="state.claimAmount()"
+                    (ngModelChange)="state.claimAmount.set($event)"
+                    placeholder="Claim"
+                    [class.has-value]="state.claimAmount()"
+                    class="ci-input form-control" />
+                  <label class="ci-check exception-check">
+                    <input
+                      type="checkbox"
+                      [ngModel]="state.isException()"
+                      (ngModelChange)="state.isException.set($event)" />
+                    <span>Exception</span>
+                  </label>
+                </div>
               </div>
 
             </div>
@@ -322,7 +320,7 @@
         <div class="svc-rows" *ngIf="state.selectedVendor()">
 
           <div class="svc-row" *ngFor="let row of state.serviceRows(); let i = index; trackBy: trackByRowId"
-            [class.svc-row-err]="rowServiceInvalid(row) || rowQtyInvalid(row) || rowCareItemInvalid(row)">
+            [class.svc-row-err]="rowServiceInvalid(row) || rowQtyInvalid(row) || rowCareItemInvalid(row) || rowUnitsInvalid(row) || rowRepeatInvalid(row) || rowDurationInvalid(row)">
 
             <!-- line 1: the service takes the whole row -->
             <div class="svc-row-top">
@@ -352,31 +350,28 @@
                   </div>
                 </ng-template>
               </ng-select>
-              <button type="button" class="del-btn" (click)="removeServiceRow(row.rowId)" title="Remove item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </div>
-            <span *ngIf="rowServiceInvalid(row)" class="field-err">Select a service for this row (or remove it).</span>
 
-            <!-- line 2: the inputs -->
-            <div class="svc-row-grid">
+              <!-- Units / Repeat / Days / Qty / Unit Price on the same line as the service -->
               <div class="svc-cell" *ngIf="isMedicineType">
-                <small>Units</small>
+                <small>Units <span class="req">*</span></small>
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.units" (ngModelChange)="onRowFieldChange(row, 'units', $event)"
-                  [class.has-value]="row.units" />
+                  [class.has-value]="row.units"
+                  [class.invalid]="rowUnitsInvalid(row)" />
               </div>
               <div class="svc-cell" *ngIf="isMedicineType">
-                <small>Repeat</small>
+                <small>Repeat <span class="req">*</span></small>
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.repeat" (ngModelChange)="onRowFieldChange(row, 'repeat', $event)"
-                  [class.has-value]="row.repeat" />
+                  [class.has-value]="row.repeat"
+                  [class.invalid]="rowRepeatInvalid(row)" />
               </div>
               <div class="svc-cell" *ngIf="isMedicineType">
-                <small>Days</small>
+                <small>Days <span class="req">*</span></small>
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.duration" (ngModelChange)="onRowFieldChange(row, 'duration', $event)"
-                  [class.has-value]="row.duration" />
+                  [class.has-value]="row.duration"
+                  [class.invalid]="rowDurationInvalid(row)" />
               </div>
               <div class="svc-cell">
                 <small>Qty <span class="req">*</span></small>
@@ -388,14 +383,10 @@
                 <span class="unit-pill" *ngIf="isMedicineType && unitLabel(row)">{{ unitLabel(row) }}</span>
               </div>
               <div class="svc-cell">
-                <small>Price</small>
+                <small>Unit Price</small>
                 <input type="number" class="num-sm price-in"
                   [ngModel]="row.itemPrice" (ngModelChange)="onRowFieldChange(row, 'itemPrice', $event)"
                   [class.has-value]="row.itemPrice" />
-              </div>
-              <div class="svc-cell">
-                <small>Total</small>
-                <b class="line-total">{{ state.getRowValue(row).toFixed(2) }}</b>
               </div>
               <div class="svc-cell">
                 <small>CO%</small>
@@ -403,40 +394,45 @@
                   [ngModel]="row.coPercent" (ngModelChange)="onRowFieldChange(row, 'coPercent', $event)"
                   [class.has-value]="row.coPercent" />
               </div>
-              <div class="svc-cell svc-cell-wide">
-                <small>Care Item <span class="req">*</span></small>
-                <ng-select
-                  class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
-                  [class.select-invalid]="rowCareItemInvalid(row)"
-                  [items]="careItemOptions"
-                  bindLabel="name"
-                  bindValue="id"
-                  [ngModel]="row.careItemId"
-                  (ngModelChange)="onCareItemSelect(row, $event)"
-                  placeholder="Care item"
-                  [clearable]="true"
-                  appendTo="body"
-                ></ng-select>
+              <!-- Care Item + Notes always beside each other -->
+              <div class="svc-pair">
+                <div class="svc-cell svc-cell-grow">
+                  <small>Care Item <span class="req">*</span></small>
+                  <ng-select
+                    class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"
+                    [class.select-invalid]="rowCareItemInvalid(row)"
+                    [items]="careItemOptions"
+                    bindLabel="name"
+                    bindValue="id"
+                    [ngModel]="row.careItemId"
+                    (ngModelChange)="onCareItemSelect(row, $event)"
+                    placeholder="Care item"
+                    [clearable]="true"
+                    appendTo="body"
+                  ></ng-select>
+                </div>
+                <div class="svc-cell svc-cell-grow">
+                  <small>Notes</small>
+                  <input type="text" class="num-sm note-in"
+                    [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)"
+                    [class.has-value]="row.notes" />
+                </div>
               </div>
-              <div class="svc-cell svc-cell-wide">
-                <small>Notes</small>
-                <input type="text" class="num-sm note-in"
-                  [ngModel]="row.notes" (ngModelChange)="onRowFieldChange(row, 'notes', $event)"
-                  [class.has-value]="row.notes" />
-              </div>
-              <div class="svc-cell svc-cell-chk" *ngIf="isMedicineType">
-                <small>Chronic</small>
-                <input type="checkbox"
-                  [ngModel]="row.isChronic" (ngModelChange)="onRowFieldChange(row, 'isChronic', $event)" />
-              </div>
-              <div class="svc-cell" *ngIf="isMedicineType">
-                <small>Rep. Count</small>
-                <input type="number" class="num-sm"
-                  [ngModel]="row.repeatCount" (ngModelChange)="onRowFieldChange(row, 'repeatCount', $event)"
-                  [class.has-value]="row.repeatCount" />
-              </div>
-            </div>
 
+              <!-- Total on the same line as the service name -->
+              <span class="svc-total">
+                <small>Total</small>
+                <b class="line-total">{{ state.getRowValue(row).toFixed(2) }}</b>
+              </span>
+              <button type="button" class="del-btn" (click)="removeServiceRow(row.rowId)" title="Remove item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+            <span *ngIf="rowServiceInvalid(row)" class="field-err">Select a service for this row (or remove it).</span>
+
+            <span *ngIf="rowUnitsInvalid(row) || rowRepeatInvalid(row) || rowDurationInvalid(row)" class="field-err">
+              Units, Repeat and Days must be greater than 0.
+            </span>
             <span *ngIf="rowQtyInvalid(row)" class="field-err">Quantity must be greater than 0.</span>
             <span *ngIf="rowCareItemInvalid(row)" class="field-err">Care Item (med item) is required.</span>
           </div>
