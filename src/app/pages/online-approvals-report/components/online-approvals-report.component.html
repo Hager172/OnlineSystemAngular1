@@ -176,10 +176,15 @@
             <tr>
               <th class="sortable" (click)="sort('approvalId')">Approval ID {{ getSortIcon('approvalId') }}</th>
               <th class="sortable" (click)="sort('empName')">Member {{ getSortIcon('empName') }}</th>
-              <th class="sortable" (click)="sort('provName')">Provider / Branch {{ getSortIcon('provName') }}</th>
+              <th class="sortable" (click)="sort('provName')">
+                Provider {{ getSortIcon('provName') }}
+                <small class="sub">Branch</small>
+              </th>
               <th class="sortable" (click)="sort('approvalDate')">Approval Date {{ getSortIcon('approvalDate') }}</th>
-              <th class="sortable num-col" (click)="sort('value')">Value {{ getSortIcon('value') }}</th>
-              <th class="sortable num-col" (click)="sort('coinsurance')">Coinsurance {{ getSortIcon('coinsurance') }}</th>
+              <th class="sortable num-col" (click)="sort('value')">
+                Value {{ getSortIcon('value') }}
+                <small class="sub" (click)="sort('coinsurance'); $event.stopPropagation()">Coinsurance {{ getSortIcon('coinsurance') }}</small>
+              </th>
               <th>Notes</th>
               <th class="sortable" (click)="sort('lastUpdateDate')">Last Updated {{ getSortIcon('lastUpdateDate') }}</th>
               <th class="sortable" (click)="sort('onlineLud')">Online LUD {{ getSortIcon('onlineLud') }}</th>
@@ -205,15 +210,25 @@
                 <small class="sub cell-clip" *ngIf="row.branchName" [title]="row.branchName">{{ row.branchName }}</small>
               </td>
               <td class="nowrap">{{ row.approvalDate | date:'mediumDate' }}</td>
-              <td class="num-col">{{ row.value != null ? (row.value | number:'1.2-2') : '—' }}</td>
-              <td class="num-col">{{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}</td>
+              <!-- Value + Coinsurance -->
+              <td class="num-col">
+                {{ row.value != null ? (row.value | number:'1.2-2') : '—' }}
+                <small class="sub">{{ row.coinsurance != null ? (row.coinsurance | number:'1.2-2') : '—' }}</small>
+              </td>
               <td><span class="cell-clip notes" [title]="row.notes">{{ row.notes }}</span></td>
               <!-- Last Updated + Updated By -->
               <td class="nowrap">
-                {{ row.lastUpdateDate | date:'medium' }}
+                {{ row.lastUpdateDate | date:'mediumDate' }}
+                <small class="sub" *ngIf="row.lastUpdateDate">{{ row.lastUpdateDate | date:'shortTime' }}</small>
                 <small class="sub" *ngIf="row.lastUpdateBy">by {{ row.lastUpdateBy }}</small>
               </td>
-              <td class="nowrap">{{ row.onlineLud ? (row.onlineLud | date:'medium') : '—' }}</td>
+              <td class="nowrap">
+                <ng-container *ngIf="row.onlineLud; else noLud">
+                  {{ row.onlineLud | date:'mediumDate' }}
+                  <small class="sub">{{ row.onlineLud | date:'shortTime' }}</small>
+                </ng-container>
+                <ng-template #noLud>—</ng-template>
+              </td>
               <td class="no-print action-col">
                 <a class="btn btn-primary btn-sm respond-btn"
                   [routerLink]="['/response-approval', row.approvalId]"
@@ -224,7 +239,7 @@
               </td>
             </tr>
             <tr *ngIf="currentItems().length === 0">
-              <td colspan="10" class="empty-cell">
+              <td colspan="9" class="empty-cell">
                 {{ globalFilter() ? 'No records match your search.' : 'No records matched your criteria. Try a different date range.' }}
               </td>
             </tr>
