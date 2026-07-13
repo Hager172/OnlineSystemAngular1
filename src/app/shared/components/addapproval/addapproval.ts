@@ -20,6 +20,7 @@ import {
 } from '../../models/create-claim/service-package.model';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { MemberService } from '../../../core/services/member/member-service';
 
@@ -153,13 +154,23 @@ console.log('Vendor Type:', vendorType);
       });
     });
 
-    this.productSearch$.subscribe(term => {
-      if (!term || term.length < 3) return;
-      const vendorType = this.authService.getVendorType();
-      this.approvalService.getProducts(term, vendorType ?? '').subscribe(res => {
-        this.productOptions = res;
+    this.productSearch$
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe(term => {
+        const q = (term ?? '').trim();
+        // A purely numeric term is a contract_service_id search (allowed from 1
+        // char); a name search still needs at least 3 characters.
+        const isNumericId = /^\d+$/.test(q);
+        const minLen = isNumericId ? 1 : 3;
+        if (!q || q.length < minLen) {
+          this.productOptions = [];
+          return;
+        }
+        const vendorType = this.authService.getVendorType();
+        this.approvalService.getProducts(q, vendorType ?? '').subscribe(res => {
+          this.productOptions = res ?? [];
+        });
       });
-    });
 
     // Contract-service packages active today, used to warn when a full package
     // is selected (package price applies instead of the per-service prices).
