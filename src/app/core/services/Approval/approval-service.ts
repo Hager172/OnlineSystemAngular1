@@ -335,6 +335,51 @@ getAgentProducts(term: string, vendorId: string) {
     `${this.baseUrl}Approval/Agentproducts?term=${term}&vendor_id=${vendorId}`
   );
 }
+/**
+ * Runs the ported ACMS SubmitApproval(approval, srvs) validations (member status, balance, ...)
+ * and, like the legacy EditApproval, can also send `diagnosis` (replaces approval_diagnose)
+ * and `files` (attachments saved under the approval).
+ * Only approvalId is required — omitted approval fields / an empty srvs list fall back
+ * to what is stored in the database for that approval.
+ */
+submitApproval(
+  approvalId: string | number,
+  options: {
+    approval?: any;
+    srvs?: any[];
+    diagnosis?: string[];
+    files?: File[];
+  } = {}
+): Observable<{ status: boolean; msg: string; error_type: string }> {
+  // الباك إند بيستقبل [FromForm] عشان الملفات، فلازم multipart/form-data
+  const formData = new FormData();
+
+  formData.append('Approval.ApprovalId', String(Number(approvalId)));
+
+  Object.entries(options.approval ?? {}).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      formData.append(`Approval.${key}`, String(value));
+    }
+  });
+
+  (options.srvs ?? []).forEach((s, i) => {
+    Object.entries(s ?? {}).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(`Srvs[${i}].${key}`, String(value));
+      }
+    });
+  });
+
+  (options.diagnosis ?? []).forEach((d) => formData.append('Diagnosis', d));
+
+  (options.files ?? []).forEach((f) => formData.append('Attach', f, f.name));
+
+  return this.http.post<{ status: boolean; msg: string; error_type: string }>(
+    `${this.baseUrl}Claims/submit`,
+    formData
+  );
+}
+
 getMemberCareItems(memberId: string) {
   return this.http.get<any>(
     `${this.baseUrl}Approval/GetMemberCareItems?member_id=${memberId}`
