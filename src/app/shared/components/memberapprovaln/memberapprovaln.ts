@@ -20,13 +20,19 @@ interface ApprovalItem {
 
 interface Approval {
   memberTele: string;
+  memberName: string;
   approvalNumber: string;
   memberId: string;
   date: string;
-  expiryDate: string;
   notes: string;
+  /** Approval value limit (maxValue) — null when the approval has no limit. */
+  maxValue: number | null;
+  /** Coinsurance / member share, in percent. */
+  copaymentPercent: number;
   itemCount: number;
   items: any[];
+  /** True once the services were fetched, so a service-less approval isn't refetched. */
+  itemsLoaded?: boolean;
 }
 
 interface ManualItem {
@@ -51,7 +57,6 @@ approvedApprovals = signal<ApprovalItem[]>([]);
   lookupValue: string = '';
   showResults = signal(false);
   searchType: 'member' | 'approval' | null = null;
-  currentApproval = signal<Approval | null>(null);
   currentMemberId: string = '';
   memberApprovals: Approval[] = [];
   selectedApproval: Approval | null = null;
@@ -232,7 +237,6 @@ loadApprovedApprovals(): void {
     this.lookupValue = '';
     this.showResults.set(false);
     this.searchType = null;
-    this.currentApproval.set(null);
     this.memberApprovals = [];
     this.currentMemberId = '';
     this.selectedApproval = null;
@@ -251,30 +255,31 @@ loadApprovedApprovals(): void {
     }
     this.selectedApproval = approval;
     this.displayedApproval = approval;
-    // the member-approvals list comes without items → fetch them on first view
-    if (!approval.items?.length) {
+    // fetch the full approval once, on first view
+    if (!approval.itemsLoaded) {
       this.loadApprovalServices(approval);
     }
   }
 
-  /** Fetches the services of an approval (same endpoint the pull page uses). */
+  /**
+   * Fetches the services of an approval (same endpoint the pull page uses) and
+   * tops up the header fields the member-approvals list doesn't carry
+   * (notes, mobile, value limit, copayment).
+   */
   private loadApprovalServices(approval: Approval): void {
     this.detailsLoading.set(true);
     this.approvalService.getApprovalDetails(approval.approvalNumber).subscribe({
       next: (res: any) => {
-        approval.items =
-          res.services?.map((s: any) => ({
-            id: s.serviceId,
-            name: s.itemDesc || s.servicename,
-            quantity: s.apQty,
-            unitPrice: s.price
-          })) || [];
-        approval.itemCount = approval.items.length;
-        if (!approval.notes && res.notes) {
-          approval.notes = res.notes;
-        }
-        if ((!approval.memberTele || approval.memberTele === 'N/A') && res.memberTele) {
-          approval.memberTele = res.memberTele;
+        const details = this.mapApprovalDetails(res);
+        approval.items = details.items;
+        approval.itemCount = details.itemCount;
+        approval.itemsLoaded = true;
+        approval.notes = approval.notes || details.notes;
+        approval.memberName = approval.memberName || details.memberName;
+        approval.maxValue = approval.maxValue ?? details.maxValue;
+        approval.copaymentPercent = approval.copaymentPercent || details.copaymentPercent;
+        if ((!approval.memberTele || approval.memberTele === 'N/A') && details.memberTele) {
+          approval.memberTele = details.memberTele;
         }
         this.detailsLoading.set(false);
       },
@@ -289,7 +294,6 @@ loadApprovedApprovals(): void {
   closeResults(): void {
     this.showResults.set(false);
     this.searchType = null;
-    this.currentApproval.set(null);
     this.memberApprovals = [];
     this.currentMemberId = '';
     this.selectedApproval = null;
@@ -327,10 +331,19 @@ this.isLoading.set(true);
     if (this.lookupType === 'approvalId') {
       this.approvalService.getApprovalDetails(value).subscribe({
         next: (res: any) => {
+          const approval = this.mapApprovalDetails(res);
+          // render the member card exactly like a member-ID search, with this
+          // one approval already expanded
           this.searchType = 'approval';
-          this.currentApproval.set(this.mapApprovalDetails(res));
+          this.currentMemberId = (approval.memberId ?? '').toString();
+          this.memberApprovals = [approval];
+          this.selectedApproval = approval;
+          this.displayedApproval = approval;
           this.showResults.set(true);
           this.isLoading.set(false);
+          if (this.currentMemberId) {
+            this.loadMemberInfo(this.currentMemberId);
+          }
         },
         error: (err) => {
           console.log("error elsearch", err);
@@ -403,6 +416,11 @@ console.log("error elsearch", err);
     return this.member()?.mobile || 'N/A';
   }
 
+  /** Name shown in the strip — the member profile, else the approval payload. */
+  get memberName(): string {
+    return this.member()?.memberName || this.memberApprovals[0]?.memberName || '—';
+  }
+
   /** Member has no approvals → open the Claim Issuing (add) page directly. */
   private goToClaimIssuing(memberId: string): void {
     this.error.set('');
@@ -413,23 +431,53 @@ console.log("error elsearch", err);
   }
 
   private mapSingleApproval(a: any): Approval {
+    const items = (a.items || []).map((i: any) => this.mapService(i));
     return {
       approvalNumber: a.approvalNumber?.toString(),
       memberId: a.memberId,
+      memberName: a.memberName || '',
       date: a.approvalDate ? new Date(a.approvalDate).toLocaleDateString() : '',
-      expiryDate: a.expiryDate
-        ? new Date(a.expiryDate).toLocaleDateString()
-        : '',
-      notes: a.notes,
-      itemCount: a.itemCount ?? a.items?.length ?? 0,
+      notes: a.notes || '',
+      maxValue: this.readLimit(a),
+      copaymentPercent: this.readCopayment(a),
+      itemCount: a.itemCount ?? items.length,
       memberTele: a.memberTele || 'N/A',
-      items: a.items?.map((i: any) => ({
-        id: i.id,
-        name: i.description ?? i.name,
-        quantity: i.quantity,
-        unitPrice: i.unitPrice
-      })) || []
+      items,
+      // the member-approvals list carries no per-service notes, value limit or
+      // coinsurance → always top the approval up from /details when it's opened
+      itemsLoaded: false
     };
+  }
+
+  /**
+   * ApprovalServiceDto (/details) and ApprovalItemDto (member-approvals list) name
+   * their fields differently: apQty/price/itemDesc vs quantity/unitPrice/description.
+   * `apQty` (approved qty) is only set once the approval is responded to, so fall
+   * back to the requested `qty` — reading apQty alone left Qty blank and every
+   * line total at 0.
+   */
+  private mapService(s: any): any {
+    return {
+      id: s.serviceId ?? s.itemSerial ?? s.id,
+      name: s.itemDesc || s.servicename || s.description || s.name || '',
+      quantity: Number(s.apQty || s.qty || s.quantity || 0),
+      unitPrice: Number(s.price ?? s.unitPrice ?? 0),
+      note: s.notes ?? s.note ?? ''
+    };
+  }
+
+  /** Approval value limit (ApprovalDetailDto.maxValue); 0/absent means no limit. */
+  private readLimit(a: any): number | null {
+    const limit = Number(a?.maxValue ?? a?.limit ?? 0);
+    return limit > 0 ? limit : null;
+  }
+
+  /**
+   * Coinsurance %, from the approval header else the first service.
+   * Note `copaymentvalue` is an amount, not a percent — don't read it here.
+   */
+  private readCopayment(a: any): number {
+    return Number(a?.coinsurance ?? a?.services?.[0]?.coinsurance ?? 0);
   }
 
   /** "Claim Issuing" from the results view → new claim for this member. */
@@ -439,25 +487,23 @@ console.log("error elsearch", err);
     });
   }
 
-  private mapApprovalDetails(a: any): Approval {
-    const approvalDate = new Date(a.approvalDate);
-    const expiryDate = new Date(approvalDate);
-    expiryDate.setDate(expiryDate.getDate() + 7);
+  /** Maps the /details payload (flat, or wrapped in `data`) to the card model. */
+  private mapApprovalDetails(res: any): Approval {
+    const a = res?.data ?? res;
+    const items = (a.services || []).map((s: any) => this.mapService(s));
 
     return {
-      approvalNumber: a.approvalId?.toString(),
+      approvalNumber: (a.approvalId ?? a.approvalNumber)?.toString(),
       memberId: a.memberId,
-      date: approvalDate.toLocaleDateString(),
-      expiryDate: expiryDate.toLocaleDateString(),
-      notes: a.notes,
-      itemCount: a.services?.length || 0,
+      memberName: a.memberName || '',
+      date: a.approvalDate ? new Date(a.approvalDate).toLocaleDateString() : '',
+      notes: a.notes || '',
+      maxValue: this.readLimit(a),
+      copaymentPercent: this.readCopayment(a),
+      itemCount: items.length,
       memberTele: a.memberTele || 'N/A',
-      items: a.services?.map((s: any) => ({
-        id: s.serviceId,
-        name: s.itemDesc || s.servicename,
-        quantity: s.apQty,
-        unitPrice: s.price
-      })) || []
+      items,
+      itemsLoaded: true
     };
   }
 
