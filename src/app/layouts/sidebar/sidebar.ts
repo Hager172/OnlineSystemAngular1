@@ -67,9 +67,9 @@ currentRole: string | null = '';
   }
 
  get isRtl(): boolean {
-  
 
-console.log('Current Role:', this.currentRole);
+
+//console.log('Current Role:', this.currentRole);
     return this.currentLang === 'ar';
 
   }
