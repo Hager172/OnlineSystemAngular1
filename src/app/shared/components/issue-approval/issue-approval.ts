@@ -680,89 +680,72 @@ export class IssueApproval {
       return;
     }
 
-    const claim = {
-      membId: this.state.member()?.memberId ?? '',
-      serviceDate: new Date(this.state.approvalDate()),
-      presId: this.state.selectedVendor()?.id ?? '',
-      phone: this.state.member()?.mobile ?? '',
-      diagnosisString: this.state.diagnosisIds().join(','),
-      diagnosisInsString: this.state.diagnosisIds().join(','),
-      notes: this.state.notes(),
-
-      services: this.state.serviceRows().map((x) => ({
-        productId: Number(x.serviceId ?? 0),
-        qty: x.qty ?? 0,
-        price: x.itemPrice ?? 0,
-        units: x.units ?? 0,
-        rep: x.repeat ?? 0,
-        duration: x.duration ?? 0,
-      })),
-    };
-
     this.submitting = true;
 
-    // الملفات بتتبعت مع الـ submit (زي AddAttachments في النظام القديم) مش مع الإنشاء
-    this.approvalService.createRequestClaim(claim, []).subscribe({
-      next: (res) => {
-        if (res.success) {
-          const approvalId = res.result?.claimId;
+    // صفحة الأجنت بتروح مباشرة على Claims/submit — الباك إند بينشئ الموافقة
+    // (ApprovalId = 0) وبعدين بيشغّل فاليديشن الـ SubmitApproval المنقول من النظام القديم
+    const branchId = this.state.selectedBranch();
 
-          if (approvalId) {
-            // بعد إنشاء الموافقة بنشغّل فاليديشن الـ SubmitApproval المنقول من النظام القديم
-            // ومعاه التشخيصات والمرفقات (زي diagnosis / attach في EditApproval القديم)
-            this.approvalService.submitApproval(approvalId, {
-              diagnosis: this.state.diagnosisIds().map(String),
-              files: this.state.selectedFiles(),
-            }).subscribe({
-              next: (sub) => {
-                this.submitting = false;
-                if (sub.status) {
-                  this.popup.success(
-                    'Success!',
-                    sub.msg === 'Done'
-                      ? (res.message || 'Request created successfully.')
-                      : sub.msg
-                  );
-                } else {
-                  this.popup.warning('Warning!', sub.msg || 'Could not submit the approval.');
-                }
-                this.state.reset();
-                this.searchTerm = '';
-                this.memberChecked = false;
-                this.submitted = false;
-              },
-              error: (err) => {
-                this.submitting = false;
-                console.error('submitApproval failed', err);
-                this.popup.warning(
-                  'Warning!',
-                  err.error?.msg || 'Request was created but the submit validation failed.'
-                );
-                this.state.reset();
-                this.searchTerm = '';
-                this.memberChecked = false;
-                this.submitted = false;
-              },
-            });
-            return;
-          }
-
-          this.submitting = false;
-          this.popup.success('Success!', res.message || 'Request created successfully.');
+    this.approvalService.submitApproval(0, {
+      approval: {
+        MemberId: this.state.member()?.memberId ?? '',
+        ApprovalDate: new Date(this.state.approvalDate()).toISOString(),
+        VendorId: this.state.selectedVendor()?.id ?? null,
+        ApType: this.state.selectedType(),
+        MaxValue: this.state.maxLimit(),
+        Notes: this.state.notes() || null,
+        PrivateNotes: this.state.privateNotes() || null,
+        VBranchId: branchId && !isNaN(Number(branchId)) ? Number(branchId) : null,
+        IsExceptional: this.state.isException(),
+      },
+      srvs: this.state.serviceRows()
+        .filter((r) => !!r.serviceId)
+        .map((r, i) => ({
+          ServiceId: Number(r.serviceId),
+          ItemSerial: i + 1,
+          MedItem: r.careItemId != null ? Number(r.careItemId) : null,
+          Qty: r.qty ?? 0,
+          Price: r.itemPrice ?? 0,
+          Coinsurance: r.coPercent ?? 0,
+          DoseUnits: r.units ?? 0,
+          DoseRepeat: r.repeat ?? 0,
+          DoseDuration: r.duration ?? 0,
+        })),
+      diagnosis: this.state.diagnosisIds().map(String),
+      files: this.state.selectedFiles(),
+    }).subscribe({
+      next: (sub) => {
+        this.submitting = false;
+        if (sub.status) {
+          Swal.fire({
+            title: 'Success!',
+            text: sub.msg === 'Done' ? 'Request submitted successfully.' : sub.msg,
+            icon: 'success',
+            confirmButtonColor: '#3085d6',
+          });
           this.state.reset();
           this.searchTerm = '';
           this.memberChecked = false;
           this.submitted = false;
         } else {
-          this.submitting = false;
-          this.popup.warning('Warning!', res.message || 'Could not process the request.');
+          Swal.fire({
+            title: 'Warning!',
+            text: sub.msg || 'Could not submit the approval.',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6',
+          });
         }
       },
       error: (err) => {
         this.submitting = false;
-        console.error(err);
-        const errorMessage = err.error?.message || 'Server Error. Please try again later.';
-        this.popup.error('Error!', errorMessage);
+        console.error('submitApproval failed', err);
+        const errorMessage = err.error?.msg || err.error?.message || 'Server Error. Please try again later.';
+        Swal.fire({
+          title: 'Error!',
+          text: errorMessage,
+          icon: 'error',
+          confirmButtonColor: '#d33',
+        });
       },
     });
   }
