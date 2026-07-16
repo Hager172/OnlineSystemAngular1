@@ -7,9 +7,9 @@ import { ActivatedRoute,Router } from '@angular/router';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 
 import { Subject } from 'rxjs';
-import Swal from 'sweetalert2';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { AuthService } from '../../../core/services/auth/auth-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 
 @Component({
   selector: 'app-approval-edit-search',
@@ -29,7 +29,8 @@ coPayment: number = 0;
     private route: ActivatedRoute,
     private router: Router,
     private approvalService: ApprovalService,
-  private authService: AuthService
+  private authService: AuthService,
+  private popup: PopupService
   ) {}
 
 ngOnInit(): void {
@@ -259,22 +260,14 @@ onSubmit(): void {
 
 this.approvalService.editApproval(request).subscribe({
   next: () => {
-    Swal.fire(
-      'Saved!',
-      'Approval updated successfully.',
-      'success'
-    );
+    this.popup.success('Saved!', 'Approval updated successfully.');
 
-    
+
   },
   error: err => {
     console.error(err);
 
-    Swal.fire(
-      'Error',
-      'Failed to update approval.',
-      'error'
-    );
+    this.popup.error('Error', 'Failed to update approval.');
   }
 });  //   next: () => {
   //     Swal.fire(

@@ -11,11 +11,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { OnlineApprovalsReportService } from '../services/online-approvals-report.service';
 import { ApprovalReportDto, ReportStats } from '../models/approval-report.model';
 import { AuthService } from '../../../core/services/auth/auth-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 
 // ─── Column definitions ────────────────────────────────────────────────────────
 const COLUMN_DEFS = [
@@ -52,7 +52,7 @@ export class OnlineApprovalsReportComponent implements OnInit {
 
   // ── DI ───────────────────────────────────────────────────────────────────
   private readonly service    = inject(OnlineApprovalsReportService);
-  private readonly snackBar   = inject(MatSnackBar);
+  private readonly popup      = inject(PopupService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth       = inject(AuthService);
 
@@ -149,7 +149,7 @@ export class OnlineApprovalsReportComponent implements OnInit {
     if (!clientId) {
       const msg = 'No client is selected. Please log in again.';
       this.error.set(msg);
-      this.snackBar.open(msg, 'Dismiss', { duration: 6000, panelClass: ['oar-snack-error'] });
+      this.popup.error(msg);
       return;
     }
     this.persistFilters(start, end);
@@ -264,10 +264,7 @@ export class OnlineApprovalsReportComponent implements OnInit {
           const msg = e?.error?.message ?? e?.message ?? 'Failed to load report. Please try again.';
           this.error.set(msg);
           this.loading.set(false);
-          this.snackBar.open(msg, 'Dismiss', {
-            duration: 6000,
-            panelClass: ['oar-snack-error'],
-          });
+          this.popup.error(msg);
         },
       });
   }

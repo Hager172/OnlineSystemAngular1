@@ -7,9 +7,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 
 import { Subject } from 'rxjs';
-import Swal from 'sweetalert2';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { AuthService } from '../../../core/services/auth/auth-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 
 /**
  * Agent response page: like approval-edit-search but the approval limit
@@ -39,7 +39,8 @@ export class ResponseApproval implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private approvalService: ApprovalService,
-    private authService: AuthService
+    private authService: AuthService,
+    private popup: PopupService
   ) {}
 
   ngOnInit(): void {
@@ -220,7 +221,7 @@ export class ResponseApproval implements OnInit {
 
   onSubmit(): void {
     if (this.editLimit == null || this.editLimit < 0) {
-      Swal.fire('Validation Error', 'Approval Limit is required and must be 0 or more.', 'error');
+      this.popup.error('Validation Error', 'Approval Limit is required and must be 0 or more.');
       return;
     }
 
@@ -245,20 +246,12 @@ export class ResponseApproval implements OnInit {
     this.approvalService.editApproval(request).subscribe({
       next: () => {
         this.submitting = false;
-        Swal.fire(
-          'Saved!',
-          'Approval response submitted successfully.',
-          'success'
-        ).then(() => this.goBack());
+        this.popup.success('Saved!', 'Approval response submitted successfully.').then(() => this.goBack());
       },
       error: err => {
         this.submitting = false;
         console.error(err);
-        Swal.fire(
-          'Error',
-          'Failed to submit the approval response.',
-          'error'
-        );
+        this.popup.error('Error', 'Failed to submit the approval response.');
       }
     });
   }

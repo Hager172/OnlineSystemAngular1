@@ -3,7 +3,7 @@ import { ApprovalDetailsDto } from '../../../interfaces/approval/approval-detail
 import { Approval } from '../../../../core/services/Approval/approval';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import Swal  from 'sweetalert2';
+import { PopupService } from '../../../../core/services/popup/popup-service';
 
 @Component({
   selector: 'app-approvalexchange',
@@ -15,7 +15,7 @@ export class Approvalexchange implements OnInit {
   approval!: ApprovalDetailsDto | null;
   isSubmitting = false;
   isSubmitted = false;
-  constructor(private approvalService: Approval) {}
+  constructor(private approvalService: Approval, private popup: PopupService) {}
 
   ngOnInit(): void {
     this.approvalService.getApprovalDetails(1).subscribe({
@@ -48,12 +48,7 @@ getGrandTotal(): number {
 onQuantityChange(item: any){
   if(item.quantity > item.maxQuantity){
     // alert (`maximum quantity allowed is ${item.maxQuantity}`);
-    Swal.fire({
-      icon: 'error',
-      title: 'Invalid Quantity',
-      text: `Maximum quantity allowed  is ${item.maxQuantity}`,
-      confirmButtonText: 'OK'
-    });
+    this.popup.error('Invalid Quantity', `Maximum quantity allowed  is ${item.maxQuantity}`);
     item.quantity = item.maxQuantity;
   }
   if(item.quantity < 0){
@@ -73,22 +68,13 @@ submitApproval() {
       if (res.success) {
         this.isSubmitted = true;
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Approval Submitted',
-          text: 'Approval submitted successfully',
-          confirmButtonText: 'OK'
-        });
+        this.popup.success('Approval Submitted', 'Approval submitted successfully');
       }
     },
     error: () => {
       this.isSubmitting = false;
 
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Something went wrong',
-      });
+      this.popup.error('Error', 'Something went wrong');
     }
   });
 }

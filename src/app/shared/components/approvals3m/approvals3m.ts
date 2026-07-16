@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
 // silently drops the `s` (style) property when writing.
 import * as XLSX from 'xlsx-js-style';
 import { AuthService } from '../../../core/services/auth/auth-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 /** A column of the monthly claims report, rendered to both Excel and PDF. */
@@ -91,7 +92,11 @@ export class Approvals3m implements OnInit {
     threeMonthsAgo: 3,
   };
 
-  constructor(private service: ApprovalService, private authService: AuthService) {}
+  constructor(
+    private service: ApprovalService,
+    private authService: AuthService,
+    private popup: PopupService
+  ) {}
 
   ngOnInit() {
     this.initMonthNames();
@@ -301,7 +306,7 @@ export class Approvals3m implements OnInit {
   exportToExcel(): void {
     const dataToExport = this.filteredApprovals();
     if (dataToExport.length === 0) {
-      alert('No data available to export!');
+      this.popup.warning('No data available to export!');
       return;
     }
 
@@ -535,7 +540,7 @@ export class Approvals3m implements OnInit {
 async exportToPDF(): Promise<void> {
   const dataToExport = this.filteredApprovals();
   if (dataToExport.length === 0) {
-    alert('No data available to export!');
+    this.popup.warning('No data available to export!');
     return;
   }
 

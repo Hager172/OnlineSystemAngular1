@@ -5,7 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { AuthService } from '../../../core/services/auth/auth-service';
 import { MemberService } from '../../../core/services/member/member-service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { PopupService } from '../../../core/services/popup/popup-service';
 interface ApprovalItem {
   id: number;
   memberId: string;
@@ -109,7 +109,7 @@ approvedApprovals = signal<ApprovalItem[]>([]);
     private router: Router,
     private authService: AuthService,
     private memberService: MemberService,
-     private snackBar: MatSnackBar
+    private popup: PopupService
   ) {}
 
   ngOnInit(): void {
@@ -582,7 +582,7 @@ get currentItems(): ApprovalItem[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
-  handleAction(action: string, id: number): void {
+  async handleAction(action: string, id: number): Promise<void> {
     switch(action) {
       case 'print':
         console.log('Printing approval:', id);
@@ -591,7 +591,13 @@ get currentItems(): ApprovalItem[] {
         this.router.navigate(['/approval-edit', id]);
         break;
       case 'delete':
-        if (confirm('Are you sure you want to delete this approval?')) {
+        const confirmed = await this.popup.confirm({
+          title: 'Are you sure you want to delete this approval?',
+          danger: true,
+          confirmText: 'Yes',
+          cancelText: 'No'
+        });
+        if (confirmed) {
           console.log('Deleting approval:', id);
         }
         break;
