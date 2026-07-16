@@ -18,6 +18,10 @@ import {
   CareItemOption,
   ServiceRow,
 } from '../../models/member-search';
+import {
+  ServicePackageDto,
+  findCoveredPackages,
+} from '../../models/create-claim/service-package.model';
 
 /**
  * Agent "Issue Approval" page — addapproval look & feel, but keeps the
@@ -60,6 +64,10 @@ export class IssueApproval {
   serviceOptions: ServiceOption[] = [];
   careItemOptions: CareItemOption[] = [];
 
+  /** Active contract-service packages, and the package ids already alerted for. */
+  servicePackages: ServicePackageDto[] = [];
+  private alertedPackageIds = new Set<number>();
+
   // =========================
   // SUBMIT STATE
   // =========================
@@ -97,6 +105,19 @@ export class IssueApproval {
       this.state.selectedVendor();
       this.serviceOptions = [];
       this.state.serviceRows.set([]);
+    });
+
+    // Warn when the selected services fully cover a contract-service package:
+    // the approval is priced at the package price, not the sum of item prices.
+    effect(() => {
+      const rows = this.state.serviceRows();
+      this.checkServicePackages(rows);
+    });
+
+    // Contract-service packages active today.
+    this.approvalService.getServicePackages().subscribe({
+      next: (res) => (this.servicePackages = res ?? []),
+      error: () => (this.servicePackages = []),
     });
 
     this.vendorSearch$
@@ -447,20 +468,25 @@ export class IssueApproval {
   }
 
   rowCareItemInvalid(row: ServiceRow): boolean {
-    return this.submitted && !!row.serviceId && !row.careItemId;
+    return this.submitted && !!row.serviceId && !row.isPackage && !row.careItemId;
   }
 
-  // Units / Repeat / Days are required for medicine rows
+  // Units / Repeat / Days are required for medicine rows (a package row has none)
   rowUnitsInvalid(row: ServiceRow): boolean {
-    return this.submitted && this.isMedicineType && !!row.serviceId && !((row.units || 0) > 0);
+    return this.isMedicineRow(row) && !((row.units || 0) > 0);
   }
 
   rowRepeatInvalid(row: ServiceRow): boolean {
-    return this.submitted && this.isMedicineType && !!row.serviceId && !((row.repeat || 0) > 0);
+    return this.isMedicineRow(row) && !((row.repeat || 0) > 0);
   }
 
   rowDurationInvalid(row: ServiceRow): boolean {
-    return this.submitted && this.isMedicineType && !!row.serviceId && !((row.duration || 0) > 0);
+    return this.isMedicineRow(row) && !((row.duration || 0) > 0);
+  }
+
+  /** A submitted medicine row that carries a service and is not a package row. */
+  private isMedicineRow(row: ServiceRow): boolean {
+    return this.submitted && this.isMedicineType && !!row.serviceId && !row.isPackage;
   }
 
   // =========================
@@ -526,16 +552,115 @@ export class IssueApproval {
         errors.push('Every service must have a quantity greater than 0.');
       }
       if (this.isMedicineType &&
-          rows.some((r) => !!r.serviceId &&
+          rows.some((r) => !!r.serviceId && !r.isPackage &&
             (!((r.units || 0) > 0) || !((r.repeat || 0) > 0) || !((r.duration || 0) > 0)))) {
         errors.push('Every medicine must have Units, Repeat and Days greater than 0.');
       }
-      if (rows.some((r) => !!r.serviceId && !r.careItemId)) {
+      if (rows.some((r) => !!r.serviceId && !r.isPackage && !r.careItemId)) {
         errors.push('Every service must have a Care Item (med item) selected.');
       }
     }
 
     return errors;
+  }
+
+  /**
+   * Warns once per package when the selected service rows fully cover a package,
+   * then replaces those service rows with a single row for the package itself.
+   */
+  private checkServicePackages(rows: ServiceRow[]): void {
+    if (!this.servicePackages.length) return;
+
+    const selectedIds = rows.map((r) => Number(r.serviceId ?? 0));
+    const covered = findCoveredPackages(selectedIds, this.servicePackages);
+
+    // forget packages that are no longer fully selected, so re-selecting warns again
+    const coveredIds = new Set(covered.map((p) => p.packageId));
+    for (const id of [...this.alertedPackageIds]) {
+      if (!coveredIds.has(id)) this.alertedPackageIds.delete(id);
+    }
+
+    const fresh = covered.filter((p) => !this.alertedPackageIds.has(p.packageId));
+    if (!fresh.length) return;
+
+    fresh.forEach((p) => this.alertedPackageIds.add(p.packageId));
+
+    const list = fresh
+      .map(
+        (p) =>
+          `<li><b>${p.packageName || 'Package #' + p.packageId}</b> — package price <b>${p.packagePrice.toLocaleString()}</b></li>`
+      )
+      .join('');
+
+    Swal.fire({
+      title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
+      html:
+        `You selected all services of the following package(s). They will be replaced by a single ` +
+        `row priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
+        `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
+      icon: 'info',
+      confirmButtonColor: '#0e7360',
+    }).then(() => this.collapseIntoPackageRows(fresh));
+  }
+
+  /**
+   * Replaces every service row belonging to one of `packages` with a single row for
+   * the package: package name, package price, qty 1, submitted as the package id.
+   * The package row takes the position of the first service it replaces.
+   */
+  private collapseIntoPackageRows(packages: ServicePackageDto[]): void {
+    // packages that already have a row — their remaining services are just dropped
+    const added = new Set<number>(
+      this.state
+        .serviceRows()
+        .filter((r) => r.isPackage)
+        .map((r) => Number(r.serviceId ?? 0))
+    );
+
+    // the services each package row replaces, kept so the row can still name them
+    const replacedNames = new Map<number, string[]>();
+    for (const row of this.state.serviceRows()) {
+      const serviceId = Number(row.serviceId ?? 0);
+      const pkg = packages.find((p) => p.serviceIds.includes(serviceId));
+      if (!pkg) continue;
+      const names = replacedNames.get(pkg.packageId) ?? [];
+      names.push(row.serviceName || `#${serviceId}`);
+      replacedNames.set(pkg.packageId, names);
+    }
+
+    const rows: ServiceRow[] = [];
+
+    for (const row of this.state.serviceRows()) {
+      const serviceId = Number(row.serviceId ?? 0);
+      const pkg = packages.find((p) => p.serviceIds.includes(serviceId));
+
+      if (!pkg) {
+        rows.push(row);
+        continue;
+      }
+      if (added.has(pkg.packageId)) continue;
+
+      added.add(pkg.packageId);
+      rows.push({
+        rowId: crypto.randomUUID(),
+        serviceId: String(pkg.packageId),
+        serviceName: pkg.packageName || `Package #${pkg.packageId}`,
+        units: null,
+        repeat: null,
+        duration: null,
+        isChronic: false,
+        repeatCount: null,
+        qty: 1,
+        itemPrice: pkg.packagePrice,
+        coPercent: 0,
+        careItemId: null,
+        notes: '',
+        isPackage: true,
+        packageServices: (replacedNames.get(pkg.packageId) ?? []).join(' • '),
+      });
+    }
+
+    this.state.serviceRows.set(rows);
   }
 
   submitRequest(): void {

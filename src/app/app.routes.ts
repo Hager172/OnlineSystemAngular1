@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Login } from './shared/components/login/login';
 import { Mainlayout } from './layouts/mainlayout/mainlayout';
-import { Home } from './shared/components/home/home';
+import { Dashboard } from './pages/dashboard/dashboard';
 import { AuthGuard } from './core/guards/auth/auth-guard';
 import { Approvalexchange } from './shared/components/approval/approvalexchange/approvalexchange';
 import { ApprovalInput } from './shared/components/approval/approval-input/approval-input';
@@ -31,7 +31,7 @@ export const routes: Routes = [
     path: '',
     component: Mainlayout,
     children: [
-      { path: 'home', component: Home },
+      { path: 'home', component: Dashboard },
       {path: 'exchange' , component: Approvalexchange},
       {path: 'appinput', component:ApprovalInput},
       {path: 'approval-edit/:approvalNumber', component: ApprovalEdit},

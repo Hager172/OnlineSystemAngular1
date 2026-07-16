@@ -1,0 +1,434 @@
+/* ==========================================================================
+   Users Analytics Dashboard — Provider Portal teal design
+   ========================================================================== */
+
+:host {
+  display: block;
+  color: var(--pp-text);
+  font-size: 14px;
+}
+
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--pp-card);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow);
+}
+.card-pad {
+  padding: 20px;
+}
+.tiny {
+  font-size: 12px;
+  color: var(--pp-text-3);
+  margin-top: 4px;
+}
+
+/* ---------------- Head ---------------- */
+.dash-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dash-head h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.dash-head .btn {
+  margin-left: auto;
+}
+
+.btn {
+  border: none;
+  border-radius: 11px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--teal-600);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--teal-700);
+}
+.btn-ghost {
+  background: #fff;
+  color: var(--pp-text-2);
+  border: 1.5px solid var(--pp-border-2);
+}
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--teal-500);
+  color: var(--teal-600);
+}
+
+.loading-note,
+.error-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--pp-text-2);
+  font-size: 13px;
+  padding: 30px 20px;
+}
+.error-note i {
+  color: var(--pp-red);
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-note {
+  padding: 34px 20px;
+  text-align: center;
+  color: var(--pp-text-3);
+  font-size: 13px;
+}
+
+/* ---------------- KPI tiles ---------------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+.stat-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pp-text-2);
+}
+.stat-value {
+  font-size: 30px;
+  font-weight: 650;
+  line-height: 1.15;
+  margin-top: 6px;
+  color: var(--pp-text);
+}
+.stat-value .unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pp-text-3);
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 36px;
+  margin-top: 8px;
+}
+
+/* Approved / Rejected / Deleted mini stacked bar (status colors + labels) */
+.status-bar {
+  display: flex;
+  gap: 2px; /* surface gap between touching segments */
+  height: 10px;
+  margin-top: 10px;
+  border-radius: 0 4px 4px 0;
+  overflow: hidden;
+}
+.status-seg {
+  min-width: 0;
+}
+.status-seg.is-empty {
+  display: none;
+}
+
+/* legend / key chips — text stays in text tokens, the dot carries identity */
+.chip-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.chip-row.wrap {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--pp-text-2);
+  white-space: nowrap;
+}
+.chip b {
+  color: var(--pp-text);
+  font-weight: 650;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* ---------------- Chart cards ---------------- */
+.charts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .charts-grid { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+  padding: 20px;
+}
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.head-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.head-tools .chip-row {
+  margin: 0;
+}
+.chart-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* per-chart date range */
+.range-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.range-ctl input[type='date'] {
+  border: 1.5px solid var(--pp-border-2);
+  border-radius: 9px;
+  padding: 6px 8px;
+  font-size: 12.5px;
+  color: var(--pp-text-2);
+  background: #fff;
+  font-family: inherit;
+}
+.range-ctl input[type='date']:focus {
+  outline: none;
+  border-color: var(--teal-500);
+}
+.range-ctl .sep {
+  color: var(--pp-text-3);
+}
+
+/* inline loading / retry note inside a chart card */
+.chart-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--pp-text-2);
+  font-size: 13px;
+  padding: 34px 4px;
+  justify-content: center;
+}
+.chart-note.error {
+  color: var(--pp-red);
+}
+.chart-note a {
+  color: var(--teal-600);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.chart-body {
+  position: relative;
+}
+.chart-body svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grid {
+  stroke: var(--pp-border);
+  stroke-width: 1;
+}
+.tick {
+  font-size: 11px;
+  fill: var(--pp-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.crosshair {
+  stroke: var(--pp-border-2);
+  stroke-width: 1;
+}
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.marker {
+  stroke: #fff; /* surface ring so markers stay legible on the lines */
+  stroke-width: 2;
+}
+.end-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--pp-text-2);
+}
+
+/* shared hover tooltip */
+.viz-tip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: #fff;
+  border: 1px solid var(--pp-border-2);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(10, 60, 50, 0.16);
+  padding: 8px 11px;
+  font-size: 12px;
+  color: var(--pp-text-2);
+  min-width: 130px;
+}
+.tip-title {
+  font-weight: 700;
+  color: var(--pp-text);
+  margin-bottom: 4px;
+}
+.tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.tip-row b {
+  margin-left: auto;
+  color: var(--pp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Response reasons ---------------- */
+.reasons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.reason-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.reason-name {
+  flex: none;
+  width: 46%;
+  font-size: 12px;
+  color: var(--pp-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reason-track {
+  flex: 1;
+  min-width: 0;
+}
+.reason-bar {
+  height: 12px; /* thin mark, square at the baseline */
+  border-radius: 0 4px 4px 0; /* 4px rounded data-end */
+  min-width: 2px;
+}
+.reason-count {
+  flex: none;
+  width: 52px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--pp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Agents performance ---------------- */
+.agents-wrap {
+  position: relative;
+}
+.agents-scroll {
+  max-height: 440px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+}
+.agent-name {
+  flex: none;
+  width: 170px;
+  font-size: 12.5px;
+  color: var(--pp-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+.agent-track {
+  flex: 1;
+  min-width: 0;
+}
+.agent-bar {
+  display: flex;
+  gap: 2px; /* surface gap between touching segments */
+  height: 14px; /* thin mark, square at the baseline */
+  border-radius: 0 4px 4px 0; /* 4px rounded data-end */
+  overflow: hidden;
+  min-width: 3px;
+}
+.agent-bar .seg {
+  min-width: 0;
+}
+.agent-bar .seg.is-empty {
+  display: none;
+}
+.agent-total {
+  flex: none;
+  width: 64px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--pp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .agent-name { width: 110px; }
+  .agent-total { width: 52px; }
+}

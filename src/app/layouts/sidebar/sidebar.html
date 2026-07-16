@@ -81,6 +81,17 @@
       <span class="grow">{{ isRtl ? 'سجل الشهر' : "Month's register" }}</span>
     </a>
 
+    <!-- Dashboard (agents) -->
+    <a *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'"
+      class="nav-item"
+      [routerLink]="['/home']"
+      routerLinkActive="active"
+      (click)="closeMobile()"
+      title="Dashboard">
+      <i class="fas fa-gauge-high"></i>
+      <span class="grow">{{ isRtl ? 'لوحة المتابعة' : 'Dashboard' }}</span>
+    </a>
+
     <!-- Issue Approval -->
     <a *ngIf="currentRole === 'CLINETAGENT' || currentRole === 'SITEAGENT'"
       class="nav-item"

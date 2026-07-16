@@ -123,6 +123,13 @@ export class OnlineApprovalsReportComponent implements OnInit {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.restoreFilters();
+    // Default the range to today when nothing was persisted, then load immediately.
+    if (!this.startDate() || !this.endDate()) {
+      const today = this.todayInput();
+      this.startDate.set(today);
+      this.endDate.set(today);
+    }
+    this.search();
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -310,6 +317,12 @@ export class OnlineApprovalsReportComponent implements OnInit {
       startDate: new Date(start).toISOString(),
       endDate:   new Date(end).toISOString(),
     }));
+  }
+
+  /** Today's date as a yyyy-MM-dd string in local time (matches the date inputs). */
+  private todayInput(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   private restoreFilters(): void {

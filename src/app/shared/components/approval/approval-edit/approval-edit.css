@@ -91,12 +91,24 @@
   color: var(--pp-text);
 }
 
+/* the title + Back/Submit actions stay put while the page scrolls (same as the add page) */
 .pull-head {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
+  position: sticky;
+  top: 63px; /* just below the sticky topbar */
+  z-index: 20;
+  background: var(--pp-bg);
+  padding: 10px 0;
+  margin-top: -10px;
+}
+@media (max-width: 900px) {
+  .pull-head {
+    top: 57px;
+  }
 }
 .pull-head h2 {
   font-size: 20px;
@@ -145,102 +157,119 @@
   min-width: 0;
 }
 
-/* ---------------- Member info (photo layout) ---------------- */
-.mi-flex {
+/* ---------------- Member info (compact) ---------------- */
+.mi-body {
   display: flex;
-  gap: 24px;
-  padding: 16px 20px 20px;
-  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 20px 16px;
   align-items: flex-start;
+  flex-wrap: wrap;
+}
+.mi-who {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+  min-width: 190px;
+  padding-right: 16px;
+  border-right: 1px solid var(--pp-border);
+  align-self: stretch;
 }
 .mi-photo {
-  width: 106px;
-  height: 126px;
-  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   background: linear-gradient(180deg, #dff0eb, #bcded4);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 }
 .mi-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.mi-name {
-  min-width: 150px;
-  padding-top: 4px;
-}
 .mi-name b {
-  font-size: 17px;
+  font-size: 14.5px;
   display: block;
+  line-height: 1.3;
 }
 .mi-name .en {
-  font-size: 13px;
+  font-size: 11.5px;
   color: var(--pp-text-2);
   display: block;
-  margin: 3px 0 9px;
 }
-.mi-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-left: 24px;
-  border-left: 1px solid var(--pp-border);
-  min-width: 160px;
+/* one dense grid — 4 fields per line instead of tall stacked columns */
+.mi-grid {
+  flex: 1 1 430px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 980px) {
+  .mi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .mi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.mi-field {
+  background: #f7faf9;
+  border: 1px solid var(--pp-border);
+  border-radius: 9px;
+  padding: 6px 10px;
+  min-width: 0;
 }
 .mi-field small {
   display: block;
-  font-size: 11px;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   color: var(--pp-text-3);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 .mi-field b {
-  font-size: 13.5px;
+  font-size: 12.5px;
+  word-break: break-word;
+}
+/* diagnosis / note run the full width of the grid */
+.mi-field.wide {
+  grid-column: 1 / -1;
+}
+.mi-field.dx b {
+  color: var(--teal-700);
+}
+.mi-field.note {
+  background: #fffbeb;
+  border-color: #f0e2b6;
+}
+.mi-field.note b {
+  font-weight: 700;
+  font-size: 14px;
+  color: #6b5a26;
+  line-height: 1.5;
 }
 @media (max-width: 760px) {
-  .mi-col {
-    border-left: none;
-    padding-left: 0;
+  .mi-who {
+    border-right: none;
+    padding-right: 0;
   }
 }
 
 .pill {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  border-radius: 8px;
-  padding: 3.5px 10px;
+  border-radius: 7px;
+  padding: 2px 8px;
   display: inline-block;
-  margin-top: 6px;
+  margin-top: 3px;
 }
 .pill.active {
   background: var(--pp-green-bg);
   color: var(--pp-green);
-}
-
-.dx-wrap {
-  padding: 0 20px 18px;
-}
-.dx-wrap > small {
-  display: block;
-  font-size: 10px;
-  color: var(--pp-text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 7px;
-}
-.dx-chip {
-  display: inline-flex;
-  background: var(--teal-50);
-  color: var(--teal-700);
-  border: 1px solid #cfe6df;
-  border-radius: 8px;
-  padding: 4.5px 11px;
-  font-size: 11.5px;
-  font-weight: 600;
-  margin: 0 6px 6px 0;
 }
 
 /* ---------------- Read-only info ---------------- */
@@ -290,72 +319,6 @@
 .ro b {
   font-size: 13px;
   word-break: break-word;
-}
-
-.fin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  padding: 12px 20px 18px;
-}
-.fin {
-  background: #f7faf9;
-  border: 1px solid var(--pp-border);
-  border-radius: 11px;
-  padding: 12px 14px;
-}
-.fin small {
-  display: block;
-  font-size: 11px;
-  color: var(--pp-text-3);
-  margin-bottom: 4px;
-}
-.fin b {
-  font-size: 15px;
-}
-.fin.hl {
-  background: var(--teal-50);
-  border-color: #cfe6df;
-}
-.fin.hl b {
-  color: var(--teal-700);
-  font-size: 17px;
-}
-.fin.over {
-  background: var(--pp-red-bg);
-  border-color: #f5c9c9;
-}
-.fin.over b {
-  color: var(--pp-red);
-}
-.fin.pay {
-  background: var(--pp-blue-bg);
-  border-color: #cadff5;
-}
-.fin.pay b {
-  color: var(--pp-blue);
-}
-
-.appr-note-wrap {
-  margin: 0 20px 20px;
-  background: #fffbeb;
-  border: 1px solid #f0e2b6;
-  border-radius: 11px;
-  padding: 12px 15px;
-}
-.appr-note-wrap small {
-  display: block;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: #a8842a;
-  margin-bottom: 4px;
-}
-.appr-note-wrap p {
-  font-size: 13px;
-  color: #6b5a26;
-  line-height: 1.55;
 }
 
 /* ---------------- Services table ---------------- */
@@ -447,6 +410,53 @@ tbody tr:last-child td {
 .qty-input:focus {
   border-color: var(--teal-600);
   box-shadow: 0 0 0 3px rgba(14, 115, 96, 0.12);
+}
+
+/* ---------------- Totals block (same as the add page) ---------------- */
+.totals-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 20px 20px;
+  margin-left: auto;
+  max-width: 430px;
+  width: 100%;
+}
+.t-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.t-row small {
+  color: var(--pp-text-2);
+}
+.t-row b {
+  font-size: 13.5px;
+}
+.t-row.net b {
+  color: var(--pp-green);
+  font-size: 16px;
+}
+.t-row.extra b {
+  color: var(--pp-red);
+}
+.t-row.total-copay {
+  border-top: 1px dashed var(--pp-border);
+  margin-top: 4px;
+  padding-top: 9px;
+}
+.t-row.total-copay small,
+.t-row.total-copay b {
+  font-weight: 700;
+  color: var(--pp-text);
+}
+/* the value limit reads red wherever it appears — only when one exists */
+.t-row b.lim,
+.mi-field b.lim {
+  color: var(--pp-red);
 }
 
 /* ---------------- Summary aside ---------------- */

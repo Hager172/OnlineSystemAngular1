@@ -457,6 +457,18 @@ tbody tr:last-child td {
 .cell-clip.notes {
   max-width: 220px;
 }
+/* secondary line inside merged columns (Form ID, Member ID, branch, coinsurance, updated-by) */
+td .sub,
+th .sub {
+  display: block;
+  font-size: 11px;
+  color: var(--pp-text-3);
+  margin-top: 2px;
+}
+th .sub {
+  font-size: 10px;
+  font-weight: 600;
+}
 .rep-row {
   transition: background 0.15s;
 }

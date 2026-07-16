@@ -325,7 +325,17 @@
             <!-- line 1: the service takes the whole row -->
             <div class="svc-row-top">
               <span class="svc-idx">{{ i + 1 }}</span>
+
+              <div *ngIf="row.isPackage" class="pkg-cell svc-select-full">
+                <span class="pkg-badge">Package</span>
+                <span class="pkg-name">{{ row.serviceName }}</span>
+                <span class="pkg-services" *ngIf="row.packageServices" [title]="row.packageServices">
+                  {{ row.packageServices }}
+                </span>
+              </div>
+
               <ng-select
+                *ngIf="!row.isPackage"
                 class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select svc-select-full"
                 [class.select-invalid]="rowServiceInvalid(row)"
                 [items]="serviceOptions"
@@ -352,21 +362,21 @@
               </ng-select>
 
               <!-- Units / Repeat / Days / Qty / Unit Price on the same line as the service -->
-              <div class="svc-cell" *ngIf="isMedicineType">
+              <div class="svc-cell" *ngIf="isMedicineType && !row.isPackage">
                 <small>Units <span class="req">*</span></small>
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.units" (ngModelChange)="onRowFieldChange(row, 'units', $event)"
                   [class.has-value]="row.units"
                   [class.invalid]="rowUnitsInvalid(row)" />
               </div>
-              <div class="svc-cell" *ngIf="isMedicineType">
+              <div class="svc-cell" *ngIf="isMedicineType && !row.isPackage">
                 <small>Repeat <span class="req">*</span></small>
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.repeat" (ngModelChange)="onRowFieldChange(row, 'repeat', $event)"
                   [class.has-value]="row.repeat"
                   [class.invalid]="rowRepeatInvalid(row)" />
               </div>
-              <div class="svc-cell" *ngIf="isMedicineType">
+              <div class="svc-cell" *ngIf="isMedicineType && !row.isPackage">
                 <small>Days <span class="req">*</span></small>
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.duration" (ngModelChange)="onRowFieldChange(row, 'duration', $event)"
@@ -378,15 +388,21 @@
                 <input type="number" min="0" class="num-sm"
                   [ngModel]="row.qty" (ngModelChange)="onRowFieldChange(row, 'qty', $event)"
                   [class.has-value]="row.qty"
-                  [class.invalid]="rowQtyInvalid(row)" />
+                  [class.invalid]="rowQtyInvalid(row)"
+                  [readonly]="row.isPackage"
+                  [class.qty-auto]="row.isPackage"
+                  [title]="row.isPackage ? 'A package is always priced once' : ''" />
                 <!-- medicine unit data (Strip / Box …) under the Qty -->
-                <span class="unit-pill" *ngIf="isMedicineType && unitLabel(row)">{{ unitLabel(row) }}</span>
+                <span class="unit-pill" *ngIf="isMedicineType && !row.isPackage && unitLabel(row)">{{ unitLabel(row) }}</span>
               </div>
               <div class="svc-cell">
                 <small>Unit Price</small>
                 <input type="number" class="num-sm price-in"
                   [ngModel]="row.itemPrice" (ngModelChange)="onRowFieldChange(row, 'itemPrice', $event)"
-                  [class.has-value]="row.itemPrice" />
+                  [class.has-value]="row.itemPrice"
+                  [readonly]="row.isPackage"
+                  [class.qty-auto]="row.isPackage"
+                  [title]="row.isPackage ? 'Package price' : ''" />
               </div>
               <div class="svc-cell">
                 <small>CO%</small>
@@ -396,7 +412,7 @@
               </div>
               <!-- Care Item + Notes always beside each other -->
               <div class="svc-pair">
-                <div class="svc-cell svc-cell-grow">
+                <div class="svc-cell svc-cell-grow" *ngIf="!row.isPackage">
                   <small>Care Item <span class="req">*</span></small>
                   <ng-select
                     class="ci-select ci-select-inline custom-diagnosis-select custom-ng-select"

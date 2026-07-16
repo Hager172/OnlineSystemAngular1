@@ -36,7 +36,10 @@ errorMessage = signal('');
     const {userName , password} = this.loginForm.value;
     this.auth.login(userName , password).subscribe({
       next: (res)=>{
-        this.router.navigate(['/mem']);
+        // Agents land on the analytics dashboard; providers keep their home page
+        const role = (this.auth.getRole() ?? '').toUpperCase();
+        const isAgent = role === 'CLINETAGENT' || role === 'SITEAGENT';
+        this.router.navigate([isAgent ? '/home' : '/mem']);
       },
       error: (err)=>{
         this.errorMessage.set('login Invalid');

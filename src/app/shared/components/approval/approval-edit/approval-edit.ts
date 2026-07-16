@@ -17,6 +17,9 @@ export class ApprovalEdit {
 approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
   approvalNumber: string = '';
   currentDate: string = '';
+  /** Copayment of the totals block — read-only, taken from the approval. */
+  coPayment: number = 0;
+  coPaymentAmount: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -36,6 +39,8 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
     ...item,
     originalQuantity: item.quantity
   }));
+        this.coPayment = data.copaymentPercentage || 0;
+        this.recalcCopayment();
       },
       error: (err) => {
         console.error(err);
@@ -49,24 +54,47 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
     return this.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   }
 
+  /** The approval's value limit, or null when it has none. */
+  getLimit(): number | null {
+    const limit = Number(this.approval()?.limit || 0);
+    return limit > 0 ? limit : null;
+  }
+
+  /**
+   * The amount the copayment is charged on: capped at the approval limit when
+   * there is one, otherwise the whole subtotal.
+   */
   getWithinLimit(): number {
-    return Math.min(this.getSubtotal(), this.approval()?.limit || 0);
+    const limit = this.getLimit();
+    return limit === null ? this.getSubtotal() : Math.min(this.getSubtotal(), limit);
   }
 
+  /** Whatever the subtotal runs over the limit by — 0 when there is no limit. */
   getExceedingAmount(): number {
-    return Math.max(0, this.getSubtotal() - (this.approval()?.limit || 0));
+    const limit = this.getLimit();
+    return limit === null ? 0 : Math.max(0, this.getSubtotal() - limit);
   }
 
-  getRegularCopayment(): number {
-    return (this.getWithinLimit() * (this.approval()?.copaymentPercentage || 0)) / 100;
+  /**
+   * Copayment amount = the approval's percentage of the covered amount
+   * (the limit when there is one, else the whole subtotal). Read-only —
+   * it's recomputed whenever a pull quantity moves the subtotal.
+   */
+  recalcCopayment(): void {
+    this.coPaymentAmount = this.round2((this.getWithinLimit() * (this.coPayment || 0)) / 100);
   }
 
+  /** The over-limit difference — the member carries all of it. */
   getExtraCopayment(): number {
-    return (this.getExceedingAmount() * (this.approval()?.extraCopaymentPercentage || 0)) / 100;
+    return this.getExceedingAmount();
   }
 
   getTotalCopayment(): number {
-    return this.getRegularCopayment() + this.getExtraCopayment();
+    return (this.coPaymentAmount || 0) + this.getExtraCopayment();
+  }
+
+  private round2(value: number): number {
+    return parseFloat((value || 0).toFixed(2));
   }
 
   getTotal(): number {
@@ -93,6 +121,8 @@ limitQuantity(item: any): void {
   ) {
     item.quantity = item.originalQuantity;
   }
+  // the subtotal moved → keep the copayment amount on the same percentage
+  this.recalcCopayment();
 }
 
 }

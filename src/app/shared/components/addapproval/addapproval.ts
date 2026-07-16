@@ -14,8 +14,13 @@ import {
 } from '../../models/create-claim/create-claim.model';
 
 import { DiagnosisDto } from '../../models/create-claim/DiagnosisDto';
+import {
+  ServicePackageDto,
+  findCoveredPackages,
+} from '../../models/create-claim/service-package.model';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { MemberService } from '../../../core/services/member/member-service';
 
@@ -68,6 +73,10 @@ vendorType: string | null = null;
   // =========================
   diagnosisOptions: DiagnosisDto[] = [];
   productOptions: ProductLookupDto[] = [];
+
+  /** Active contract-service packages, and the package ids already alerted for. */
+  servicePackages: ServicePackageDto[] = [];
+  private alertedPackageIds = new Set<number>();
 
   prescriptionItems: PrescriptionItem[] = [
     {
@@ -145,13 +154,121 @@ console.log('Vendor Type:', vendorType);
       });
     });
 
-    this.productSearch$.subscribe(term => {
-      if (!term || term.length < 3) return;
-      const vendorType = this.authService.getVendorType();
-      this.approvalService.getProducts(term, vendorType ?? '').subscribe(res => {
-        this.productOptions = res;
+    this.productSearch$
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe(term => {
+        const q = (term ?? '').trim();
+        // A purely numeric term is a contract_service_id search (allowed from 1
+        // char); a name search still needs at least 3 characters.
+        const isNumericId = /^\d+$/.test(q);
+        const minLen = isNumericId ? 1 : 3;
+        if (!q || q.length < minLen) {
+          this.productOptions = [];
+          return;
+        }
+        const vendorType = this.authService.getVendorType();
+        this.approvalService.getProducts(q, vendorType ?? '').subscribe(res => {
+          this.productOptions = res ?? [];
+        });
       });
+
+    // Contract-service packages active today, used to warn when a full package
+    // is selected (package price applies instead of the per-service prices).
+    this.approvalService.getServicePackages().subscribe({
+      next: res => (this.servicePackages = res ?? []),
+      error: () => (this.servicePackages = []),
     });
+}
+
+/**
+ * Warns once per package when the selected services fully cover a package, then
+ * replaces those service lines with a single line for the package itself.
+ */
+private checkServicePackages(): void {
+  if (!this.servicePackages.length) return;
+
+  const selectedIds = this.prescriptionItems.map(i => i.productId);
+  const covered = findCoveredPackages(selectedIds, this.servicePackages);
+
+  // drop remembered packages that are no longer fully selected, so re-selecting warns again
+  const coveredIds = new Set(covered.map(p => p.packageId));
+  for (const id of [...this.alertedPackageIds]) {
+    if (!coveredIds.has(id)) this.alertedPackageIds.delete(id);
+  }
+
+  const fresh = covered.filter(p => !this.alertedPackageIds.has(p.packageId));
+  if (!fresh.length) return;
+
+  fresh.forEach(p => this.alertedPackageIds.add(p.packageId));
+
+  const list = fresh
+    .map(
+      p =>
+        `<li><b>${p.packageName || 'Package #' + p.packageId}</b> — package price <b>${p.packagePrice.toLocaleString()}</b></li>`
+    )
+    .join('');
+
+  Swal.fire({
+    title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
+    html:
+      `You selected all services of the following package(s). They will be replaced by a single ` +
+      `line priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
+      `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
+    icon: 'info',
+    confirmButtonColor: '#0e7360',
+  }).then(() => this.collapseIntoPackageLines(fresh));
+}
+
+/**
+ * Replaces every service line belonging to one of `packages` with a single line
+ * for the package: package name, package price, qty 1, submitted as the package id.
+ * The package line takes the position of the first service it replaces.
+ */
+private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
+  // packages that already have a line — their remaining services are just dropped
+  const added = new Set<number>(
+    this.prescriptionItems.filter(i => i.isPackage).map(i => Number(i.productId))
+  );
+
+  // the services each package line replaces, kept so the line can still name them
+  const replacedNames = new Map<number, string[]>();
+  for (const item of this.prescriptionItems) {
+    const serviceId = Number(item.productId ?? 0);
+    const pkg = packages.find(p => p.serviceIds.includes(serviceId));
+    if (!pkg) continue;
+    const names = replacedNames.get(pkg.packageId) ?? [];
+    names.push(item.product?.name || `#${serviceId}`);
+    replacedNames.set(pkg.packageId, names);
+  }
+
+  const items: PrescriptionItem[] = [];
+
+  for (const item of this.prescriptionItems) {
+    const serviceId = Number(item.productId ?? 0);
+    const pkg = packages.find(p => p.serviceIds.includes(serviceId));
+
+    if (!pkg) {
+      items.push(item);
+      continue;
+    }
+    if (added.has(pkg.packageId)) continue;
+
+    added.add(pkg.packageId);
+    items.push({
+      productId: pkg.packageId,
+      units: null,
+      repeat: null,
+      days: null,
+      price: pkg.packagePrice,
+      qty: 1,
+      isPackage: true,
+      packageName: pkg.packageName || `Package #${pkg.packageId}`,
+      packageServices: (replacedNames.get(pkg.packageId) ?? []).join(' • '),
+    });
+  }
+
+  this.prescriptionItems = items;
+  this.updateSubTotals();
 }
 
   onExternalPrescriptionChange(): void {
@@ -168,6 +285,7 @@ console.log('Vendor Type:', vendorType);
 
   removePrescriptionItem(index: number): void {
     this.prescriptionItems.splice(index, 1);
+    this.checkServicePackages();
   }
 
   // =========================
@@ -256,6 +374,8 @@ console.log('Vendor Type:', vendorType);
       services: this.prescriptionItems.map(x => ({
         productId: x.productId ?? 0,
         qty: x.qty,
+        // Defaults to qty; always kept within 0..qty by onAvailableQtyChange.
+        availableQty: Math.min(Math.max(x.availableQty ?? x.qty, 0), x.qty),
         price: x.price,
         units: x.units ?? 0,
         rep: x.repeat ?? 0,
@@ -463,7 +583,22 @@ console.log('Vendor Type:', vendorType);
     }
 
     item.qty = qty;
+    // Available Qty defaults to the (re)calculated Qty, kept within 0..qty.
+    item.availableQty = qty;
     this.updateSubTotals();
+  }
+
+  /** Clamp a line's Available Qty into the valid 0..qty range (no negatives, never above qty). */
+  onAvailableQtyChange(item: PrescriptionItem): void {
+    const qty = item.qty || 0;
+    let value = Number(item.availableQty);
+    if (!isFinite(value) || value < 0) {
+      value = 0;
+    }
+    if (value > qty) {
+      value = qty;
+    }
+    item.availableQty = value;
   }
 
 onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
@@ -472,12 +607,15 @@ onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
       item.product = undefined;
       item.price = 0;
       item.qty = 0;
+      item.availableQty = 0;
       return;
     }
 
     item.product = product;
+    item.productId = product.id;
     item.price = product.price / (product.subUnitNo ?? 1);
     this.calculateQty(item);
+    this.checkServicePackages();
 }
 
   onDiagnosisClear(): void {

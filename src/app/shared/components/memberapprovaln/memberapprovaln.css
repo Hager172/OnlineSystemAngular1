@@ -525,6 +525,19 @@ tr:last-child td {
   to { opacity: 1; transform: none; }
 }
 
+/* soft red — only when the approval actually has a value limit */
+.limit-set {
+  color: #e57373;
+}
+
+.svc-note {
+  max-width: 220px;
+  color: var(--pp-muted, #6b7280);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+}
+
 .tfoot td {
   background: #f7faf9;
   font-weight: 700;

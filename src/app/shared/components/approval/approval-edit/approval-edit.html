@@ -45,95 +45,47 @@
           </span>
         </div>
 
-        <div class="mi-flex">
-          <div class="mi-photo">
-            <img src="assets/images/member-photo.png" alt="Member Photo" />
-          </div>
-          <div class="mi-name">
-            <b>{{ approval()?.clientName }}</b>
-            <span class="en" *ngIf="approval()?.companyName">{{ approval()?.companyName }}</span>
-            <span class="pill active">Active</span>
-          </div>
-          <div class="mi-col">
-            <div class="mi-field">
-              <small>Client ID</small>
-              <b>{{ approval()?.clientId }}</b>
+        <div class="mi-body">
+          <div class="mi-who">
+            <div class="mi-photo">
+              <img src="assets/images/member-photo.png" alt="Member Photo" />
             </div>
-            <div class="mi-field" *ngIf="approval()?.memberId">
-              <small>Member ID</small>
-              <b>{{ approval()?.memberId }}</b>
-            </div>
-            <div class="mi-field" *ngIf="approval()?.clientPhone">
-              <small>Phone</small>
-              <b>{{ approval()?.clientPhone }}</b>
+            <div class="mi-name">
+              <b>{{ approval()?.clientName }}</b>
+              <span class="en">Member ID {{ approval()?.clientId }}</span>
+              <span class="pill active">Active</span>
             </div>
           </div>
-          <div class="mi-col">
-            <div class="mi-field">
-              <small>Approval #</small>
-              <b>{{ approvalNumber }}</b>
-            </div>
+
+          <div class="mi-grid">
+
             <div class="mi-field" *ngIf="approval()?.date">
               <small>Approval Date</small>
-              <b>{{ approval()?.date }}</b>
+              <b>{{ approval()?.date | date:'dd/MM/yyyy' }}</b>
             </div>
-            <div class="mi-field" *ngIf="approval()?.expiryDate">
-              <small>Expiry</small>
-              <b>{{ approval()?.expiryDate }}</b>
+            <div class="mi-field">
+              <small>Approval Limit</small>
+              <b [class.lim]="getLimit() !== null">{{ approval()?.limit || 'No limit' }}</b>
             </div>
-          </div>
-          <div class="mi-col">
             <div class="mi-field">
               <small>Copayment</small>
-              <b>{{ approval()?.copaymentPercentage }}%</b>
+              <b>{{ approval()?.copaymentPercentage || 0 }}%</b>
             </div>
             <div class="mi-field" *ngIf="approval()?.extraCopaymentPercentage">
               <small>Extra Copayment</small>
               <b>{{ approval()?.extraCopaymentPercentage }}%</b>
             </div>
-            <div class="mi-field" *ngIf="approval()?.branch">
-              <small>Branch</small>
-              <b>{{ approval()?.branch }}</b>
+            <div class="mi-field dx wide" *ngIf="approval()?.diagnose">
+              <small>Diagnosis</small>
+              <b>{{ approval()?.diagnose }}</b>
+            </div>
+            <div class="mi-field note wide" *ngIf="approval()?.notes">
+              <small>Approval Note</small>
+              <b>{{ approval()?.notes }}</b>
             </div>
           </div>
         </div>
 
-        <div class="dx-wrap" *ngIf="approval()?.diagnose">
-          <small>Diagnosis</small>
-          <span class="dx-chip">{{ approval()?.diagnose }}</span>
-        </div>
-
-        <div class="fin-grid">
-          <div class="fin">
-            <small>Total Value</small>
-            <b>{{ getSubtotal().toFixed(2) }}</b>
-          </div>
-          <div class="fin over">
-            <small>Approval Limit</small>
-            <b>{{ approval()?.limit }}</b>
-          </div>
-          <div class="fin">
-            <small>Covered Amount</small>
-            <b>{{ getWithinLimit().toFixed(2) }}</b>
-          </div>
-          <div class="fin pay">
-            <small>Member Pays · Copayment ({{ approval()?.copaymentPercentage }}%)</small>
-            <b>{{ getTotalCopayment().toFixed(2) }}</b>
-          </div>
-          <div class="fin over" *ngIf="getExceedingAmount() > 0">
-            <small>Over Limit — Not Covered</small>
-            <b>{{ getExceedingAmount().toFixed(2) }}</b>
-          </div>
-          <div class="fin hl">
-            <small>Net Value</small>
-            <b>{{ getTotal().toFixed(2) }}</b>
-          </div>
-        </div>
-
-        <div class="appr-note-wrap" *ngIf="approval()?.notes">
-          <small>Approval Note</small>
-          <p>{{ approval()?.notes }}</p>
-        </div>
       </section>
 
       <!-- Services -->
@@ -175,13 +127,40 @@
                 <td style="text-align:right;"><b>{{ ((item.quantity || 0) * (item.unitPrice || 0)).toFixed(2) }}</b></td>
               </tr>
             </tbody>
-            <tfoot>
-              <tr class="tfoot">
-                <td colspan="6" style="text-align:right;">Subtotal</td>
-                <td style="text-align:right;">{{ getSubtotal().toFixed(2) }}</td>
-              </tr>
-            </tfoot>
           </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="totals-block">
+          <div class="t-row">
+            <small>Total Before Discount</small>
+            <b>{{ getSubtotal().toFixed(2) }}</b>
+          </div>
+          <div class="t-row" *ngIf="getLimit() !== null">
+            <small>Approval Limit</small>
+            <b class="lim">{{ getLimit()?.toFixed(2) }}</b>
+          </div>
+          <!-- <div class="t-row" *ngIf="getLimit() !== null">
+            <small>Covered Amount — copayment is charged on this</small>
+            <b>{{ getWithinLimit().toFixed(2) }}</b>
+          </div> -->
+          <div class="t-row">
+            <small>Copayment ({{ coPayment || 0 }}%)</small>
+            <b>{{ (coPaymentAmount || 0).toFixed(2) }}</b>
+          </div>
+          <div class="t-row extra" *ngIf="getExtraCopayment() > 0">
+            <small>Extra Copayment — over the approval limit</small>
+            <b>{{ getExtraCopayment().toFixed(2) }}</b>
+          </div>
+          <div class="t-row total-copay">
+            <small>Total Copayment</small>
+            <b>{{ getTotalCopayment().toFixed(2) }}</b>
+          </div>
+          <div class="sum-div"></div>
+          <div class="t-row net">
+            <small><b>Net Amount</b></small>
+            <b>{{ getTotal().toFixed(2) }}</b>
+          </div>
         </div>
       </section>
     </div>
@@ -208,7 +187,7 @@
         </div>
         <div class="sum-row" *ngIf="approval()?.date">
           <small>Approval Date</small>
-          <b>{{ approval()?.date }}</b>
+          <b>{{ approval()?.date | date:'dd/MM/yyyy' }}</b>
         </div>
 
         <div class="sum-div"></div>
@@ -217,17 +196,17 @@
           <small>Subtotal</small>
           <b>{{ getSubtotal().toFixed(2) }}</b>
         </div>
-        <div class="sum-row" *ngIf="getExceedingAmount() > 0">
-          <small>Amount exceeding limit</small>
-          <b class="over">{{ getExceedingAmount().toFixed(2) }}</b>
+        <div class="sum-row">
+          <small>Covered amount</small>
+          <b>{{ getWithinLimit().toFixed(2) }}</b>
         </div>
         <div class="sum-row pay">
-          <small>Member pays — Copayment ({{ approval()?.copaymentPercentage }}%)</small>
-          <b>{{ getRegularCopayment().toFixed(2) }}</b>
+          <small>Member pays — Copayment ({{ coPayment || 0 }}%)</small>
+          <b>{{ (coPaymentAmount || 0).toFixed(2) }}</b>
         </div>
         <div class="sum-row pay" *ngIf="getExtraCopayment() > 0">
-          <small>Member pays — Extra copayment ({{ approval()?.extraCopaymentPercentage }}%)</small>
-          <b>{{ getExtraCopayment().toFixed(2) }}</b>
+          <small>Member pays — Extra copayment (over limit)</small>
+          <b class="over">{{ getExtraCopayment().toFixed(2) }}</b>
         </div>
 
         <div class="sum-div"></div>

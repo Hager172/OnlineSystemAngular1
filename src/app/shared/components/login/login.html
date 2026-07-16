@@ -1,10 +1,20 @@
 <div class="main">
-<div class="container">
-<app-languageswitcher class="lang-btn"></app-languageswitcher>
+  <app-languageswitcher class="lang-btn"></app-languageswitcher>
+
   <div class="form-wrapper">
     <div class="login-card">
+
+      <!-- Brand -->
+      <!-- <div class="brand">
+        <div class="brand-logo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0e7360" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.6 3-3.6 3-6a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 2.4 1.5 4.4 3 6l6 6 6-6z"/><path d="M8 11h2l1.5-3 2 5L15 11h1"/></svg>
+        </div>
+        <div class="brand-name">Provider Portal</div>
+      </div> -->
+
       <div class="header">
         <h2>{{'LOGIN.login' | transloco}}</h2>
+        <p class="tiny">Sign in to manage approvals &amp; claims.</p>
       </div>
 
       <!-- Reactive Form -->
@@ -14,9 +24,7 @@
         <div class="form-group">
           <label for="username">{{'LOGIN.username' | transloco}}</label>
           <div class="input-wrapper">
-            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.6 3.7-5.4 7-5.4s6.1 1.8 7 5.4"/></svg>
             <input
               type="text"
               id="username"
@@ -30,7 +38,6 @@
             *ngIf="loginForm.get('userName')?.touched && loginForm.get('userName')?.invalid"
             class="text-danger"
           >
-            <!-- Username is required -->
             {{'LOGIN.userValid' | transloco}}
           </small>
         </div>
@@ -39,9 +46,7 @@
         <div class="form-group">
           <label for="password">{{'LOGIN.password' | transloco}}</label>
           <div class="input-wrapper">
-            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             <input
               [type]="showPassword ? 'text' : 'password'"
               id="password"
@@ -54,49 +59,47 @@
               type="button"
               class="toggle-password"
               (click)="togglePassword()"
+              aria-label="Toggle password visibility"
             >
-              <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+              <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
               <!-- Eye Off Icon (hidden) -->
-              <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-              </svg>
+              <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="m1 1 22 22"/></svg>
             </button>
           </div>
-           <small
+          <small
             *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
             class="text-danger"
           >
-            <!-- Password is required -->
             {{'LOGIN.passValid' | transloco}}
           </small>
         </div>
 
         <!-- Remember Me -->
-        <div class="remember-me">
-          <input type="checkbox" formControlName="rememberMe" />
-          <label>{{'LOGIN.remember' | transloco}}</label>
-        </div>
+        <!-- <div class="remember-me">
+          <input type="checkbox" id="rememberMe" formControlName="rememberMe" />
+          <label for="rememberMe">{{'LOGIN.remember' | transloco}}</label>
+        </div> -->
 
         <!-- Error -->
-        <p class="error" *ngIf="errorMessage()">
-          {{ errorMessage() }}
-        </p>
+        <div class="banner err" *ngIf="errorMessage()">
+          <div class="bicon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          </div>
+          <p>{{ errorMessage() }}</p>
+        </div>
 
         <!-- Submit -->
         <button type="submit" class="submit-btn" [disabled]="loginForm.invalid">
-           {{'LOGIN.login' | transloco}}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          {{'LOGIN.login' | transloco}}
         </button>
 
       </form>
 
       <div class="footer">
         <span>{{'LOGIN.developed' | transloco}}</span>
-        <span class="brand">AspirCode</span>
+        <span class="brand-tag">AspirCode</span>
       </div>
     </div>
   </div>
-</div>
 </div>
