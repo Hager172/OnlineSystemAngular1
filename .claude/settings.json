@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/hp/source/repos/IQ-Health-portal-project/IQHealthPortal.Infrastructure/Persistence/Repositories/**)"
+    ]
+  }
+}

@@ -136,8 +136,11 @@ approvedApprovals = signal<ApprovalItem[]>([]);
             console.log("vendorid", vendorid);
 
      }
-     
-    this.switchTab('approved');
+
+    // both lists load up front: the chips/stat cards show a count for each tab,
+    // not just the one that's open
+    this.activeTab = 'approved';
+    this.loadData();
     } else {
       this.error.set('Vendor ID not found');
       console.log("vendor not found");
@@ -170,6 +173,9 @@ loadPendingApprovals(): void {
       if (this.activeTab === 'pending') {
         this.currentPage = 1;
       }
+    },
+    error: (err) => {
+      this.pendingApprovals.set([]);
     }
   });
 }
