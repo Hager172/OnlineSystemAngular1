@@ -16,6 +16,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 export class Login {
   loginForm: FormGroup;
 errorMessage = signal('');
+  isLoading = signal(false);
   showPassword: boolean = false;
   rememberMe: boolean = false;
   
@@ -32,16 +33,20 @@ errorMessage = signal('');
   }
 
   login(){
-    if(this.loginForm.invalid) return;
+    if(this.loginForm.invalid || this.isLoading()) return;
     const {userName , password} = this.loginForm.value;
+    this.errorMessage.set('');
+    this.isLoading.set(true);
     this.auth.login(userName , password).subscribe({
       next: (res)=>{
         // Agents land on the analytics dashboard; providers keep their home page
         const role = (this.auth.getRole() ?? '').toUpperCase();
         const isAgent = role === 'CLINETAGENT' || role === 'SITEAGENT';
-        this.router.navigate([isAgent ? '/home' : '/mem']);
+        this.router.navigate([isAgent ? '/home' : '/mem'])
+          .finally(()=> this.isLoading.set(false));
       },
       error: (err)=>{
+        this.isLoading.set(false);
         this.errorMessage.set('login Invalid');
       }
     });

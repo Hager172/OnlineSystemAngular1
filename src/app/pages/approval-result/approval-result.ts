@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApprovallsclientDTO } from '../../shared/models/ApprovallsclientDTO';
-import Swal from 'sweetalert2';
 import { ClientApproval } from '../../core/services/clientApprovalls/client-approval';
+import { PopupService } from '../../core/services/popup/popup-service';
 
 @Component({
   selector: 'app-approval-result',
@@ -25,7 +25,7 @@ export class ApprovalResultComponent implements OnInit {
     memberId: '',
     memberName: ''
   };
-  constructor(private router: Router,private service :ClientApproval) {
+  constructor(private router: Router,private service :ClientApproval, private popup: PopupService) {
     // بنجيب البيانات من state
     const navigation = this.router.getCurrentNavigation();
     if (navigation?.extras?.state) {
@@ -72,36 +72,21 @@ export class ApprovalResultComponent implements OnInit {
 
     // التحقق من الحقول المطلوبة
     if (!claimData.claimId || !claimData.claimDate || !claimData.diagnosis) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please fill in all required fields',
-        confirmButtonColor: '#f59e0b'
-      });
+      this.popup.warning('Missing Fields', 'Please fill in all required fields');
       return;
     }
 
     // استدعاء السيرفس
     this.service.add(claimData).subscribe({
       next: (response) => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Claim Submitted',
-          text: 'Your claim has been submitted successfully',
-          confirmButtonColor: '#4f46e5'
-        }).then(() => {
+        this.popup.success('Claim Submitted', 'Your claim has been submitted successfully').then(() => {
           // لو عايزة تعملي حاجة بعد النجاح، مثلاً تفضي الفورم
           this.resetForm();
         });
       },
       error: (error) => {
         console.error('Error submitting claim:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Submission Failed',
-          text: 'Failed to submit claim. Please try again.',
-          confirmButtonColor: '#d33'
-        });
+        this.popup.error('Submission Failed', 'Failed to submit claim. Please try again.');
       }
     });
   }

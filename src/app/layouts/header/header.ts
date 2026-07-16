@@ -7,7 +7,6 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { Languageswitcher } from '../../shared/components/languageswitcher/languageswitcher';
 import { ChatWidget } from '../../shared/components/chat-widget/chat-widget';
-import Swal from 'sweetalert2';
 import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-header',

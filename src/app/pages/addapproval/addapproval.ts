@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PopupService } from '../../core/services/popup/popup-service';
 interface PrescriptionItem {
   id: string;
   product: string;
@@ -49,6 +50,8 @@ export class Addapproval {
   ];
 
   memberPhoto: string = 'assets/images/member-photo.png'; // Update with your actual image path
+
+  constructor(private popup: PopupService) {}
 
   onExternalPrescriptionChange(): void {
     if (this.externalPrescription) {
@@ -108,11 +111,17 @@ export class Addapproval {
     };
     
     console.log('Form submitted', formData);
-    alert('Form submitted successfully!');
+    this.popup.success('Form submitted successfully!');
   }
 
-  handleCancel(): void {
-    if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
+  async handleCancel(): Promise<void> {
+    const confirmed = await this.popup.confirm({
+      title: 'Are you sure you want to cancel? All changes will be lost.',
+      danger: true,
+      confirmText: 'Yes',
+      cancelText: 'No'
+    });
+    if (confirmed) {
       this.insuredId = '';
       this.nationalId = '';
       this.claimId = '';
