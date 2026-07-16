@@ -374,6 +374,8 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
       services: this.prescriptionItems.map(x => ({
         productId: x.productId ?? 0,
         qty: x.qty,
+        // Defaults to qty; always kept within 0..qty by onAvailableQtyChange.
+        availableQty: Math.min(Math.max(x.availableQty ?? x.qty, 0), x.qty),
         price: x.price,
         units: x.units ?? 0,
         rep: x.repeat ?? 0,
@@ -581,7 +583,22 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     }
 
     item.qty = qty;
+    // Available Qty defaults to the (re)calculated Qty, kept within 0..qty.
+    item.availableQty = qty;
     this.updateSubTotals();
+  }
+
+  /** Clamp a line's Available Qty into the valid 0..qty range (no negatives, never above qty). */
+  onAvailableQtyChange(item: PrescriptionItem): void {
+    const qty = item.qty || 0;
+    let value = Number(item.availableQty);
+    if (!isFinite(value) || value < 0) {
+      value = 0;
+    }
+    if (value > qty) {
+      value = qty;
+    }
+    item.availableQty = value;
   }
 
 onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
@@ -590,6 +607,7 @@ onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {
       item.product = undefined;
       item.price = 0;
       item.qty = 0;
+      item.availableQty = 0;
       return;
     }
 

@@ -25,6 +25,12 @@ export interface ClaimServiceItemDto {
 
   qty: number;
 
+  /**
+   * Quantity actually available at the pharmacy (0..qty). Persisted as ap_qty.
+   * Optional: callers that don't set it fall back to `qty` in createClaim().
+   */
+  availableQty?: number;
+
   price: number;
 
   units: number;
@@ -83,6 +89,12 @@ export interface PrescriptionItem {
  position?: string | null;
   price: number;
   qty: number;
+
+  /**
+   * Pharmacy-only. Quantity actually available to dispense; defaults to `qty`
+   * and is kept clamped to the range 0..qty.
+   */
+  availableQty?: number | null;
 
   product?: ProductLookupDto;
 

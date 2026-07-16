@@ -257,6 +257,7 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     claim.services.forEach((s, i) => {
       formData.append(`Services[${i}].ProductId`, String(s.productId));
       formData.append(`Services[${i}].Qty`, String(s.qty));
+      formData.append(`Services[${i}].AvailableQty`, String(s.availableQty ?? s.qty));
       formData.append(`Services[${i}].Price`, String(s.price));
       formData.append(`Services[${i}].Units`, String(s.units));
       formData.append(`Services[${i}].Rep`, String(s.rep));

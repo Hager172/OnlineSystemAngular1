@@ -257,6 +257,7 @@
                 <th *ngIf="vendorType?.toLowerCase() === 'dt'">Position</th>
                 <th>Price</th>
                 <th *ngIf="vendorType?.toLowerCase() != 'dt'">Qty</th>
+                <th *ngIf="vendorType?.toLowerCase() === 'ph'">Available Qty</th>
                 <th>Total</th>
                 <th></th>
               </tr>
@@ -304,6 +305,7 @@
                   <div class="unit-cell" *ngIf="!item.isPackage">
                     <input
                       type="number"
+                      min="0"
                       [(ngModel)]="item.units"
                       (ngModelChange)="onItemChange(item)"
                       [class.has-value]="item.units"
@@ -316,6 +318,7 @@
                   <input
                     *ngIf="!item.isPackage"
                     type="number"
+                    min="0"
                     [(ngModel)]="item.repeat"
                     (ngModelChange)="onItemChange(item)"
                     [class.has-value]="item.repeat"
@@ -326,6 +329,7 @@
                   <input
                     *ngIf="!item.isPackage"
                     type="number"
+                    min="0"
                     [(ngModel)]="item.days"
                     (ngModelChange)="onItemChange(item)"
                     [class.has-value]="item.days"
@@ -349,6 +353,7 @@
                 <td>
                   <input
                     type="number"
+                    min="0"
                     [(ngModel)]="item.price"
                     (ngModelChange)="onItemChange(item)"
                     [class.has-value]="item.price"
@@ -360,6 +365,7 @@
                 <td *ngIf="vendorType?.toLowerCase() != 'dt'">
                   <input
                     type="number"
+                    min="0"
                     [(ngModel)]="item.qty"
                     (ngModelChange)="updateSubTotals()"
                     [class.has-value]="item.qty"
@@ -367,6 +373,19 @@
                     [title]="item.isPackage ? 'A package is always priced once' : (vendorType?.toLowerCase() === 'ph' && item.product ? 'Auto-calculated from units × repeat × days' : '')"
                     class="num-sm"
                     [class.qty-auto]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)" />
+                </td>
+                <td *ngIf="vendorType?.toLowerCase() === 'ph'">
+                  <span *ngIf="item.isPackage" class="muted">—</span>
+                  <input
+                    *ngIf="!item.isPackage"
+                    type="number"
+                    min="0"
+                    [max]="item.qty"
+                    [(ngModel)]="item.availableQty"
+                    (ngModelChange)="onAvailableQtyChange(item)"
+                    [class.has-value]="item.availableQty"
+                    [title]="'Available quantity (0 to ' + item.qty + ')'"
+                    class="num-sm" />
                 </td>
                 <td><b class="line-total">{{ calculateTotal(item) }}</b></td>
                 <td>
@@ -394,6 +413,7 @@
             <span class="t-in">
               <input
                 type="number"
+                min="0"
                 [(ngModel)]="coPayment"
                 (ngModelChange)="onCoPaymentChange()"
                 [class.has-value]="coPayment"
@@ -405,6 +425,7 @@
             <small>Copayment Amount</small>
             <input
               type="number"
+              min="0"
               [(ngModel)]="coPaymentAmount"
               (ngModelChange)="onCoAmountChange()"
               [class.has-value]="coPaymentAmount"
