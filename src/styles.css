@@ -108,6 +108,125 @@ body {
   line-height: 1.5;
 }
 
+/* ===== The app's one popup (PopupService → SweetAlert2, themed) =====
+   Every alert/confirm/spinner in the app renders with these. Selectors are
+   compound (.swal2-popup.pp-popup) so they beat SweetAlert2's own injected
+   stylesheet on specificity, without needing !important. */
+.pp-popup__container.swal2-container {
+  background: rgba(12, 60, 50, 0.32);
+  backdrop-filter: blur(2px);
+}
+.swal2-popup.pp-popup {
+  width: 30em;
+  max-width: calc(100vw - 32px);
+  padding: 24px 24px 18px;
+  border-radius: var(--pp-radius);
+  border: 1px solid var(--pp-border);
+  box-shadow: 0 18px 48px rgba(10, 60, 50, 0.22);
+  background: var(--pp-card);
+  font-family: 'Inter', sans-serif;
+}
+.swal2-popup.pp-popup .pp-popup__title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--pp-text);
+  padding: 0;
+  margin-bottom: 6px;
+}
+.swal2-popup.pp-popup .pp-popup__body {
+  font-size: 13.5px;
+  color: var(--pp-text-2);
+  margin: 0;
+  line-height: 1.6;
+}
+.swal2-popup.pp-popup .pp-popup__body ul {
+  text-align: start;
+  margin: 6px 0 0;
+  padding-inline-start: 20px;
+}
+.swal2-popup.pp-popup .pp-popup__body li { margin-bottom: 3px; }
+.swal2-popup.pp-popup .pp-popup__actions {
+  gap: 8px;
+  margin-top: 20px;
+}
+.pp-popup__btn {
+  border: 1px solid transparent;
+  border-radius: 11px;
+  padding: 10px 22px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+.pp-popup__btn:focus-visible {
+  outline: 2px solid var(--teal-500);
+  outline-offset: 2px;
+}
+.pp-popup__btn--primary {
+  background: var(--teal-600);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(14, 115, 96, 0.3);
+}
+.pp-popup__btn--primary:hover {
+  background: var(--teal-700);
+  transform: translateY(-1px);
+}
+.pp-popup__btn--danger {
+  background: var(--pp-red);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(223, 70, 70, 0.28);
+}
+.pp-popup__btn--danger:hover {
+  background: #c93b3b;
+  transform: translateY(-1px);
+}
+.pp-popup__btn--ghost {
+  background: #fff;
+  color: var(--pp-text-2);
+  border-color: var(--pp-border-2);
+}
+.pp-popup__btn--ghost:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-700);
+}
+
+/* icons + spinner in the portal's palette */
+.swal2-popup.pp-popup .swal2-icon { margin: 4px auto 16px; }
+.swal2-popup.pp-popup .swal2-icon.swal2-success {
+  border-color: var(--pp-green);
+  color: var(--pp-green);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(25, 154, 109, 0.3);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-success [class^='swal2-success-line'] {
+  background-color: var(--pp-green);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-error {
+  border-color: var(--pp-red);
+  color: var(--pp-red);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+  background-color: var(--pp-red);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-warning {
+  border-color: var(--pp-orange);
+  color: var(--pp-orange);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-info {
+  border-color: var(--pp-blue);
+  color: var(--pp-blue);
+}
+.swal2-popup.pp-popup .swal2-icon.swal2-question {
+  border-color: var(--teal-500);
+  color: var(--teal-600);
+}
+.swal2-popup.pp-popup .swal2-loader {
+  border-color: var(--teal-600) transparent var(--teal-600) transparent;
+}
+.swal2-popup.pp-popup .swal2-timer-progress-bar { background: var(--teal-500); }
+
 /* Utility Classes */
 .min-h-screen { min-height: 100vh; }
 .max-w-md { max-width: 28rem; }

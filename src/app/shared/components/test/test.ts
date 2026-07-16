@@ -3,6 +3,7 @@ import { Approval } from '../../interfaces/approval/approval';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
+import { PopupService } from '../../../core/services/popup/popup-service';
 @Component({
   selector: 'app-test',
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
@@ -74,7 +75,7 @@ export class Test {
 
   private mockApprovalsById: Record<string, Approval> = {};
 
-  constructor() {
+  constructor(private popup: PopupService) {
     // Build approval lookup by ID
     Object.values(this.mockApprovals).flat().forEach(approval => {
       this.mockApprovalsById[approval.approvalNumber] = approval;
@@ -92,7 +93,7 @@ export class Test {
         this.currentApproval = approval;
         this.showResults = true;
       } else {
-        alert(`No approval found with ID: ${value}`);
+        this.popup.error(`No approval found with ID: ${value}`);
       }
     } else {
       const approvals = this.mockApprovals[value] || [];
@@ -142,7 +143,7 @@ export class Test {
   }
 
   handleContinue(): void {
-    alert('Approval confirmed - The approval process will continue.');
+    this.popup.info('Approval confirmed - The approval process will continue.');
   }
 
   handleCancel(): void {

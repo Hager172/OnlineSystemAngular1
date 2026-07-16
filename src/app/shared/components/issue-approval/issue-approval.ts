@@ -5,10 +5,10 @@ import { RouterModule } from '@angular/router';
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import Swal from 'sweetalert2';
 
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
 import { VendorService } from '../../../core/services/vendor/vendor-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 import { RequestStateService } from '../../../core/services/request-state/request-state';
 import {
   VendorOption,
@@ -77,7 +77,8 @@ export class IssueApproval {
   constructor(
     public state: RequestStateService,
     public approvalService: ApprovalService,
-    private vendorService: VendorService
+    private vendorService: VendorService,
+    private popup: PopupService
   ) {
     // تحميل الـ Care Items أول ما العضو يتأكد
     effect(() => {
@@ -592,15 +593,18 @@ export class IssueApproval {
       )
       .join('');
 
-    Swal.fire({
-      title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
-      html:
-        `You selected all services of the following package(s). They will be replaced by a single ` +
-        `row priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
-        `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
-      icon: 'info',
-      confirmButtonColor: '#0e7360',
-    }).then(() => this.collapseIntoPackageRows(fresh));
+    this.popup
+      .info(
+        fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
+        undefined,
+        {
+          html:
+            `You selected all services of the following package(s). They will be replaced by a single ` +
+            `row priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
+            `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
+        }
+      )
+      .then(() => this.collapseIntoPackageRows(fresh));
   }
 
   /**
@@ -668,13 +672,10 @@ export class IssueApproval {
 
     const validationErrors = this.validateForm();
     if (validationErrors.length > 0) {
-      Swal.fire({
-        title: 'Validation Error',
+      this.popup.error('Validation Error', undefined, {
         html: `<ul style="text-align:left;list-style-position:inside;margin:0;padding:0;">${validationErrors
           .map((e) => `<li>${e}</li>`)
           .join('')}</ul>`,
-        icon: 'error',
-        confirmButtonColor: '#d33',
       });
       return;
     }
@@ -754,13 +755,19 @@ export class IssueApproval {
     console.log(this.state);
   }
 
-  cancel(): void {
-    if (confirm('Are you sure you want to cancel?')) {
-      this.state.reset();
-      this.searchTerm = '';
-      this.memberChecked = false;
-      this.memberError = '';
-      this.submitted = false;
-    }
+  async cancel(): Promise<void> {
+    const confirmed = await this.popup.confirm({
+      title: 'Are you sure you want to cancel?',
+      danger: true,
+      confirmText: 'Yes',
+      cancelText: 'No',
+    });
+    if (!confirmed) return;
+
+    this.state.reset();
+    this.searchTerm = '';
+    this.memberChecked = false;
+    this.memberError = '';
+    this.submitted = false;
   }
 }

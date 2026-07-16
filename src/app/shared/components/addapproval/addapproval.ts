@@ -21,8 +21,8 @@ import {
 import { NgSelectComponent, NgSelectModule } from '@ng-select/ng-select';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import Swal from 'sweetalert2';
 import { MemberService } from '../../../core/services/member/member-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 
 @Component({
   selector: 'app-addapproval',
@@ -38,7 +38,8 @@ export class Addapproval implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private memberService: MemberService
+    private memberService: MemberService,
+    private popup: PopupService
   ) {}
 
   /** True when the member search found a valid member with no approvals and sent the user here. */
@@ -208,15 +209,18 @@ private checkServicePackages(): void {
     )
     .join('');
 
-  Swal.fire({
-    title: fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
-    html:
-      `You selected all services of the following package(s). They will be replaced by a single ` +
-      `line priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
-      `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
-    icon: 'info',
-    confirmButtonColor: '#0e7360',
-  }).then(() => this.collapseIntoPackageLines(fresh));
+  this.popup
+    .info(
+      fresh.length > 1 ? 'Service packages selected' : 'Service package selected',
+      undefined,
+      {
+        html:
+          `You selected all services of the following package(s). They will be replaced by a single ` +
+          `line priced at the <b>package price</b>, quantity 1, instead of the individual services:` +
+          `<ul style="text-align:left;list-style-position:inside;margin:8px 0 0;padding:0;">${list}</ul>`,
+      }
+    )
+    .then(() => this.collapseIntoPackageLines(fresh));
 }
 
 /**
@@ -332,13 +336,10 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
 
     const validationErrors = this.validateForm();
     if (validationErrors.length > 0) {
-      Swal.fire({
-        title: 'Validation Error',
+      this.popup.error('Validation Error', undefined, {
         html: `<ul style="text-align:left;list-style-position:inside;margin:0;padding:0;">${validationErrors
           .map(e => `<li>${e}</li>`)
           .join('')}</ul>`,
-        icon: 'error',
-        confirmButtonColor: '#d33'
       });
       return;
     }
@@ -349,12 +350,7 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     if (currentNationalId && currentNationalId.trim() !== '') {
       const natIdRegex = /^[0-9]{14}$/;
       if (!natIdRegex.test(currentNationalId.trim())) {
-        Swal.fire({
-          title: 'Validation Error',
-          text: 'National ID must be exactly 14 digits.',
-          icon: 'error',
-          confirmButtonColor: '#d33'
-        });
+        this.popup.error('Validation Error', 'National ID must be exactly 14 digits.');
         return;
       }
     }
@@ -388,35 +384,29 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     this.approvalService.createClaim(claimDto, this.selectedFiles).subscribe({
       next: (res: CreateClaimResponseDto) => {
         if (res.success) {
-          Swal.fire({
-            title: 'Success!',
-            text: res.message || 'Claim created successfully.',
-            icon: 'success',
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'OK'
-          });
+          this.popup.success('Success!', res.message || 'Claim created successfully.');
           this.resetForm();
         } else {
-          Swal.fire({
-            title: 'Warning!',
-            text: res.message || 'Could not process the claim.',
-            icon: 'warning',
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'Review Data'
+          this.popup.warning('Warning!', res.message || 'Could not process the claim.', {
+            confirmText: 'Review Data',
           });
         }
       },
       error: (err) => {
         const errorMessage = err.error?.message || 'Server Error. Please try again later.';
-        Swal.fire({
-          title: 'Error!', text: errorMessage, icon: 'error', confirmButtonColor: '#d33', confirmButtonText: 'Close'
-        });
+        this.popup.error('Error!', errorMessage, { confirmText: 'Close' });
       }
     });
   }
 
-  handleCancel(): void {
-    if (!confirm('Are you sure you want to cancel?')) return;
+  async handleCancel(): Promise<void> {
+    const confirmed = await this.popup.confirm({
+      title: 'Are you sure you want to cancel?',
+      danger: true,
+      confirmText: 'Yes',
+      cancelText: 'No',
+    });
+    if (!confirmed) return;
 
     this.submitted = false;
     this.insuredId = '';
@@ -502,11 +492,8 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
       this.selectedFiles.push(file);
     }
     if (rejected.length > 0) {
-      Swal.fire({
-        title: 'File too large',
+      this.popup.warning('File too large', undefined, {
         html: `Maximum file size is <b>${this.maxFileSizeMb} MB</b>.<br>Skipped: ${rejected.join(', ')}`,
-        icon: 'warning',
-        confirmButtonColor: '#0e7360'
       });
     }
     console.log('Selected Files:', this.selectedFiles);

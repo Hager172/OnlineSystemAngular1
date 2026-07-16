@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { AuthService } from '../../../core/services/auth/auth-service';
 import { RouterLink } from '@angular/router';
-import Swal from 'sweetalert2';
+import { PopupService } from '../../../core/services/popup/popup-service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as QRCode from 'qrcode';
@@ -58,7 +58,11 @@ export class SearchResults implements OnInit {
   /** Row selected for the right-side details panel. */
   selectedId = signal<number | null>(null);
 
-  constructor(private service: ApprovalService,private authService: AuthService) {}
+  constructor(
+    private service: ApprovalService,
+    private authService: AuthService,
+    private popup: PopupService
+  ) {}
 
   statusCounts = computed(() => {
     const counts: Record<string, number> = {};
@@ -269,7 +273,7 @@ export class SearchResults implements OnInit {
     const dataToExport = this.filteredApprovals();
     
     if (dataToExport.length === 0) {
-      alert('No data available to export!');
+      this.popup.warning('No data available to export!');
       return;
     }
 
@@ -350,25 +354,21 @@ viewDetails(item: BranchApprovalItem) {
   }
 
   generateInvoicePDF(item: BranchApprovalItem) {
-    Swal.fire({
-      title: 'Generating Invoice...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
+    this.popup.loading('Generating Invoice...');
 
     this.service.getApprovalPrint(item.approvalId.toString()).subscribe({
       next: async (approval) => {
         try {
           await this.renderInvoicePDF(approval);
-          Swal.close();
+          this.popup.close();
         } catch (error) {
           console.error('Error generating PDF:', error);
-          Swal.fire({ icon: 'error', title: 'Error', text: 'Error generating PDF. Please try again.' });
+          this.popup.error('Error', 'Error generating PDF. Please try again.');
         }
       },
       error: (err) => {
         console.error('Error loading approval print data:', err);
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load approval data.' });
+        this.popup.error('Error', 'Could not load approval data.');
       }
     });
   }
@@ -564,46 +564,29 @@ viewDetails(item: BranchApprovalItem) {
 
 
 cancelApproval(item: any) {
-  Swal.fire({
+  this.popup.confirm({
     title: 'Cancel Approval?',
-    text: 'Are you sure you want to cancel this approval?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6b7280',
-    confirmButtonText: 'Yes, Cancel',
-    cancelButtonText: 'No'
-  }).then((result) => {
-    if (result.isConfirmed) {
+    message: 'Are you sure you want to cancel this approval?',
+    confirmText: 'Yes, Cancel',
+    cancelText: 'No',
+    danger: true,
+  }).then((confirmed) => {
+    if (confirmed) {
 
       this.service.cancelApproval(item.approvalId).subscribe({
         next: (res) => {
 
           if (res.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Cancelled',
-              text: 'Approval cancelled successfully.',
-              timer: 1500,
-              showConfirmButton: false
-            });
+            this.popup.success('Cancelled', 'Approval cancelled successfully.', { timer: 1500 });
 
             this.loadBranchApprovals();
           }
           else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Failed',
-              text: res.messageEn || 'Unable to cancel approval.'
-            });
+            this.popup.error('Failed', res.messageEn || 'Unable to cancel approval.');
           }
         },
         error: () => {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Something went wrong.'
-          });
+          this.popup.error('Error', 'Something went wrong.');
         }
       });
 

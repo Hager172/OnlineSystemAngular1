@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router'; // استيراد Router
 import { ClientApproval } from '../../core/services/clientApprovalls/client-approval';
 import { ApprovallsclientDTO } from '../../shared/models/ApprovallsclientDTO';
-import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth/auth-service';
+import { PopupService } from '../../core/services/popup/popup-service';
 
 @Component({
   selector: 'app-clientapprovals',
@@ -31,7 +31,8 @@ export class Clientapprovals implements OnInit {
   constructor(
     private service: ClientApproval,
     private router: Router,
-    private auth:AuthService // حقن Router
+    private auth:AuthService, // حقن Router
+    private popup: PopupService
   ) {}
 
   ngOnInit(): void {
@@ -100,12 +101,7 @@ export class Clientapprovals implements OnInit {
     if (!this.searchValue) return;
 
     if (this.searchValue <= 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Invalid Input',
-        text: 'Please enter a valid number greater than 0',
-        confirmButtonColor: '#f59e0b'
-      });
+      this.popup.warning('Invalid Input', 'Please enter a valid number greater than 0');
       return;
     }
 
@@ -116,12 +112,7 @@ export class Clientapprovals implements OnInit {
         },
         error: (err) => {
           console.error('Error searching by approval:', err);
-          Swal.fire({
-            icon: 'error',
-            title: 'Search Failed',
-            text: 'Failed to search by approval',
-            confirmButtonColor: '#d33'
-          });
+          this.popup.error('Search Failed', 'Failed to search by approval');
         }
       });
     } 
@@ -133,12 +124,7 @@ export class Clientapprovals implements OnInit {
         },
         error: (err) => {
           console.error('Error searching by member ID:', err);
-          Swal.fire({
-            icon: 'error',
-            title: 'Search Failed',
-            text: 'Failed to search by member ID',
-            confirmButtonColor: '#d33'
-          });
+          this.popup.error('Search Failed', 'Failed to search by member ID');
         }
       });
     }
@@ -146,17 +132,14 @@ export class Clientapprovals implements OnInit {
 
   checkSearchResult(result: any): void {
     if (!result || (typeof result === 'object' && Object.keys(result).length === 0)) {
-      Swal.fire({
-        icon: 'info',
-        title: 'No Results Found',
+      this.popup.info('No Results Found', undefined, {
         html: `
           <div class="text-center">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
             <p class="mb-0">No approval found for this ${this.searchType === 'approval' ? 'approval number' : 'member ID'}</p>
             <small class="text-muted">Please check the number and try again</small>
           </div>
-        `,
-        confirmButtonColor: '#667eea'
+        `
       });
       this.cancelSearch();
       return;

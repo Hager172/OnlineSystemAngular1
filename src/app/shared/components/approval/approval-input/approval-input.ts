@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApprovalService } from '../../../../core/services/Approval/approval-service';
 import { Approval } from '../../../../core/services/Approval/approval';
+import { PopupService } from '../../../../core/services/popup/popup-service';
 
 @Component({
   selector: 'app-approval-input',
@@ -18,7 +19,8 @@ export class ApprovalInput implements OnInit {
 
   constructor(
     private router: Router,
-    private approvalService: ApprovalService
+    private approvalService: ApprovalService,
+    private popup: PopupService
   ) {}
 ngOnInit(): void {
   const state = window.history.state as any;
@@ -39,7 +41,7 @@ ngOnInit(): void {
 
   onNewApproval(): void {
     this.isModalOpen = false;
-    alert('Create new approval functionality - coming soon!');
+    this.popup.info('Create new approval functionality - coming soon!');
   }
 
   onDisplayApproval(): void {

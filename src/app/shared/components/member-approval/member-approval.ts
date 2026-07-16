@@ -2,6 +2,7 @@ import { Component, computed, signal } from '@angular/core';
 import { Approval } from '../../interfaces/approval/approval';
 import { FormsModule } from '@angular/forms';
 import { ApprovalService } from '../../../core/services/Approval/approval-service';
+import { PopupService } from '../../../core/services/popup/popup-service';
 
 interface NewApprovalForm {
   title: string;
@@ -42,7 +43,10 @@ export class MemberApproval {
     () => this.showResults() && this.searchType() === 'member'
   );
 
-  constructor(private approvalService: ApprovalService) {}
+  constructor(
+    private approvalService: ApprovalService,
+    private popup: PopupService
+  ) {}
 
   searchById(searchId?: string): void {
     const value = (searchId ?? this.searchValue).trim();
@@ -53,7 +57,7 @@ export class MemberApproval {
     this.approvalService.getMemberApprovals(value).subscribe({
       next: (res) => {
         if (!res?.success || !res.data) {
-          alert(isApprovalId ? 'Approval not found' : 'No approvals found');
+          this.popup.error(isApprovalId ? 'Approval not found' : 'No approvals found');
           return;
         }
 
@@ -72,7 +76,7 @@ export class MemberApproval {
       },
       error: (err) => {
         console.error('searchById failed', err);
-        alert('Error fetching approvals');
+        this.popup.error('Error fetching approvals');
       }
     });
   }
@@ -126,7 +130,7 @@ export class MemberApproval {
   }
 
   handleContinue(): void {
-    alert('Approval confirmed - The approval process will continue.');
+    this.popup.info('Approval confirmed - The approval process will continue.');
   }
 
   handleCancel(): void {
