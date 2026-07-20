@@ -348,11 +348,16 @@
   }
 }
 
-/* checkbox field sits level with the inputs of its row */
+/* checkbox field sits level with the inputs of its row.
+   Pinned to the top of the grid row (align-self:start) instead of stretching
+   to fill it, so when a validation error appears under a sibling field (e.g.
+   Claim ID) and grows the row, the checkbox keeps its place. */
 .ci-check-field {
   display: flex;
-  align-items: flex-end;
-  padding-bottom: 10px;
+  align-items: center;
+  align-self: start;
+  min-height: 40px; /* ~ input height */
+  margin-top: 24px; /* clears the label row so it lines up with the inputs */
 }
 .ci-check-field .ci-check {
   margin-top: 0;
@@ -520,11 +525,15 @@
   accent-color: var(--teal-600);
   cursor: pointer;
 }
-/* checkbox occupying a grid slot — aligned with the inputs beside it */
+/* checkbox occupying a grid slot — aligned with the inputs beside it.
+   (Duplicate of the rule above; kept in sync — top-pinned so a growing
+   validation error in the same row can't shift it.) */
 .ci-check-field {
   display: flex;
-  align-items: flex-end;
-  padding-bottom: 11px;
+  align-items: center;
+  align-self: start;
+  min-height: 40px;
+  margin-top: 24px;
 }
 .ci-check-field .ci-check {
   margin-top: 0;
