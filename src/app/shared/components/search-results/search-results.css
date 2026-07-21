@@ -66,6 +66,14 @@
   border-color: var(--teal-500);
   color: var(--teal-600);
 }
+.btn-danger {
+  background: var(--pp-red-bg);
+  color: var(--pp-red);
+}
+.btn-danger:hover {
+  background: var(--pp-red);
+  color: #fff;
+}
 .export-btn {
   background: #0f7a44;
   color: #fff;
@@ -150,7 +158,7 @@
 /* ---------------- Filters ---------------- */
 .filters-grid {
   display: grid;
-  grid-template-columns: 190px 190px minmax(220px, 1fr) auto;
+  grid-template-columns: 190px 190px 1fr;
   gap: 14px;
   align-items: end;
 }
@@ -261,44 +269,77 @@
   color: #fff;
 }
 
-/* ---------------- Stat tiles ---------------- */
-.req-stats {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+/* ---------------- Stat tiles + Global Search row ---------------- */
+.stats-search-row {
+  display: flex;
+  align-items: stretch;
   gap: 12px;
 }
-@media (max-width: 1100px) {
+@media (max-width: 980px) {
+  .stats-search-row {
+    flex-direction: column;
+  }
+}
+.stats-search-input {
+  flex: 1;
+  min-width: 220px;
+}
+.req-stats {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+@media (max-width: 1300px) {
   .req-stats {
-    grid-template-columns: repeat(2, 1fr);
+    flex-wrap: wrap;
   }
 }
 .req-stat {
   display: flex;
-  gap: 11px;
-  align-items: flex-start;
+  gap: 8px;
+  align-items: center;
   background: #fff;
   border: 1px solid var(--pp-border);
   border-radius: var(--pp-radius);
-  padding: 14px;
+  padding: 8px 12px;
   box-shadow: var(--pp-shadow);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 150px;
+}
+.req-stat:hover {
+  border-color: var(--teal-500);
+}
+.req-stat.on {
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px rgba(14, 115, 96, 0.12);
 }
 .req-stat .s-ico {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .req-stat .num {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1.1;
 }
 .req-stat .lbl {
   font-size: 11.5px;
   color: var(--pp-text-2);
+}
+
+/* ---------------- Filter actions (Search / Clear) ---------------- */
+.filters-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* ---------------- Table ---------------- */
@@ -439,6 +480,24 @@ td .sub {
   font-size: 12px;
   color: var(--pp-text-3);
   margin-right: auto;
+}
+.page-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--pp-text-2);
+  font-weight: 600;
+}
+.page-size select {
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pp-text);
+  background: #fff;
+  cursor: pointer;
 }
 .page-btn {
   min-width: 31px;

@@ -63,6 +63,7 @@
               <div class="mi-name">
                 <b>{{ member().memberName }}</b>
                 <span class="en">{{ member().customerName }}</span>
+                <span class="en" *ngIf="getMemberAge() !== null">Age: {{ getMemberAge() }}</span>
                 <span class="pill active">Active Member</span>
               </div>
             </div>
@@ -310,7 +311,6 @@
                       (ngModelChange)="onItemChange(item)"
                       [class.has-value]="item.units"
                       class="num-sm" />
-                    <span class="unit-pill" *ngIf="getUnitLabel(item)">{{ getUnitLabel(item) }}</span>
                   </div>
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
@@ -363,16 +363,19 @@
                     [class.qty-auto]="item.isPackage" />
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() != 'dt'">
-                  <input
-                    type="number"
-                    min="0"
-                    [(ngModel)]="item.qty"
-                    (ngModelChange)="updateSubTotals()"
-                    [class.has-value]="item.qty"
-                    [readonly]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)"
-                    [title]="item.isPackage ? 'A package is always priced once' : (vendorType?.toLowerCase() === 'ph' && item.product ? 'Auto-calculated from units × repeat × days' : '')"
-                    class="num-sm"
-                    [class.qty-auto]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)" />
+                  <div class="unit-cell">
+                    <input
+                      type="number"
+                      min="0"
+                      [(ngModel)]="item.qty"
+                      (ngModelChange)="updateSubTotals()"
+                      [class.has-value]="item.qty"
+                      [readonly]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)"
+                      [title]="item.isPackage ? 'A package is always priced once' : (vendorType?.toLowerCase() === 'ph' && item.product ? 'Auto-calculated from units × repeat × days' : '')"
+                      class="num-sm"
+                      [class.qty-auto]="item.isPackage || (vendorType?.toLowerCase() === 'ph' && !!item.product)" />
+                    <span class="unit-pill" *ngIf="vendorType?.toLowerCase() === 'ph' && getUnitLabel(item)">{{ getUnitLabel(item) }}</span>
+                  </div>
                 </td>
                 <td *ngIf="vendorType?.toLowerCase() === 'ph'">
                   <span *ngIf="item.isPackage" class="muted">—</span>
@@ -414,10 +417,10 @@
               <input
                 type="number"
                 min="0"
-                [(ngModel)]="coPayment"
-                (ngModelChange)="onCoPaymentChange()"
+                [ngModel]="coPayment"
+                readonly
                 [class.has-value]="coPayment"
-                class="num-sm pct-in" />
+                class="num-sm pct-in ci-readonly" />
               <span class="pct-sign">%</span>
             </span>
           </div>
@@ -426,10 +429,10 @@
             <input
               type="number"
               min="0"
-              [(ngModel)]="coPaymentAmount"
-              (ngModelChange)="onCoAmountChange()"
+              [ngModel]="coPaymentAmount"
+              readonly
               [class.has-value]="coPaymentAmount"
-              class="num-sm paid-in"
+              class="num-sm paid-in ci-readonly"
               placeholder="Amount" />
           </div>
           <div class="sum-div"></div>

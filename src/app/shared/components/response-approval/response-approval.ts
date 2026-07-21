@@ -114,11 +114,12 @@ export class ResponseApproval implements OnInit {
 
   limitQuantity(item: any): void {
     if (
-      item.originalQuantity != null &&
-      item.editqty > item.originalQuantity
+      item.quantity != null &&
+      item.editqty > item.quantity
     ) {
-      item.editqty = item.originalQuantity;
+      item.editqty = item.quantity;
     }
+    this.updateSubTotals();
   }
 
   // الحسابات بتعتمد على الليميت المعدّل مش المخزن
@@ -225,27 +226,32 @@ export class ResponseApproval implements OnInit {
       return;
     }
 
+    // UpdateClaims only updates existing approval_services rows by ItemSerial —
+    // it has no insert path, so newly added rows can't be sent here.
+    const items = this.items.filter(item => !item.isNew);
+
     const request = {
-      approval: {
-        approvalId: Number(this.approval()?.approvalNumber),
-        notes: this.approval()?.notes,
-        maxValue: this.editLimit,
-        services: this.items.map(item => ({
-          itemSerial: item.id,
-          serviceId: item.isNew ? item.serviceId : -1,
-          editqty: item.editqty,
-          days: item.days,
-          itemDesc: item.description,
-          price: item.unitPrice
-        }))
-      }
+      approvalId: this.approval()?.approvalNumber,
+      notes: this.approval()?.notes,
+      isChronic: false,
+      items: items.map(item => ({
+        itemSerial: item.id,
+        qty: Number(item.editqty) || 0,
+        claimed: Number(item.quantity) || 0,
+        days: item.days != null ? String(item.days) : null,
+        description: item.description
+      }))
     };
 
     this.submitting = true;
 
-    this.approvalService.editApproval(request).subscribe({
-      next: () => {
+    this.approvalService.respondToApproval(request).subscribe({
+      next: (res) => {
         this.submitting = false;
+        if (res?.data === '-1') {
+          this.popup.error('Rejected', 'The response could not be submitted — check the quantities and your permissions.');
+          return;
+        }
         this.popup.success('Saved!', 'Approval response submitted successfully.').then(() => this.goBack());
       },
       error: err => {

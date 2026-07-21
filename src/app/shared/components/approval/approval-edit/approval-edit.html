@@ -23,9 +23,13 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
         Back
       </button>
-      <button type="button" class="btn btn-primary btn-submit" (click)="onSubmit()">
+      <button type="button" class="btn btn-primary btn-submit" (click)="onSubmit()" [disabled]="submitting">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
-        Submit Request
+        {{ submitting ? 'Submitting...' : 'Submit Request' }}
+      </button>
+      <button type="button" class="btn btn-primary btn-submit" *ngIf="submitted" (click)="printInvoice()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Print Invoice
       </button>
     </div>
   </div>

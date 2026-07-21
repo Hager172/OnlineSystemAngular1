@@ -1,6 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApprovalService } from '../../../../core/services/Approval/approval-service';
+import { InvoicePrintService } from '../../../../core/services/invoice-print/invoice-print-service';
+import { PopupService } from '../../../../core/services/popup/popup-service';
 import { Approval } from '../../../interfaces/approval/approval';
 import { ApprovalItem } from '../../../interfaces/approval/approvalitem';
 import { CommonModule  } from '@angular/common';
@@ -13,18 +15,23 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './approval-edit.css',
 })
 export class ApprovalEdit {
-  
+
 approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
   approvalNumber: string = '';
   currentDate: string = '';
   /** Copayment of the totals block — read-only, taken from the approval. */
   coPayment: number = 0;
   coPaymentAmount: number = 0;
+  submitting = false;
+  /** Shown once PullApproval has succeeded — lets the user print, same as /search-results. */
+  submitted = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private approvalService: ApprovalService
+    private approvalService: ApprovalService,
+    private invoicePrint: InvoicePrintService,
+    private popup: PopupService
   ) {}
 
   ngOnInit(): void {
@@ -107,8 +114,40 @@ approval = signal<Approval | null>(null);  items: ApprovalItem[] = [];
   }
 
   onSubmit(): void {
-    this.approvalService.saveEditedItems(this.approvalNumber, this.items);
-    this.router.navigate(['/invoice-print', this.approvalNumber]);
+    const request = {
+      approvalId: Number(this.approvalNumber),
+      notes: this.approval()?.notes,
+      items: this.items.map(item => ({
+        itemSerial: Number(item.id),
+        approvedQty: item.quantity || 0,
+        itemDesc: item.description,
+        price: item.unitPrice,
+        days: item.days ?? null
+      }))
+    };
+
+    this.submitting = true;
+
+    this.approvalService.submitChronicApproval(request).subscribe({
+      next: (res) => {
+        this.submitting = false;
+        if (!res?.success) {
+          this.popup.error('Failed', res?.msg || 'The approval could not be submitted.');
+          return;
+        }
+        this.submitted = true;
+        this.popup.success('Submitted!', 'Approval submitted successfully.');
+      },
+      error: (err) => {
+        this.submitting = false;
+        console.error(err);
+        this.popup.error('Error', 'Failed to submit the approval.');
+      }
+    });
+  }
+
+  printInvoice(): void {
+    this.invoicePrint.printApprovalById(this.approvalNumber);
   }
 
   goBack(): void {

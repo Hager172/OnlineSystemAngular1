@@ -40,7 +40,7 @@
             <div class="ci-field">
               <label>Date From <span class="req">*</span></label>
               <input
-                type="datetime-local"
+                type="date"
                 class="ci-input"
                 [ngModel]="fromDate()"
                 (ngModelChange)="setFromDate($event)" />
@@ -48,91 +48,75 @@
             <div class="ci-field">
               <label>Date To <span class="req">*</span></label>
               <input
-                type="datetime-local"
+                type="date"
                 class="ci-input"
                 [ngModel]="toDate()"
                 (ngModelChange)="setToDate($event)"
                 [min]="fromDate()" />
             </div>
-            <div class="ci-field">
-              <label>Global Search</label>
-              <div class="search-input">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                <input
-                  type="search"
-                  [ngModel]="searchQuery()"
-                  (ngModelChange)="updateSearchQuery($event)"
-                  placeholder="Search by Member ID, Member Name, Approval ID, Pres ID..." />
-              </div>
-            </div>
-            <button type="button" class="btn btn-ghost" (click)="clearDateFilter()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-              Clear
-            </button>
-          </div>
-        </section>
-
-        <!-- STATUS CHIPS -->
-        <section class="card">
-          <div class="chips-bar">
-            <button type="button" class="fchip" [class.on]="statusFilter() === 'All'" (click)="setStatusFilter('All')">
-              All <span class="c">{{ approvals().length }}</span>
-            </button>
-            <ng-container *ngFor="let s of statusChips">
-              <button type="button" *ngIf="statusCounts()[s]" class="fchip"
-                [class.on]="statusFilter() === s" (click)="setStatusFilter(s)">
-                {{ s }} <span class="c">{{ statusCounts()[s] }}</span>
+            <div class="filters-actions">
+              <button type="button" class="btn btn-primary" (click)="search()" [disabled]="isLoading()">
+                <svg *ngIf="!isLoading()" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <svg *ngIf="isLoading()" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg>
+                {{ isLoading() ? 'Searching...' : 'Search' }}
               </button>
-            </ng-container>
+              <button type="button" class="btn btn-ghost" (click)="clearDateFilter()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                Clear
+              </button>
+            </div>
           </div>
         </section>
 
-        <!-- STAT TILES -->
-        <div class="req-stats">
-          <div class="req-stat">
-            <div class="s-ico" style="background:var(--pp-blue-bg);color:var(--pp-blue);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
-            </div>
-            <div>
-              <div class="num">{{ approvals().length }}</div>
-              <div class="lbl">Total Requests</div>
-            </div>
+        <!-- STAT TILES (click to filter by status) + GLOBAL SEARCH, same row -->
+        <div class="stats-search-row">
+          <div class="req-stats">
+            <button type="button" class="req-stat" [class.on]="statusFilter() === 'All'" (click)="setStatusFilter('All')">
+              <div class="s-ico" style="background:var(--pp-blue-bg);color:var(--pp-blue);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>
+              </div>
+              <div>
+                <div class="num">{{ approvals().length }}</div>
+                <div class="lbl">Total Requests</div>
+              </div>
+            </button>
+            <button type="button" class="req-stat" [class.on]="statusFilter() === 'Pending'" (click)="setStatusFilter('Pending')">
+              <div class="s-ico" style="background:var(--pp-orange-bg);color:var(--pp-orange);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+              </div>
+              <div>
+                <div class="num">{{ statusCounts()['Pending'] || 0 }}</div>
+                <div class="lbl">Pending</div>
+              </div>
+            </button>
+            <button type="button" class="req-stat" [class.on]="statusFilter() === 'Approved'" (click)="setStatusFilter('Approved')">
+              <div class="s-ico" style="background:var(--pp-green-bg);color:var(--pp-green);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
+              </div>
+              <div>
+                <div class="num">{{ statusCounts()['Approved'] || 0 }}</div>
+                <div class="lbl">Approved</div>
+              </div>
+            </button>
+            <button type="button" class="req-stat" [class.on]="statusFilter() === 'CancelledGroup'" (click)="setStatusFilter('CancelledGroup')">
+              <div class="s-ico" style="background:var(--pp-red-bg);color:var(--pp-red);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+              </div>
+              <div>
+                <div class="num">{{ (statusCounts()['Cancelled'] || 0) + (statusCounts()['Rejected'] || 0) + (statusCounts()['Suspended'] || 0) }}</div>
+                <div class="lbl">Rejected</div>
+              </div>
+            </button>
           </div>
-          <div class="req-stat">
-            <div class="s-ico" style="background:var(--pp-orange-bg);color:var(--pp-orange);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-            </div>
-            <div>
-              <div class="num">{{ statusCounts()['Pending'] || 0 }}</div>
-              <div class="lbl">Pending</div>
-            </div>
-          </div>
-          <div class="req-stat">
-            <div class="s-ico" style="background:var(--pp-green-bg);color:var(--pp-green);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 5-5"/></svg>
-            </div>
-            <div>
-              <div class="num">{{ statusCounts()['Approved'] || 0 }}</div>
-              <div class="lbl">Approved</div>
-            </div>
-          </div>
-          <div class="req-stat">
-            <div class="s-ico" style="background:var(--pp-purple-bg);color:var(--pp-purple);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M12 18v-6M9 15h6"/></svg>
-            </div>
-            <div>
-              <div class="num">{{ statusCounts()['New'] || 0 }}</div>
-              <div class="lbl">New</div>
-            </div>
-          </div>
-          <div class="req-stat">
-            <div class="s-ico" style="background:var(--pp-red-bg);color:var(--pp-red);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
-            </div>
-            <div>
-              <div class="num">{{ (statusCounts()['Cancelled'] || 0) + (statusCounts()['Rejected'] || 0) + (statusCounts()['Suspended'] || 0) }}</div>
-              <div class="lbl">Cancelled / Rejected</div>
-            </div>
+
+          <!-- GLOBAL SEARCH -->
+          <div class="search-input stats-search-input">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              type="search"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="updateSearchQuery($event)"
+              placeholder="Search by Member ID, Member Name, Approval ID, Pres ID..." />
           </div>
         </div>
 
@@ -148,7 +132,7 @@
                   <th class="sortable" (click)="sort('memberName')">Member Name {{ getSortIcon('memberName') }}</th>
                   <th class="sortable" (click)="sort('approvalDate')">Service Date {{ getSortIcon('approvalDate') }}</th>
                   <th class="sortable" (click)="sort('vendorName')">Provider {{ getSortIcon('vendorName') }}</th>
-                  <th class="sortable" (click)="sort('presId')">Pres ID {{ getSortIcon('presId') }}</th>
+                  <th class="sortable" (click)="sort('formId')">Pres ID {{ getSortIcon('formId') }}</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -171,22 +155,22 @@
                     {{ item.vendorName || item.vendorId }}
                     <small class="sub" *ngIf="item.branchName">{{ item.branchName }}</small>
                   </td>
-                  <td>{{ item.presId || '-' }}</td>
+                  <td>{{ item.formId || '-' }}</td>
                   <td>
                     <div class="row-actions">
                       <button type="button" class="mini-btn" title="View Details"
                         [routerLink]="['/invoice-print', item.approvalId]" (click)="$event.stopPropagation()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                       </button>
-                      <button type="button" class="mini-btn" title="Edit Request"
+                      <button type="button" class="mini-btn" title="Edit Request" *ngIf="item.statusText !== 'Rejected'"
                         [routerLink]="['/approval-edit-search', item.approvalId]" (click)="$event.stopPropagation()">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
                       </button>
-                      <button type="button" class="mini-btn" title="Print Invoice PDF"
-                        (click)="generateInvoicePDF(item); $event.stopPropagation()">
+                      <button type="button" class="mini-btn" title="Print Invoice PDF" *ngIf="item.statusText === 'Approved'"
+                        (click)="printApproval(item); $event.stopPropagation()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
                       </button>
-                      <button type="button" class="mini-btn danger" title="Cancel Request"
+                      <button type="button" class="mini-btn danger" title="Cancel Request" *ngIf="item.deletable && item.statusText !== 'Rejected'"
                         (click)="cancelApproval(item); $event.stopPropagation()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
                       </button>
@@ -205,10 +189,16 @@
           <!-- pager -->
           <div class="pager" *ngIf="totalPages() > 0">
             <span class="info">
-              Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} to
-              {{ Math.min(currentPage() * itemsPerPage, filteredApprovals().length) }} of
+              Showing {{ (currentPage() - 1) * itemsPerPage() + 1 }} to
+              {{ Math.min(currentPage() * itemsPerPage(), filteredApprovals().length) }} of
               {{ filteredApprovals().length }} entries
             </span>
+            <label class="page-size">
+              Rows per page
+              <select [ngModel]="itemsPerPage()" (ngModelChange)="setItemsPerPage($event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
             <button type="button" class="page-btn" (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1">‹</button>
             <button type="button" class="page-btn"
               *ngFor="let page of getPagesArray()"
@@ -246,11 +236,13 @@
               <span class="status" [ngClass]="statusPillClass(sel)">{{ sel.statusText }}</span>
             </div>
             <div class="sum-row"><small>Approval ID</small><b>{{ sel.approvalId }}</b></div>
-            <div class="sum-row" *ngIf="sel.presId"><small>Pres ID</small><b>{{ sel.presId }}</b></div>
-            <div class="sum-row"><small>Request Type</small><b>{{ sel.apType }}</b></div>
-            <div class="sum-row"><small>Source</small><b>{{ sel.requestSource }}</b></div>
-            <div class="sum-row" *ngIf="sel.vendorName"><small>Provider</small><b>{{ sel.vendorName }}</b></div>
+            <div class="sum-row" *ngIf="sel.formId"><small>Pres ID</small><b>{{ sel.formId }}</b></div>
             <div class="sum-row" *ngIf="sel.branchName"><small>Branch</small><b>{{ sel.branchName }}</b></div>
+            <div class="sum-div"></div>
+            <div class="sum-row"><small>Services Count</small><b>{{ sel.servicesCount || 0 }}</b></div>
+            <div class="sum-row" *ngIf="sel.approvalLimit"><small>Approval Limit</small><b>{{ sel.approvalLimit.toFixed(2) }}</b></div>
+            <div class="sum-row"><small>Copayment ({{ sel.copaymentPercentage || 0 }}%)</small><b>{{ ((sel.value || 0) * (sel.copaymentPercentage || 0) / 100).toFixed(2) }}</b></div>
+            <div class="sum-row big"><small>Approval Value</small><b>{{ (sel.value || 0).toFixed(2) }}</b></div>
             <ng-container *ngIf="sel.notes && sel.notes !== '-'">
               <div class="sum-div"></div>
               <div class="rd-notes">
@@ -263,11 +255,16 @@
           <div class="rd-actions">
             <button type="button" class="btn btn-ghost" [routerLink]="['/invoice-print', sel.approvalId]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-              View Details
+              View 
             </button>
-            <button type="button" class="btn btn-primary" [routerLink]="['/approval-edit-search', sel.approvalId]">
+            <button type="button" class="btn btn-primary" *ngIf="sel.statusText === 'Approved'" [routerLink]="['/approval-edit-search', sel.approvalId]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
-              Edit Request
+              Edit 
+            </button>
+            <button type="button" class="btn btn-danger" title="Cancel Request" *ngIf="sel.deletable && sel.statusText !== 'Rejected'"
+              (click)="cancelApproval(sel)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+              Cancel 
             </button>
           </div>
         </ng-container>

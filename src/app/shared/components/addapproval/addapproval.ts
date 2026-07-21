@@ -285,11 +285,13 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     this.prescriptionItems.push({
       productId: null, units: null, repeat: null, days: null, price: 0, qty: 0, tooth: null, position: null
     });
+    this.updateSubTotals();
   }
 
   removePrescriptionItem(index: number): void {
     this.prescriptionItems.splice(index, 1);
     this.checkServicePackages();
+    this.updateSubTotals();
   }
 
   // =========================
@@ -435,12 +437,25 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     this.coPaymentAmount = parseFloat(((subTotal * this.coPayment) / 100).toFixed(2));
   }
 
+  /**
+   * The quantity actually billed for a line: for pharmacy items with an
+   * Available Qty set, that's what's really dispensed, so it drives the price —
+   * not the theoretically calculated Qty.
+   */
+  private billingQty(item: PrescriptionItem): number {
+    const isPharmacyLine = this.vendorType?.toLowerCase() === 'ph' && !item.isPackage;
+    if (isPharmacyLine && item.availableQty != null) {
+      return item.availableQty;
+    }
+    return item.qty || 0;
+  }
+
   calculateTotal(item: PrescriptionItem): string {
-    return ((item.price || 0) * (item.qty || 0)).toFixed(2);
+    return ((item.price || 0) * this.billingQty(item)).toFixed(2);
   }
 
   calculateSubTotal(): string {
-    const total = this.prescriptionItems.reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 0)), 0);
+    const total = this.prescriptionItems.reduce((sum, item) => sum + ((item.price || 0) * this.billingQty(item)), 0);
     return total.toFixed(2);
   }
 
@@ -452,15 +467,6 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
   /** Count of prescription lines with a chosen product and quantity. */
   getTotalItems(): number {
     return this.prescriptionItems.filter((x) => x.productId && (x.qty || 0) > 0).length;
-  }
-
-  onCoPercentChange(): void {
-    const subTotal = parseFloat(this.calculateSubTotal());
-    if (subTotal > 0) {
-      this.coPaymentAmount = parseFloat(((subTotal * (this.coPayment || 0)) / 100).toFixed(2));
-    } else {
-      this.coPaymentAmount = 0;
-    }
   }
 
   handleFileSelect(event: any): void {
@@ -499,11 +505,28 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     console.log('Selected Files:', this.selectedFiles);
   }
 
-  /** Unit-of-measure label (Strip / Box / …) shown beside the Units input. */
+  /** Member age computed from the member's birth date, or null when unavailable. */
+  getMemberAge(): number | null {
+    const birthDate = this.member()?.birthDate;
+    if (!birthDate) return null;
+
+    const dob = new Date(birthDate);
+    if (isNaN(dob.getTime())) return null;
+
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : null;
+  }
+
+  /** Minimum dispensing unit label (Strip / Box / …) shown beside Units and Qty. */
   getUnitLabel(item: PrescriptionItem): string {
     const p = item.product;
     if (!p) return '';
-    return p.unitName || p.subUnitName || p.doseUnitName || '';
+    return p.unitSale || p.doseForm || '';
   }
 
   removeFile(index: number): void {
@@ -531,22 +554,9 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
     this.coPaymentAmount = 0;
   }
 
-  onCoAmountChange(): void {
-    const subTotal = parseFloat(this.calculateSubTotal());
-    if (subTotal > 0) {
-      this.coPayment = parseFloat(((this.coPaymentAmount || 0) / subTotal * 100).toFixed(2));
-    } else {
-      this.coPayment = 0;
-    }
-  }
-
   updateSubTotals(): void {
     const subTotal = parseFloat(this.calculateSubTotal());
-    if (this.coPayment > 0) {
-      this.coPaymentAmount = parseFloat(((subTotal * this.coPayment) / 100).toFixed(2));
-    } else if (this.coPaymentAmount > 0 && subTotal > 0) {
-      this.coPayment = parseFloat(((this.coPaymentAmount / subTotal) * 100).toFixed(2));
-    }
+    this.coPaymentAmount = parseFloat(((subTotal * (this.coPayment || 0)) / 100).toFixed(2));
   }
 
   private calculateQty(item: PrescriptionItem): void {
@@ -586,6 +596,7 @@ private collapseIntoPackageLines(packages: ServicePackageDto[]): void {
       value = qty;
     }
     item.availableQty = value;
+    this.updateSubTotals();
   }
 
 onProductSelect(product: ProductLookupDto, item: PrescriptionItem): void {

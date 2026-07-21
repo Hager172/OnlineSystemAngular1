@@ -63,7 +63,7 @@ ngOnInit(): void {
             clientName: approvalData.memberName,
             clientId: approvalData.memberId,
             clientPhone: '',
-limit: approvalData.maxValue ? approvalData.maxValue : null,
+limit: approvalData.maxValue ?? null,
 vendorName: approvalData.vendorName,
             copaymentPercentage: approvalData.copaymentvalue,
             extraCopaymentPercentage: 0,
@@ -112,11 +112,13 @@ getSubtotal(): number {
 // 3. تعديل دالة الليميت لو حابه تطبقيها على الـ editqty:
 limitQuantity(item: any): void {
   if (
-    item.originalQuantity != null &&
-    item.editqty > item.originalQuantity
+    item.quantity != null &&
+    item.editqty > item.quantity
   ) {
-    item.editqty = item.originalQuantity;
-  }}
+    item.editqty = item.quantity;
+  }
+  this.updateSubTotals();
+}
 
   getWithinLimit(): number {
     return Math.min(this.getSubtotal(), this.approval()?.limit || 0);

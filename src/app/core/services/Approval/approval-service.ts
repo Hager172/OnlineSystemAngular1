@@ -214,12 +214,14 @@ mapApprovalDetailsToApproval(apiRes: any): Approval {
     copaymentPercentage: apiRes.services?.[0]?.coinsurance ?? apiRes.coinsurance ?? 0,
     extraCopaymentPercentage: 0,
     items: (apiRes.services || []).map((s: any) => ({
+      id: s.itemSerial,
       description: s.itemDesc || '',
       quantity: s.apQty || s.qty || 0,
       quantityUnit: s.doseUnits?.toString() || 'Unit',
       unitPrice: s.price || 0,
       name: s.servicename || '',
       copayment: s.coinsurance ?? 0,
+      days: s.days,
     })),
   };
 }
@@ -328,6 +330,18 @@ getbrancha3mpprovals(branchid: string): Observable<any> {
 editApproval(request: any): Observable<any> {
   return this.http.post<any>(
     `${this.baseUrl}Approval/edit`,
+    request
+  );
+}
+respondToApproval(request: any): Observable<any> {
+  return this.http.post<any>(
+    `${this.baseUrl}Claims/agetResponseApproval`,
+    request
+  );
+}
+submitChronicApproval(request: any): Observable<any> {
+  return this.http.post<any>(
+    `${this.baseUrl}Claims/PullApproval`,
     request
   );
 }

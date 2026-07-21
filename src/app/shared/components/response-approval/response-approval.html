@@ -106,8 +106,8 @@
               <tr>
                 <th style="width:44px;">#</th>
                 <th style="min-width:240px;">Service</th>
-                <th>Approved</th>
-                <th>Edit Qty</th>
+                <th>Claimed</th>
+                <th>Approved Qty</th>
                 <th>Days</th>
                 <th>Unit Price</th>
                 <th style="text-align:right;">Total</th>
@@ -155,6 +155,7 @@
                     class="num-sm"
                     [(ngModel)]="item.editqty"
                     min="0"
+                    [attr.max]="item.isNew ? null : item.quantity"
                     (ngModelChange)="item.isNew ? updateSubTotals() : limitQuantity(item)" />
                 </td>
                 <td>
