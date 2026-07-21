@@ -718,35 +718,20 @@ export class IssueApproval {
       next: (sub) => {
         this.submitting = false;
         if (sub.status) {
-          Swal.fire({
-            title: 'Success!',
-            text: sub.msg === 'Done' ? 'Request submitted successfully.' : sub.msg,
-            icon: 'success',
-            confirmButtonColor: '#3085d6',
-          });
+          this.popup.success('Success!', sub.msg === 'Done' ? 'Request submitted successfully.' : sub.msg);
           this.state.reset();
           this.searchTerm = '';
           this.memberChecked = false;
           this.submitted = false;
         } else {
-          Swal.fire({
-            title: 'Warning!',
-            text: sub.msg || 'Could not submit the approval.',
-            icon: 'warning',
-            confirmButtonColor: '#3085d6',
-          });
+          this.popup.warning('Warning!', sub.msg || 'Could not submit the approval.');
         }
       },
       error: (err) => {
         this.submitting = false;
         console.error('submitApproval failed', err);
         const errorMessage = err.error?.msg || err.error?.message || 'Server Error. Please try again later.';
-        Swal.fire({
-          title: 'Error!',
-          text: errorMessage,
-          icon: 'error',
-          confirmButtonColor: '#d33',
-        });
+        this.popup.error('Error!', errorMessage);
       },
     });
   }
